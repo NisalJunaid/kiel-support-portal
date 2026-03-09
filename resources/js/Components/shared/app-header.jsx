@@ -6,9 +6,9 @@ import { Button } from '@/Components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 
 export function AppHeader() {
-  const { auth, notifications } = usePage().props;
+  const { auth, notifications, authorization } = usePage().props;
 
-  if (!auth?.user) {
+  if (!auth?.user || !authorization?.isStaffWorkspace) {
     return null;
   }
 
@@ -20,35 +20,37 @@ export function AppHeader() {
         <p className="text-sm text-muted-foreground">Staff Workspace</p>
       </div>
       <div className="flex items-center gap-3">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              {notifications?.unread_count > 0 && <Badge className="absolute -right-1 -top-1 h-5 min-w-5 px-1 text-xs">{notifications.unread_count}</Badge>}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <DropdownMenuLabel className="flex items-center justify-between">
-              <span>Notifications</span>
-              <Link href="/notifications" className="text-xs font-medium text-primary">View all</Link>
-            </DropdownMenuLabel>
-            {(notifications?.recent ?? []).length === 0 ? (
-              <DropdownMenuItem disabled>No notifications yet.</DropdownMenuItem>
-            ) : notifications.recent.map((item) => (
-              <DropdownMenuItem key={item.id} className="block cursor-pointer" onSelect={() => {
-                if (!item.read_at) {
-                  router.patch(`/notifications/${item.id}/read`, {}, { preserveScroll: true });
-                }
-                if (item.url) {
-                  router.visit(item.url);
-                }
-              }}>
-                <p className="text-sm font-medium">{item.title}</p>
-                <p className="text-xs text-muted-foreground">{item.message}</p>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {authorization?.canViewNotifications && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                {notifications?.unread_count > 0 && <Badge className="absolute -right-1 -top-1 h-5 min-w-5 px-1 text-xs">{notifications.unread_count}</Badge>}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80">
+              <DropdownMenuLabel className="flex items-center justify-between">
+                <span>Notifications</span>
+                <Link href="/notifications" className="text-xs font-medium text-primary">View all</Link>
+              </DropdownMenuLabel>
+              {(notifications?.recent ?? []).length === 0 ? (
+                <DropdownMenuItem disabled>No notifications yet.</DropdownMenuItem>
+              ) : notifications.recent.map((item) => (
+                <DropdownMenuItem key={item.id} className="block cursor-pointer" onSelect={() => {
+                  if (!item.read_at) {
+                    router.patch(`/notifications/${item.id}/read`, {}, { preserveScroll: true });
+                  }
+                  if (item.url) {
+                    router.visit(item.url);
+                  }
+                }}>
+                  <p className="text-sm font-medium">{item.title}</p>
+                  <p className="text-xs text-muted-foreground">{item.message}</p>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
