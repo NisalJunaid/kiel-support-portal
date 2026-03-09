@@ -257,3 +257,29 @@
   - `empty-state`
   - `data-table-shell`
   - `ui/select`
+
+## Client Portal v1 (Scoped Experience)
+- Added a dedicated client portal route group under `/portal/*` protected by `auth + role:client-user`.
+- Added role-gated internal route group (`super-admin|admin|staff|support-agent|asset-manager`) to prevent client users from entering staff/admin modules.
+- Added `/home` redirect orchestration and updated login redirect target so users land in the correct experience (`/dashboard` for internal users, `/portal/dashboard` for client users).
+- Added client-aware policy behavior for tickets/assets/contacts:
+  - client users can only view records scoped to their `client_user_profiles.client_company_id`
+  - client users cannot update/delete tickets or create internal notes
+  - asset/contact visibility for client users is controlled by profile flags
+- Added a dedicated client-side portal layout (`Layouts/client-portal-layout.jsx`) with scoped nav entries for Dashboard, My Tickets, Assets, and Contacts.
+- Added client-facing Inertia pages with polished shadcn/ui cards/tables/empty-states:
+  - `ClientPortal/Dashboard`
+  - `ClientPortal/Tickets/Index`
+  - `ClientPortal/Tickets/Show`
+  - `ClientPortal/Assets/Index`
+  - `ClientPortal/Contacts/Index`
+- Internal note safety: client ticket detail only renders `public_reply` messages.
+- Company scoping safety: all portal controllers query by the authenticated client user profile company id.
+
+### New/Updated Client Portal Routes
+- `GET /home` -> role-aware redirect (`home`) [auth]
+- `GET /portal/dashboard` -> `ClientPortal\DashboardController` (`portal.dashboard`) [auth + role:client-user]
+- `GET /portal/tickets` -> `ClientPortal\TicketController@index` (`portal.tickets.index`) [auth + role:client-user]
+- `GET /portal/tickets/{ticket}` -> `ClientPortal\TicketController@show` (`portal.tickets.show`) [auth + role:client-user + policy]
+- `GET /portal/assets` -> `ClientPortal\AssetController@index` (`portal.assets.index`) [auth + role:client-user]
+- `GET /portal/contacts` -> `ClientPortal\ContactController@index` (`portal.contacts.index`) [auth + role:client-user]
