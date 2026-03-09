@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Models\Ticket;
+use App\Support\TicketAttachmentRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -45,6 +46,8 @@ class StoreTicketRequest extends FormRequest
             'resolution_due_at' => ['nullable', 'date', 'after_or_equal:first_response_due_at'],
             'resolved_at' => ['nullable', 'date'],
             'closed_at' => ['nullable', 'date', 'after_or_equal:resolved_at'],
+            'attachments' => ['nullable', ...TicketAttachmentRules::validationRules()],
+            'attachments.*' => TicketAttachmentRules::fileRules(),
         ];
     }
 }

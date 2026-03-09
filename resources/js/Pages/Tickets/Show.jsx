@@ -11,6 +11,8 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Separator } from '@/Components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { useState } from 'react';
+import FileUploadField from '@/Components/shared/file-upload-field';
+import AttachmentList from '@/Components/shared/attachment-list';
 
 const typeStyles = {
   public_reply: { label: 'Public reply', variant: 'info' },
@@ -18,14 +20,15 @@ const typeStyles = {
   system_event: { label: 'System event', variant: 'secondary' },
 };
 
-export default function TicketsShow({ ticket, activity, can, domainReferences, messages }) {
+export default function TicketsShow({ ticket, activity, can, domainReferences, messages, attachments }) {
   const [composerTab, setComposerTab] = useState('public_reply');
-  const form = useForm({ message_type: 'public_reply', body: '' });
+  const form = useForm({ message_type: 'public_reply', body: '', attachments: [] });
 
   const submitMessage = () => {
     form.post(`/tickets/${ticket.id}/messages`, {
       preserveScroll: true,
-      onSuccess: () => form.reset('body'),
+      forceFormData: true,
+      onSuccess: () => form.reset('body', 'attachments'),
     });
   };
 
@@ -65,6 +68,11 @@ export default function TicketsShow({ ticket, activity, can, domainReferences, m
       </Card>
 
       <Card>
+        <CardHeader><CardTitle>Ticket attachments</CardTitle></CardHeader>
+        <CardContent><AttachmentList attachments={attachments} emptyText="No files attached directly to this ticket." /></CardContent>
+      </Card>
+
+      <Card>
         <CardHeader><CardTitle>Conversation</CardTitle></CardHeader>
         <CardContent className="space-y-4">
           {messages.length === 0 ? <EmptyState title="No messages yet" description="Start the conversation with a public reply or an internal note." /> : (
@@ -82,6 +90,9 @@ export default function TicketsShow({ ticket, activity, can, domainReferences, m
                       <p className="text-xs text-muted-foreground">{message.created_at || '—'}</p>
                     </div>
                     <p className="whitespace-pre-wrap text-sm">{message.body}</p>
+                    <div className="mt-3">
+                      <AttachmentList attachments={message.attachments} emptyText="No attachments on this message." />
+                    </div>
                   </div>
                 );
               })}
@@ -102,6 +113,15 @@ export default function TicketsShow({ ticket, activity, can, domainReferences, m
                   <Textarea placeholder={composerTab === 'internal_note' ? 'Add an internal note for staff...' : 'Write a reply visible to the client...'} value={form.data.body} onChange={(event) => form.setData('body', event.target.value)} />
                   {form.errors.body && <p className="mt-2 text-sm text-destructive">{form.errors.body}</p>}
                   {form.errors.message_type && <p className="mt-2 text-sm text-destructive">{form.errors.message_type}</p>}
+                  <div className="mt-3">
+                    <FileUploadField
+                      id="message-attachments"
+                      label="Attach files"
+                      helperText="Up to 5 files, max 5MB each."
+                      error={form.errors.attachments || form.errors['attachments.0']}
+                      onChange={(event) => form.setData('attachments', Array.from(event.target.files || []))}
+                    />
+                  </div>
                   <div className="mt-3 flex items-center justify-between">
                     <p className="text-xs text-muted-foreground">{composerTab === 'internal_note' ? 'Internal notes are visible to staff only.' : 'Public replies are visible to client users.'}</p>
                     <Button size="sm" onClick={submitMessage} disabled={form.processing}>Post message</Button>

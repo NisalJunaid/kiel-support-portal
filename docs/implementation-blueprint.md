@@ -68,6 +68,7 @@
   - Activity logging for create/update/archive ticket lifecycle events.
   - UI pages: `Tickets/Index`, `Tickets/Create`, `Tickets/Edit`, `Tickets/Show` using shadcn cards/forms/tables/badges.
   - Ticket conversation module: `ticket_messages` persistence with enum-backed `message_type` (`public_reply`, `internal_note`, `system_event`), staff/internal visibility controls, composer UX in `Tickets/Show`, and automatic system-event generation for key lifecycle changes.
+  - Ticket attachments module: secure private-file storage on local disk with `ticket_attachments` metadata, upload flows on ticket create and message composer, server-side file validation (type/size/count), and authenticated download route bound to ticket authorization.
   - Client workspace integration: client tickets tab and create-in-context ticket action.
   - Asset workspace integration: linked ticket tab plus quick actions to create/view tickets in context.
 
@@ -93,6 +94,7 @@
 - `Resource /services` -> `ServiceController` (`services.*`) [auth + policy]
 - `Resource /tickets` -> `TicketController` (`tickets.*`) [auth + policy]
 - `POST /tickets/{ticket}/messages` -> `TicketMessageController@store` (`tickets.messages.store`) [auth + policy]
+- `GET /tickets/{ticket}/attachments/{attachment}` -> `TicketAttachmentController@show` (`tickets.attachments.show`) [auth + policy]
 - `GET /{module}` for `reports|settings` -> `PlaceholderController` (`module.show`) [auth]
 
 ## Model Inventory
@@ -105,6 +107,7 @@
 - `App\Models\Service` (soft deletes, belongs to client, many-to-many assets)
 - `App\Models\Ticket` (soft deletes, belongs to client/requester/asset/assignee with status/priority enums, has many conversation messages)
 - `App\Models\TicketMessage` (belongs to ticket and optional author user, enum-backed message type for public/internal/system semantics)
+- `App\Models\TicketAttachment` (belongs to ticket, optional ticket message context, uploader, and private file metadata)
 - Spatie permission models:
   - `Spatie\Permission\Models\Role`
   - `Spatie\Permission\Models\Permission`
@@ -178,9 +181,9 @@
 - `Services/Edit.jsx`
 - `Services/Show.jsx`
 - `Tickets/Index.jsx`
-- `Tickets/Create.jsx`
+- `Tickets/Create.jsx` (includes initial attachment upload section)
 - `Tickets/Edit.jsx`
-- `Tickets/Show.jsx` (chronological conversation thread + public reply/internal note composer with validation feedback)
+- `Tickets/Show.jsx` (chronological conversation thread + public reply/internal note composer with validation feedback + attachment upload/list/download UX)
 - `Placeholder/Index.jsx`
 - Shared shell/components:
   - `app-sidebar`
