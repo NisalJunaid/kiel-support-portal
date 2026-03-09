@@ -10,7 +10,7 @@ import { EmptyState } from '@/Components/shared/empty-state';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { useState } from 'react';
 
-export default function ClientsShow({ client, contacts, client_users, activity, stats, can, domainReferences }) {
+export default function ClientsShow({ client, contacts, client_users, assets, activity, stats, can, domainReferences }) {
   const [tab, setTab] = useState('overview');
 
   return (
@@ -24,7 +24,7 @@ export default function ClientsShow({ client, contacts, client_users, activity, 
         <div className="flex flex-wrap gap-2">
           {can.create_contact && <Button asChild size="sm"><Link href={`/contacts/create?client=${client.id}`}>Add contact</Link></Button>}
           {can.create_client_user && <Button asChild size="sm"><Link href={`/client-users/create?client=${client.id}`}>Add user</Link></Button>}
-          {can.manage_assets && <Button asChild size="sm" variant="secondary"><Link href="/assets">Add asset</Link></Button>}
+          {can.create_asset && <Button asChild size="sm" variant="secondary"><Link href={`/assets/create?client=${client.id}`}>Add asset</Link></Button>}
           {can.create_ticket && <Button asChild size="sm" variant="secondary"><Link href="/tickets">Create ticket</Link></Button>}
           {can.update && <Button asChild variant="outline" size="sm"><Link href={`/clients/${client.id}/edit`}>Edit</Link></Button>}
           {can.delete && <Button size="sm" variant="outline" onClick={() => { if (confirm('Archive this client company?')) router.delete(`/clients/${client.id}`); }}>Archive</Button>}
@@ -117,7 +117,20 @@ export default function ClientsShow({ client, contacts, client_users, activity, 
         </TabsContent>
 
         <TabsContent active={tab === 'assets'}>
-          <EmptyState title="Assets workspace ready" description="Asset module is scaffolded. Use Add asset to open the assets area while client-specific asset lists are being implemented." />
+          <Card>
+            <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+              <div><CardTitle>Assets</CardTitle><p className="text-sm text-muted-foreground">Infrastructure and service assets tied to this client.</p></div>
+              {can.create_asset && <Button asChild size="sm"><Link href={`/assets/create?client=${client.id}`}>Add asset</Link></Button>}
+            </CardHeader>
+            <CardContent>
+              {assets.length === 0 ? <EmptyState title="No assets yet" description="Create an asset to track lifecycle, risk, and ownership for this client." /> : (
+                <Table>
+                  <TableHeader><TableRow><TableHead>Asset</TableHead><TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>Criticality</TableHead><TableHead>Renewal</TableHead></TableRow></TableHeader>
+                  <TableBody>{assets.map((asset) => <TableRow key={asset.id}><TableCell><Link className="font-medium hover:underline" href={`/assets/${asset.id}`}>{asset.name}</Link><p className="text-xs text-muted-foreground">{asset.asset_code}</p></TableCell><TableCell>{asset.type?.name || '—'}</TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="assetStatus" value={asset.status} /></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="assetCriticality" value={asset.criticality} /></TableCell><TableCell>{asset.renewal_date || '—'}</TableCell></TableRow>)}</TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent active={tab === 'tickets'}>

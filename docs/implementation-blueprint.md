@@ -6,8 +6,9 @@
 - UI foundation follows shadcn/ui conventions with reusable primitives in `resources/js/Components/ui` and shared app components in `resources/js/Components/shared`.
 - Authentication uses Laravel session auth with Inertia login page (`/login`) and protected internal routes.
 - Authorization uses Spatie `laravel-permission` + Laravel policies.
-- Audit trail support is implemented via Spatie `laravel-activitylog` for client company and client contact mutations.
+- Audit trail support is implemented via Spatie `laravel-activitylog` for client company, contact, and asset mutations.
 - Client user identities are stored in `users` and extended through `client_user_profiles` for client-company scoped access flags.
+- Asset modeling uses `asset_types` + `assets` with a constrained enum surface (status/criticality) and a simple JSON `meta` payload for type-specific fields.
 
 ## Implemented Modules
 - Authentication flow baseline (login/logout + session regeneration).
@@ -37,19 +38,21 @@
   - Automatic base role assignment to `client-user` on create/update.
   - UI pages: `ClientUsers/Index`, `ClientUsers/Create`, `ClientUsers/Edit`, `ClientUsers/Show`.
   - Client detail integration: users tab on `Clients/Show`.
-- **Client Account Workspace (enhanced `Clients/Show`):**
-  - Client detail is now a tabbed account workspace with sections for Overview, Contacts, Users, Assets, Tickets, Services, and Activity.
-  - Contextual actions are surfaced in-page: add contact, add user, add asset (module entry), create ticket (module entry), and edit/archive controls based on authorization.
-  - Contacts and users render with shadcn cards, tables, badges, and empty states.
-  - Workspace-level activity feed is loaded from Spatie activity log entries for the client account.
-  - Summary cards surface key account metrics (contact/user totals and access capability counts).
+- **Assets module (full CRUD + client integration):**
+  - New `asset_types` and soft-deletable `assets` tables, plus `asset_ticket_links` bridge table for ticket-link readiness.
+  - `AssetType` and `Asset` models with client, type, parent/child, and assigned staff relationships.
+  - Store/update form requests with enum-backed validation and simple meta field validation (`ip_address`, `hostname`, `plan`, `region`).
+  - Asset policy + route/controller authorization checks backed by `assets.*` permissions.
+  - Activity logging for create/update/archive events on assets.
+  - Asset UI pages: `Assets/Index`, `Assets/Create`, `Assets/Edit`, `Assets/Show` using shadcn cards/forms/tables/tabs/badges.
+  - Client workspace integration: assets are listed inside `Clients/Show` (assets tab + stats card + add-asset entry action).
 
 ## Pending Modules
 - Password reset and profile management flows.
-- Full CRUD features for assets, tickets, services, reports, and settings (workspace tabs currently scaffolded with module-entry empty states).
+- Full CRUD features for tickets, services, reports, and settings.
 - Pagination controls component polish for larger datasets.
 - Granular permission matrix expansion for non-client modules.
-- Client-facing authorization enforcement that consumes profile flags in ticket/asset/contact modules.
+- Ticket module implementation to consume `asset_ticket_links` and surface true ticket-to-asset linking UI/workflows.
 
 ## Route Inventory
 - `GET /` -> auth-aware redirect to `/login` or `/dashboard`
@@ -63,13 +66,16 @@
 - `PATCH /contacts/{contact}/toggle-active` -> `ClientContactController@toggleActive` (`contacts.toggle-active`) [auth + policy]
 - `Resource /contacts` -> `ClientContactController` (`contacts.*`) [auth + policy]
 - `Resource /client-users` -> `ClientUserController` (`client-users.*`) [auth + policy]
-- `GET /{module}` for `assets|tickets|services|reports|settings` -> `PlaceholderController` (`module.show`) [auth]
+- `Resource /assets` -> `AssetController` (`assets.*`) [auth + policy]
+- `GET /{module}` for `tickets|services|reports|settings` -> `PlaceholderController` (`module.show`) [auth]
 
 ## Model Inventory
 - `App\Models\User`
-- `App\Models\ClientCompany` (soft deletes, account manager relation, contacts relation, client users relation)
+- `App\Models\ClientCompany` (soft deletes, account manager relation, contacts relation, client users relation, assets relation)
 - `App\Models\ClientContact` (soft deletes, belongs to client company, optional reverse link for client user profiles)
 - `App\Models\ClientUserProfile` (belongs to user/client company/optional contact)
+- `App\Models\AssetType` (asset categorization + optional meta)
+- `App\Models\Asset` (soft deletes, belongs to client/type/parent/staff, has child assets)
 - Spatie permission models:
   - `Spatie\Permission\Models\Role`
   - `Spatie\Permission\Models\Permission`
@@ -97,8 +103,13 @@
   - `client-users.create`
   - `client-users.update`
   - `client-users.delete`
+- Seeded asset permissions:
+  - `assets.view`
+  - `assets.create`
+  - `assets.update`
+  - `assets.delete`
 - Permission assignment baseline:
-  - `super-admin|admin|staff`: full client/contact/client-user CRUD permissions
+  - `super-admin|admin|staff`: full client/contact/client-user/asset CRUD permissions
   - `support-agent`: `clients.view`
 - Gate override: `super-admin` bypass in `AuthServiceProvider`.
 
@@ -110,7 +121,7 @@
 - `Clients/Index.jsx`
 - `Clients/Create.jsx`
 - `Clients/Edit.jsx`
-- `Clients/Show.jsx` (account workspace tabs + contextual account actions + activity feed)
+- `Clients/Show.jsx` (account workspace tabs + contextual account actions + activity feed + assets tab integration)
 - `Contacts/Index.jsx`
 - `Contacts/Create.jsx`
 - `Contacts/Edit.jsx`
@@ -119,6 +130,10 @@
 - `ClientUsers/Create.jsx`
 - `ClientUsers/Edit.jsx`
 - `ClientUsers/Show.jsx`
+- `Assets/Index.jsx`
+- `Assets/Create.jsx`
+- `Assets/Edit.jsx`
+- `Assets/Show.jsx`
 - `Placeholder/Index.jsx`
 - Shared shell/components:
   - `app-sidebar`
