@@ -311,3 +311,17 @@
 - Added critical authorization tests covering:
   - client-user denial of staff-only routes (`/dashboard`, `/clients`, `/notifications`)
   - client contact portal access requiring `can_manage_contacts` flag.
+
+## Automated Test Coverage Notes (Latest Pass)
+- Added `tests/Feature/SupportPortalCriticalFlowsTest.php` as a practical business-flow safety net for:
+  - auth gate coverage for internal workspace access
+  - client company CRUD permission enforcement (`clients.create/update/delete`)
+  - contact CRUD permission enforcement (`contacts.create/update/delete`)
+  - client-user creation restrictions (permission checks + same-company contact validation)
+  - asset CRUD permission enforcement (`assets.create/update/delete`)
+  - ticket creation + company-scoped visibility in the client portal
+  - internal note visibility restrictions (client portal only surfaces public replies)
+  - client-scoped asset/contact/ticket data access restrictions in portal routes
+- Added supporting factories to keep feature tests maintainable and expressive:
+  - `ClientContactFactory`, `ClientUserProfileFactory`, `AssetTypeFactory`, `AssetFactory`, `TicketFactory`, `TicketMessageFactory`.
+- Test helpers now standardize Inertia request headers and baseline role bootstrap in the new critical-flow test class to reduce per-test setup noise.
