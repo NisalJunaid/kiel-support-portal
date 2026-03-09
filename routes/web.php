@@ -72,7 +72,7 @@ Route::middleware('auth')->group(function () {
 
         Route::resource('assets', AssetController::class);
         Route::resource('services', ServiceController::class);
-        Route::resource('sla-plans', SlaPlanController::class)->parameters(['sla-plans' => 'sla_plan'])->except(['show']);
+        Route::resource('sla-plans', SlaPlanController::class)->parameters(['sla-plans' => 'sla_plan']);
         Route::resource('tickets', TicketController::class);
         Route::get('/activity', [ActivityController::class, 'index'])
             ->middleware('role:super-admin|admin|staff')

@@ -3,12 +3,14 @@ import { Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
+import { Badge } from '@/Components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { DropdownMenuItem } from '@/Components/ui/dropdown-menu';
 import { EmptyState } from '@/Components/shared/empty-state';
 import { FilterBar } from '@/Components/shared/filter-bar';
 import { RowActionsDropdown } from '@/Components/shared/row-actions-dropdown';
 import { SectionCard } from '@/Components/shared/section-card';
+import { ListPagination } from '@/Components/shared/list-pagination';
 
 export default function SlaPlansIndex({ slaPlans, filters, can }) {
   const [search, setSearch] = useState(filters.search || '');
@@ -35,24 +37,35 @@ export default function SlaPlansIndex({ slaPlans, filters, can }) {
         </FilterBar>
 
         {slaPlans.data.length === 0 ? <EmptyState title="No SLA plans" description="Create your first SLA plan to start auto-populating deadlines." /> : (
-          <Table>
-            <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Response</TableHead><TableHead>Resolution</TableHead><TableHead /></TableRow></TableHeader>
-            <TableBody>
-              {slaPlans.data.map((plan) => (
-                <TableRow key={plan.id}>
-                  <TableCell>{plan.name}</TableCell>
-                  <TableCell>{plan.response_minutes} min</TableCell>
-                  <TableCell>{plan.resolution_minutes} min</TableCell>
-                  <TableCell className="text-right">
-                    <RowActionsDropdown>
-                      {can.update && <DropdownMenuItem onSelect={() => router.visit(`/sla-plans/${plan.id}/edit`)}>Edit</DropdownMenuItem>}
-                      {can.delete && <DropdownMenuItem onSelect={() => { if (confirm('Archive this SLA plan?')) router.delete(`/sla-plans/${plan.id}`); }}>Archive</DropdownMenuItem>}
-                    </RowActionsDropdown>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <>
+            <Table>
+              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Response</TableHead><TableHead>Resolution</TableHead><TableHead>Usage</TableHead><TableHead /></TableRow></TableHeader>
+              <TableBody>
+                {slaPlans.data.map((plan) => (
+                  <TableRow key={plan.id}>
+                    <TableCell><Link className="font-medium text-primary hover:underline" href={`/sla-plans/${plan.id}`}>{plan.name}</Link></TableCell>
+                    <TableCell>{plan.response_minutes} min</TableCell>
+                    <TableCell>{plan.resolution_minutes} min</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        <Badge variant="outline">{plan.clients_count} clients</Badge>
+                        <Badge variant="outline">{plan.services_count} services</Badge>
+                        <Badge variant="outline">{plan.tickets_count} tickets</Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <RowActionsDropdown>
+                        <DropdownMenuItem asChild><Link href={`/sla-plans/${plan.id}`}>View</Link></DropdownMenuItem>
+                        {can.update && <DropdownMenuItem asChild><Link href={`/sla-plans/${plan.id}/edit`}>Edit</Link></DropdownMenuItem>}
+                        {can.delete && <DropdownMenuItem onSelect={() => { if (confirm('Archive this SLA plan?')) router.delete(`/sla-plans/${plan.id}`); }}>Archive</DropdownMenuItem>}
+                      </RowActionsDropdown>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <ListPagination paginated={slaPlans} className="mt-4" />
+          </>
         )}
       </SectionCard>
     </AppLayout>

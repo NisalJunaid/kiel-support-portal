@@ -19,6 +19,7 @@ class SlaPlanController extends Controller
         $search = trim((string) $request->string('search'));
 
         $plans = SlaPlan::query()
+            ->withCount(['clients', 'services', 'tickets'])
             ->when($search, fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->latest()
             ->paginate(15)
@@ -46,7 +47,55 @@ class SlaPlanController extends Controller
     {
         $plan = SlaPlan::create($request->validated());
 
-        return redirect()->route('sla-plans.index')->with('success', "SLA plan {$plan->name} created.");
+        return redirect()->route('sla-plans.show', $plan)->with('success', "SLA plan {$plan->name} created.");
+    }
+
+    public function show(SlaPlan $slaPlan): Response
+    {
+        $this->authorize('view', $slaPlan);
+
+        $slaPlan->loadCount(['clients', 'services', 'tickets']);
+
+        $recentClients = $slaPlan->clients()
+            ->orderBy('name')
+            ->limit(5)
+            ->get(['id', 'name', 'status']);
+
+        $recentServices = $slaPlan->services()
+            ->orderBy('name')
+            ->limit(5)
+            ->get(['id', 'name', 'status']);
+
+        $recentTickets = $slaPlan->tickets()
+            ->with(['clientCompany:id,name'])
+            ->latest('updated_at')
+            ->limit(5)
+            ->get(['id', 'ticket_number', 'subject', 'status', 'priority', 'client_company_id', 'updated_at']);
+
+        return Inertia::render('SlaPlans/Show', [
+            'slaPlan' => [
+                'id' => $slaPlan->id,
+                'name' => $slaPlan->name,
+                'response_minutes' => $slaPlan->response_minutes,
+                'resolution_minutes' => $slaPlan->resolution_minutes,
+                'business_hours' => $slaPlan->business_hours,
+                'escalation_rules' => $slaPlan->escalation_rules,
+                'clients_count' => $slaPlan->clients_count,
+                'services_count' => $slaPlan->services_count,
+                'tickets_count' => $slaPlan->tickets_count,
+                'created_at' => optional($slaPlan->created_at)->toDateTimeString(),
+                'updated_at' => optional($slaPlan->updated_at)->toDateTimeString(),
+            ],
+            'usage' => [
+                'clients' => $recentClients,
+                'services' => $recentServices,
+                'tickets' => $recentTickets,
+            ],
+            'can' => [
+                'update' => request()->user()->can('update', $slaPlan),
+                'delete' => request()->user()->can('delete', $slaPlan),
+            ],
+        ]);
     }
 
     public function edit(SlaPlan $slaPlan): Response
@@ -62,7 +111,7 @@ class SlaPlanController extends Controller
     {
         $slaPlan->update($request->validated());
 
-        return redirect()->route('sla-plans.index')->with('success', 'SLA plan updated.');
+        return redirect()->route('sla-plans.show', $slaPlan)->with('success', 'SLA plan updated.');
     }
 
     public function destroy(Request $request, SlaPlan $slaPlan): RedirectResponse
