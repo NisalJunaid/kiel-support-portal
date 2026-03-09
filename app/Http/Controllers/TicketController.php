@@ -13,6 +13,7 @@ use App\Models\ClientUserProfile;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
 use App\Models\User;
+use App\Services\Tickets\TicketAttachmentService;
 use App\Services\Tickets\TicketMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -85,7 +86,7 @@ class TicketController extends Controller
         ]);
     }
 
-    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber, TicketMessageService $ticketMessageService): RedirectResponse
+    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber, TicketMessageService $ticketMessageService, TicketAttachmentService $ticketAttachmentService): RedirectResponse
     {
         $data = $request->validated();
         $data['ticket_number'] = $generateTicketNumber->execute();
@@ -112,6 +113,8 @@ class TicketController extends Controller
 
         $ticketMessageService->createSystemEvent($ticket, sprintf('Ticket %s was created with %s priority and %s status.', $ticket->ticket_number, $ticket->priority?->label() ?? 'unknown', $ticket->status?->label() ?? 'unknown'));
 
+        $ticketAttachmentService->storeForTicket($ticket, $request->user(), $request->file('attachments', []));
+
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket created successfully.');
     }
 
@@ -126,6 +129,8 @@ class TicketController extends Controller
             'requesterContact:id,full_name,email',
             'assignedUser:id,name,email',
             'messages.author:id,name,email',
+            'attachments.uploader:id,name',
+            'messages.attachments.uploader:id,name',
         ]);
 
         $isClientScopedUser = $request->user()?->hasRole('client-user') ?? false;
@@ -158,6 +163,15 @@ class TicketController extends Controller
                 'closed_at' => optional($ticket->closed_at)?->toDateTimeString(),
                 'updated_at' => optional($ticket->updated_at)?->toDateTimeString(),
             ],
+            'attachments' => $ticket->attachments->map(fn ($attachment) => [
+                'id' => $attachment->id,
+                'name' => $attachment->original_name,
+                'mime_type' => $attachment->mime_type,
+                'size_bytes' => $attachment->size_bytes,
+                'uploaded_by' => $attachment->uploader?->name,
+                'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
+                'created_at' => optional($attachment->created_at)?->toDateTimeString(),
+            ])->values(),
             'activity' => $activity->map(fn (Activity $item) => [
                 'id' => $item->id,
                 'event' => $item->event,
@@ -174,6 +188,14 @@ class TicketController extends Controller
                 'author' => $message->author,
                 'is_system' => $message->message_type === TicketMessageType::SystemEvent,
                 'created_at' => optional($message->created_at)?->toDateTimeString(),
+                'attachments' => $message->attachments->map(fn ($attachment) => [
+                    'id' => $attachment->id,
+                    'name' => $attachment->original_name,
+                    'mime_type' => $attachment->mime_type,
+                    'size_bytes' => $attachment->size_bytes,
+                    'uploaded_by' => $attachment->uploader?->name,
+                    'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
+                ])->values(),
             ])->values(),
             'can' => [
                 'update' => $request->user()->can('update', $ticket),

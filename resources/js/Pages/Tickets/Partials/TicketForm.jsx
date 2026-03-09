@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
+import FileUploadField from '@/Components/shared/file-upload-field';
 import { getDomainOptions } from '@/lib/domain-references';
 
 export default function TicketForm({ data, setData, errors, processing, onSubmit, submitLabel, formData, domainReferences }) {
@@ -48,6 +49,19 @@ export default function TicketForm({ data, setData, errors, processing, onSubmit
           <div className="space-y-2"><Label>Resolution due</Label><Input type="datetime-local" value={data.resolution_due_at} onChange={(e) => setData('resolution_due_at', e.target.value)} /><p className="text-xs text-destructive">{errors.resolution_due_at}</p></div>
           <div className="space-y-2"><Label>Resolved at</Label><Input type="datetime-local" value={data.resolved_at} onChange={(e) => setData('resolved_at', e.target.value)} /><p className="text-xs text-destructive">{errors.resolved_at}</p></div>
           <div className="space-y-2"><Label>Closed at</Label><Input type="datetime-local" value={data.closed_at} onChange={(e) => setData('closed_at', e.target.value)} /><p className="text-xs text-destructive">{errors.closed_at}</p></div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Attachments</CardTitle></CardHeader>
+        <CardContent>
+          <FileUploadField
+            id="ticket-attachments"
+            label="Attach files"
+            helperText="Up to 5 files (PDF, images, Office docs, CSV/TXT), max 5MB each."
+            error={errors.attachments || errors['attachments.0']}
+            onChange={(event) => setData('attachments', Array.from(event.target.files || []))}
+          />
         </CardContent>
       </Card>
 

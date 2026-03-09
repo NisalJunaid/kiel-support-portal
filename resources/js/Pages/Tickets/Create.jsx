@@ -22,7 +22,8 @@ export default function TicketsCreate({ formData, defaults, domainReferences }) 
     resolution_due_at: '',
     resolved_at: '',
     closed_at: '',
+    attachments: [],
   });
 
-  return <AppLayout title="Create Ticket" description="Open a new support ticket."><TicketForm data={data} setData={setData} errors={errors} processing={processing} onSubmit={(e) => { e.preventDefault(); post('/tickets'); }} submitLabel="Create ticket" formData={formData} domainReferences={domainReferences} /></AppLayout>;
+  return <AppLayout title="Create Ticket" description="Open a new support ticket."><TicketForm data={data} setData={setData} errors={errors} processing={processing} onSubmit={(e) => { e.preventDefault(); post('/tickets', { forceFormData: true }); }} submitLabel="Create ticket" formData={formData} domainReferences={domainReferences} /></AppLayout>;
 }
