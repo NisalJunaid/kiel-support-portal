@@ -13,6 +13,7 @@
 ## Implemented Modules
 - Authentication flow baseline (login/logout + session regeneration).
 - Roles & permissions foundation with seeded roles and baseline module permissions.
+- Support bootstrap user seeding includes idempotent defaults for `admin@mail.com` (role `admin`) and `client@mail.com` (role `client-user`), with automatic role creation when permission tables are available.
 - Dashboard page (`/dashboard`) with summary cards and queue shell.
 - Administration readiness + system reference pages.
 - **Client Companies module (full CRUD):**
