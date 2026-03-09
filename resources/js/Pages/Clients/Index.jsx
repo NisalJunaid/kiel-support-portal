@@ -50,8 +50,8 @@ export default function ClientsIndex({ clients, filters, can, domainReferences }
                         <DropdownMenuTrigger asChild><Button size="sm" variant="outline">Actions</Button></DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onSelect={() => router.visit(`/clients/${client.id}`)}>View</DropdownMenuItem>
-                          {can.update && <DropdownMenuItem onSelect={() => router.visit(`/clients/${client.id}/edit`)}>Edit</DropdownMenuItem>}
-                          {can.delete && <DropdownMenuItem onSelect={() => { if (confirm('Archive this client company?')) router.delete(`/clients/${client.id}`); }}>Archive</DropdownMenuItem>}
+                          {client.can?.update && <DropdownMenuItem onSelect={() => router.visit(`/clients/${client.id}/edit`)}>Edit</DropdownMenuItem>}
+                          {client.can?.delete && <DropdownMenuItem onSelect={() => { if (confirm('Archive this client company?')) router.delete(`/clients/${client.id}`); }}>Archive</DropdownMenuItem>}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
