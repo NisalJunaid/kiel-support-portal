@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\BrandingSettings;
 use App\Support\DomainReferenceCatalog;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -47,9 +48,10 @@ class HandleInertiaRequests extends Middleware
                 'canViewAssets' => $user ? $user->can('viewAny', \App\Models\Asset::class) : false,
                 'canViewContacts' => $user ? $user->can('viewAny', \App\Models\ClientContact::class) : false,
                 'canViewNotifications' => $user ? (! $user->isClientUser()) : false,
-                'canViewSettings' => $user ? $user->hasAnyRole(['super-admin', 'admin']) : false,
+                'canViewSettings' => $user ? $user->hasRole('super-admin') : false,
                 'isStaffWorkspace' => $user ? (! $user->isClientUser()) : false,
             ],
+            'branding' => BrandingSettings::get(),
             'domainReferences' => DomainReferenceCatalog::all(),
             'notifications' => $user ? [
                 'unread_count' => $user->unreadNotifications()->count(),

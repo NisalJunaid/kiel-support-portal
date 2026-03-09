@@ -14,23 +14,21 @@ const nav = [
   { label: 'Activity', href: '/activity', icon: History, requires: 'canViewActivity' },
   { label: 'Notifications', href: '/notifications', icon: Bell, requires: 'canViewNotifications' },
   { label: 'Reports', href: '/reports', icon: BarChart3, requires: 'canViewReports' },
-  { label: 'Settings', href: '/settings', icon: Settings, requires: 'canViewSettings' },
+  { label: 'Settings', href: '/settings/branding', icon: Settings, requires: 'canViewSettings' },
   { label: 'Administration', href: '/administration', icon: Shield, requires: 'canViewAdminReadiness' },
   { label: 'System Reference', href: '/administration/system-reference', icon: Shield, requires: 'canViewSystemReference' },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ collapsed = false, onNavigate }) {
   const { url, props } = usePage();
 
-  if (!props.auth?.user || !props.authorization?.isStaffWorkspace) {
-    return null;
-  }
+  if (!props.auth?.user || !props.authorization?.isStaffWorkspace) return null;
 
   return (
-    <aside className="w-64 border-r bg-white p-4">
-      <div className="mb-6 px-2">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">Kiel</p>
-        <p className="text-lg font-semibold">Support Portal</p>
+    <aside className={cn('h-full border-r bg-white p-3 transition-all', collapsed ? 'w-[78px]' : 'w-64')}>
+      <div className={cn('mb-6 flex items-center gap-2 rounded-md border bg-muted/40 p-2', collapsed && 'justify-center')}>
+        {props.branding?.logo_url ? <img src={props.branding.logo_url} alt="Brand logo" className="h-8 w-8 rounded object-cover" /> : <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">K</div>}
+        {!collapsed && <div><p className="text-[11px] uppercase tracking-widest text-muted-foreground">Kiel</p><p className="text-sm font-semibold leading-tight">{props.branding?.app_name || 'Support Portal'}</p></div>}
       </div>
       <nav className="space-y-1">
         {nav.filter((item) => !item.requires || props.authorization?.[item.requires]).map((item) => {
@@ -38,9 +36,9 @@ export function AppSidebar() {
           const active = url.startsWith(item.href);
 
           return (
-            <Link key={item.href} href={item.href} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm', active ? 'bg-primary text-white' : 'hover:bg-accent')}>
+            <Link key={item.href} href={item.href} onClick={onNavigate} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors', active ? 'bg-primary text-white' : 'hover:bg-accent', collapsed && 'justify-center px-2')} title={collapsed ? item.label : undefined}>
               <Icon className="h-4 w-4" />
-              {item.label}
+              {!collapsed && item.label}
             </Link>
           );
         })}

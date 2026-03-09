@@ -14,9 +14,9 @@ use App\Http\Controllers\ClientPortal\TicketController as ClientPortalTicketCont
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
-use App\Http\Controllers\PlaceholderController;
 use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\Settings\BrandingSettingsController;
 use App\Http\Controllers\SlaPlanController;
 use App\Http\Controllers\TicketAttachmentController;
 use App\Http\Controllers\TicketController;
@@ -94,9 +94,13 @@ Route::middleware('auth')->group(function () {
             ->middleware('role:super-admin|admin|staff')
             ->name('reports.index');
 
-        Route::get('/{module}', PlaceholderController::class)
-            ->whereIn('module', ['settings'])
-            ->name('module.show');
+        Route::get('/settings/branding', [BrandingSettingsController::class, 'edit'])
+            ->middleware('role:super-admin')
+            ->name('settings.branding.edit');
+        Route::patch('/settings/branding', [BrandingSettingsController::class, 'update'])
+            ->middleware('role:super-admin')
+            ->name('settings.branding.update');
+
     });
 
     Route::middleware('role:client-user')->prefix('portal')->name('portal.')->group(function () {

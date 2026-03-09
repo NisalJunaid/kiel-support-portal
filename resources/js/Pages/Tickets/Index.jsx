@@ -1,9 +1,9 @@
 import AppLayout from '@/Layouts/app-layout';
 import { Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import { Table, TableBody, TableCell, TableHead, TableHeader } from '@/Components/ui/table';
 import { DropdownMenuItem } from '@/Components/ui/dropdown-menu';
 import { EmptyState } from '@/Components/shared/empty-state';
 import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
@@ -15,6 +15,8 @@ import { ListPagination } from '@/Components/shared/list-pagination';
 import { FilterBar } from '@/Components/shared/filter-bar';
 import { RowActionsDropdown } from '@/Components/shared/row-actions-dropdown';
 import { SectionCard } from '@/Components/shared/section-card';
+import { ClickableTableRow } from '@/Components/shared/clickable-table-row';
+import { EntityDrawer } from '@/Components/shared/entity-drawer';
 
 export default function TicketsIndex({ tickets, filters, can, domainReferences, staff, clients }) {
   const [search, setSearch] = useState(filters.search || '');
@@ -22,66 +24,45 @@ export default function TicketsIndex({ tickets, filters, can, domainReferences, 
   const [priority, setPriority] = useState(filters.priority || 'all');
   const [assignedUserId, setAssignedUserId] = useState(filters.assigned_user_id ? String(filters.assigned_user_id) : 'all');
   const [clientCompanyId, setClientCompanyId] = useState(filters.client_company_id ? String(filters.client_company_id) : 'all');
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const selectedTicket = useMemo(() => tickets.data.find((ticket) => ticket.id === selectedTicketId), [tickets.data, selectedTicketId]);
   const statusOptions = getDomainOptions(domainReferences, 'ticketStatus');
   const priorityOptions = getDomainOptions(domainReferences, 'ticketPriority');
 
-  const slaBadgeClass = (state) => ({ breached: 'bg-red-100 text-red-700', at_risk: 'bg-amber-100 text-amber-700', healthy: 'bg-emerald-100 text-emerald-700', none: 'bg-muted text-muted-foreground' }[state] || 'bg-muted text-muted-foreground');
-
   const updateTicket = (ticketId, endpoint, payload = {}) => {
-    router.patch(`/tickets/${ticketId}/workflow/${endpoint}`, payload, { preserveScroll: true });
+    router.patch(`/tickets/${ticketId}/workflow/${endpoint}`, payload, { preserveScroll: true, preserveState: true });
   };
 
   return (
-    <AppLayout title="Tickets" description="Track support cases, assignment, and SLA health." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Tickets' }]}> 
-      <SectionCard
-        title="Tickets"
-        description="Case queue with SLA and workflow controls."
-        action={can.create && <Button asChild size="sm"><Link href="/tickets/create">Create ticket</Link></Button>}
-      >
-        <FilterBar
-          onSubmit={(e) => {
-            e.preventDefault();
-            router.get('/tickets', {
-              search: search || undefined,
-              status: status === 'all' ? undefined : status,
-              priority: priority === 'all' ? undefined : priority,
-              assigned_user_id: assignedUserId === 'all' ? undefined : assignedUserId,
-              client_company_id: clientCompanyId === 'all' ? undefined : clientCompanyId,
-            }, { preserveState: true, replace: true });
-          }}
-          onReset={() => {
-            setSearch('');
-            setStatus('all');
-            setPriority('all');
-            setAssignedUserId('all');
-            setClientCompanyId('all');
-            router.get('/tickets');
-          }}
-          submitLabel="Filter"
-        >
+    <AppLayout title="Tickets" description="Track support cases, assignment, and SLA health." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Tickets' }]}>
+      <SectionCard title="Tickets" description="Case queue with SLA and workflow controls." action={can.create && <Button asChild size="sm"><Link href="/tickets/create">Create ticket</Link></Button>}>
+        <FilterBar onSubmit={(e) => { e.preventDefault(); router.get('/tickets', { search: search || undefined, status: status === 'all' ? undefined : status, priority: priority === 'all' ? undefined : priority, assigned_user_id: assignedUserId === 'all' ? undefined : assignedUserId, client_company_id: clientCompanyId === 'all' ? undefined : clientCompanyId }, { preserveState: true, replace: true }); }} onReset={() => { setSearch(''); setStatus('all'); setPriority('all'); setAssignedUserId('all'); setClientCompanyId('all'); router.get('/tickets'); }} submitLabel="Filter">
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search ticket #, title, category" className="md:col-span-2" />
-          <Select value={status} onValueChange={setStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{statusOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
-          <Select value={priority} onValueChange={setPriority}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All priorities</SelectItem>{priorityOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
+          <Select value={status} onValueChange={setStatus}><SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{statusOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
+          <Select value={priority} onValueChange={setPriority}><SelectTrigger><SelectValue placeholder="Priority" /></SelectTrigger><SelectContent><SelectItem value="all">All priorities</SelectItem>{priorityOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
           <Select value={assignedUserId} onValueChange={setAssignedUserId}><SelectTrigger><SelectValue placeholder="Assignee" /></SelectTrigger><SelectContent><SelectItem value="all">All assignees</SelectItem>{staff.map((user) => <SelectItem key={user.id} value={String(user.id)}>{user.name}</SelectItem>)}</SelectContent></Select>
           <Select value={clientCompanyId} onValueChange={setClientCompanyId}><SelectTrigger><SelectValue placeholder="Client" /></SelectTrigger><SelectContent><SelectItem value="all">All clients</SelectItem>{clients.map((client) => <SelectItem key={client.id} value={String(client.id)}>{client.name}</SelectItem>)}</SelectContent></Select>
         </FilterBar>
 
-        {tickets.data.length === 0 ? <EmptyState title="No tickets found" description="Create your first support ticket or refine filters." /> : (
-          <>
-            <Table>
-              <TableHeader><TableRow><TableHead>Ticket</TableHead><TableHead>Title</TableHead><TableHead>Client</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead>SLA</TableHead><TableHead>Assignee</TableHead><TableHead>Updated</TableHead><TableHead /></TableRow></TableHeader>
-              <TableBody>{tickets.data.map((ticket) => <TableRow key={ticket.id}><TableCell><Link href={`/tickets/${ticket.id}`} className="font-medium hover:underline">{ticket.ticket_number}</Link></TableCell><TableCell>{ticket.title}</TableCell><TableCell>{ticket.client?.name || '—'}</TableCell><TableCell><DomainPriorityBadge domainReferences={domainReferences} value={ticket.priority} /></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></TableCell><TableCell><div className="flex flex-col gap-1"><Badge className={slaBadgeClass(ticket.sla_response_indicator?.state)} variant="outline">Response: {ticket.sla_response_indicator?.label || '—'}</Badge><Badge className={slaBadgeClass(ticket.sla_resolution_indicator?.state)} variant="outline">Resolution: {ticket.sla_resolution_indicator?.label || '—'}</Badge></div></TableCell><TableCell>{ticket.assignee?.name || 'Unassigned'}</TableCell><TableCell>{ticket.updated_at}</TableCell><TableCell className="text-right"><RowActionsDropdown><DropdownMenuItem onSelect={() => router.visit(`/tickets/${ticket.id}`)}>View</DropdownMenuItem>{can.update && <>
-                <DropdownMenuItem onSelect={() => updateTicket(ticket.id, 'assignment', { assigned_user_id: null })}>Unassign</DropdownMenuItem>
-                {staff.map((user) => <DropdownMenuItem key={user.id} onSelect={() => updateTicket(ticket.id, 'assignment', { assigned_user_id: user.id })}>Assign to {user.name}</DropdownMenuItem>)}
-                <DropdownMenuItem onSelect={() => router.post(`/tickets/${ticket.id}/workflow/resolve`)}>Resolve</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => router.post(`/tickets/${ticket.id}/workflow/close`)}>Close</DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => router.post(`/tickets/${ticket.id}/workflow/reopen`)}>Reopen</DropdownMenuItem>
-              </>}{can.update && <DropdownMenuItem onSelect={() => router.visit(`/tickets/${ticket.id}/edit`)}>Edit</DropdownMenuItem>}{can.delete && <DropdownMenuItem onSelect={() => { if (confirm('Archive this ticket?')) router.delete(`/tickets/${ticket.id}`); }}>Archive</DropdownMenuItem>}</RowActionsDropdown></TableCell></TableRow>)}</TableBody>
-            </Table>
-            <ListPagination paginated={tickets} />
-          </>
-        )}
+        {tickets.data.length === 0 ? <EmptyState title="No tickets found" description="Create your first support ticket or refine filters." /> : <><Table><TableHeader><tr><TableHead>Ticket</TableHead><TableHead>Title</TableHead><TableHead>Client</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead>Assignee</TableHead><TableHead>Updated</TableHead><TableHead /></tr></TableHeader><TableBody>{tickets.data.map((ticket) => <ClickableTableRow key={ticket.id} onOpen={() => setSelectedTicketId(ticket.id)}><TableCell className="font-medium">{ticket.ticket_number}</TableCell><TableCell>{ticket.title}</TableCell><TableCell>{ticket.client?.name || '—'}</TableCell><TableCell><DomainPriorityBadge domainReferences={domainReferences} value={ticket.priority} /></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></TableCell><TableCell>{ticket.assignee?.name || 'Unassigned'}</TableCell><TableCell>{ticket.updated_at}</TableCell><TableCell className="text-right" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}><RowActionsDropdown><DropdownMenuItem onSelect={() => router.visit(`/tickets/${ticket.id}`)}>Open full detail</DropdownMenuItem>{can.update && <DropdownMenuItem onSelect={() => router.visit(`/tickets/${ticket.id}/edit`)}>Edit</DropdownMenuItem>}</RowActionsDropdown></TableCell></ClickableTableRow>)}</TableBody></Table><ListPagination paginated={tickets} /></>}
       </SectionCard>
+
+      <EntityDrawer open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicketId(null)} title={selectedTicket?.ticket_number} description={selectedTicket?.title}>
+        {selectedTicket && <>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <p><span className="font-medium">Client:</span> {selectedTicket.client?.name || '—'}</p>
+            <p><span className="font-medium">Assignee:</span> {selectedTicket.assignee?.name || 'Unassigned'}</p>
+            <p><span className="font-medium">First response due:</span> {selectedTicket.first_response_due_at || '—'}</p>
+            <p><span className="font-medium">Resolution due:</span> {selectedTicket.resolution_due_at || '—'}</p>
+          </div>
+          <div className="space-y-2">
+            <Badge variant="outline">{selectedTicket.sla_response_indicator?.label || 'No response SLA'}</Badge>
+            <Badge variant="outline">{selectedTicket.sla_resolution_indicator?.label || 'No resolution SLA'}</Badge>
+          </div>
+          {can.update && <div className="grid gap-2 sm:grid-cols-2"><Select value={selectedTicket.status || ''} onValueChange={(value) => updateTicket(selectedTicket.id, 'status', { status: value })}><SelectTrigger><SelectValue placeholder="Change status" /></SelectTrigger><SelectContent>{statusOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select><Select value={selectedTicket.assignee?.id ? String(selectedTicket.assignee.id) : 'unassigned'} onValueChange={(value) => updateTicket(selectedTicket.id, 'assignment', { assigned_user_id: value === 'unassigned' ? null : Number(value) })}><SelectTrigger><SelectValue placeholder="Assign owner" /></SelectTrigger><SelectContent><SelectItem value="unassigned">Unassigned</SelectItem>{staff.map((user) => <SelectItem key={user.id} value={String(user.id)}>{user.name}</SelectItem>)}</SelectContent></Select></div>}
+          <Button asChild><Link href={`/tickets/${selectedTicket.id}`}>Go to ticket page</Link></Button>
+        </>}
+      </EntityDrawer>
     </AppLayout>
   );
 }
