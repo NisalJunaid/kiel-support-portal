@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Tickets\GenerateTicketNumber;
+use App\Enums\TicketMessageType;
 use App\Http\Requests\StoreTicketRequest;
 use App\Http\Requests\UpdateTicketRequest;
 use App\Models\Asset;
@@ -10,7 +11,9 @@ use App\Models\ClientCompany;
 use App\Models\ClientContact;
 use App\Models\ClientUserProfile;
 use App\Models\Ticket;
+use App\Models\TicketMessage;
 use App\Models\User;
+use App\Services\Tickets\TicketMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -82,7 +85,7 @@ class TicketController extends Controller
         ]);
     }
 
-    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber): RedirectResponse
+    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber, TicketMessageService $ticketMessageService): RedirectResponse
     {
         $data = $request->validated();
         $data['ticket_number'] = $generateTicketNumber->execute();
@@ -107,6 +110,8 @@ class TicketController extends Controller
             ])
             ->log('Ticket created');
 
+        $ticketMessageService->createSystemEvent($ticket, sprintf('Ticket %s was created with %s priority and %s status.', $ticket->ticket_number, $ticket->priority?->label() ?? 'unknown', $ticket->status?->label() ?? 'unknown'));
+
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket created successfully.');
     }
 
@@ -120,7 +125,15 @@ class TicketController extends Controller
             'requesterUser:id,name,email',
             'requesterContact:id,full_name,email',
             'assignedUser:id,name,email',
+            'messages.author:id,name,email',
         ]);
+
+        $isClientScopedUser = $request->user()?->hasRole('client-user') ?? false;
+
+        $messages = $ticket->messages
+            ->when($isClientScopedUser, fn ($collection) => $collection->filter(fn (TicketMessage $message) => $message->isVisibleToClient()))
+            ->sortBy('created_at')
+            ->values();
 
         $activity = Activity::query()
             ->where('subject_type', Ticket::class)
@@ -153,9 +166,20 @@ class TicketController extends Controller
                 'created_at' => optional($item->created_at)?->toDateTimeString(),
             ])->values(),
             'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id),
+            'messages' => $messages->map(fn (TicketMessage $message) => [
+                'id' => $message->id,
+                'message_type' => $message->message_type?->value,
+                'message_type_label' => $message->message_type?->label(),
+                'body' => $message->body,
+                'author' => $message->author,
+                'is_system' => $message->message_type === TicketMessageType::SystemEvent,
+                'created_at' => optional($message->created_at)?->toDateTimeString(),
+            ])->values(),
             'can' => [
                 'update' => $request->user()->can('update', $ticket),
                 'delete' => $request->user()->can('delete', $ticket),
+                'addPublicReply' => $request->user()->can('addPublicReply', $ticket),
+                'addInternalNote' => $request->user()->can('addInternalNote', $ticket),
             ],
         ]);
     }
@@ -178,8 +202,12 @@ class TicketController extends Controller
         ]);
     }
 
-    public function update(UpdateTicketRequest $request, Ticket $ticket): RedirectResponse
+    public function update(UpdateTicketRequest $request, Ticket $ticket, TicketMessageService $ticketMessageService): RedirectResponse
     {
+        $previousStatus = $ticket->status?->value;
+        $previousPriority = $ticket->priority?->value;
+        $previousAssignee = $ticket->assignedUser?->name;
+
         $ticket->update($request->validated());
 
         DB::table('asset_ticket_links')->where('ticket_id', $ticket->id)->delete();
@@ -201,10 +229,29 @@ class TicketController extends Controller
             ])
             ->log('Ticket updated');
 
+        $changes = [];
+
+        if ($previousStatus !== $ticket->status?->value) {
+            $changes[] = sprintf('Status changed from %s to %s', $previousStatus ?: 'unset', $ticket->status?->value ?: 'unset');
+        }
+
+        if ($previousPriority !== $ticket->priority?->value) {
+            $changes[] = sprintf('Priority changed from %s to %s', $previousPriority ?: 'unset', $ticket->priority?->value ?: 'unset');
+        }
+
+        $newAssignee = $ticket->assignedUser?->name;
+        if ($previousAssignee !== $newAssignee) {
+            $changes[] = sprintf('Assignee changed from %s to %s', $previousAssignee ?: 'unassigned', $newAssignee ?: 'unassigned');
+        }
+
+        if ($changes !== []) {
+            $ticketMessageService->createSystemEvent($ticket, implode('. ', $changes).'.');
+        }
+
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket updated successfully.');
     }
 
-    public function destroy(Request $request, Ticket $ticket): RedirectResponse
+    public function destroy(Request $request, Ticket $ticket, TicketMessageService $ticketMessageService): RedirectResponse
     {
         $this->authorize('delete', $ticket);
 
@@ -217,6 +264,8 @@ class TicketController extends Controller
             ->event('archived')
             ->withProperties(['ticket_number' => $ticket->ticket_number])
             ->log('Ticket archived');
+
+        $ticketMessageService->createSystemEvent($ticket, sprintf('Ticket %s was archived.', $ticket->ticket_number));
 
         return redirect()->route('tickets.index')->with('success', 'Ticket archived successfully.');
     }

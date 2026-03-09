@@ -1,15 +1,41 @@
 import AppLayout from '@/Layouts/app-layout';
-import { Link, router } from '@inertiajs/react';
+import { Link, router, useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { EmptyState } from '@/Components/shared/empty-state';
+import { Badge } from '@/Components/ui/badge';
+import { Textarea } from '@/Components/ui/textarea';
+import { Separator } from '@/Components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
+import { useState } from 'react';
 
-export default function TicketsShow({ ticket, activity, can, domainReferences }) {
+const typeStyles = {
+  public_reply: { label: 'Public reply', variant: 'info' },
+  internal_note: { label: 'Internal note', variant: 'warning' },
+  system_event: { label: 'System event', variant: 'secondary' },
+};
+
+export default function TicketsShow({ ticket, activity, can, domainReferences, messages }) {
+  const [composerTab, setComposerTab] = useState('public_reply');
+  const form = useForm({ message_type: 'public_reply', body: '' });
+
+  const submitMessage = () => {
+    form.post(`/tickets/${ticket.id}/messages`, {
+      preserveScroll: true,
+      onSuccess: () => form.reset('body'),
+    });
+  };
+
+  const setTab = (tab) => {
+    setComposerTab(tab);
+    form.setData('message_type', tab);
+  };
+
   return (
-    <AppLayout title={ticket.ticket_number} description={ticket.title} breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Tickets', href: '/tickets' }, { label: ticket.ticket_number }]}>
+    <AppLayout title={ticket.ticket_number} description={ticket.title} breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Tickets', href: '/tickets' }, { label: ticket.ticket_number }]}> 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-2"><DomainPriorityBadge domainReferences={domainReferences} value={ticket.priority} /><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></div>
         <div className="flex gap-2">{can.update && <Button asChild size="sm" variant="outline"><Link href={`/tickets/${ticket.id}/edit`}>Edit</Link></Button>}{can.delete && <Button size="sm" variant="outline" onClick={() => { if (confirm('Archive this ticket?')) router.delete(`/tickets/${ticket.id}`); }}>Archive</Button>}</div>
@@ -40,7 +66,51 @@ export default function TicketsShow({ ticket, activity, can, domainReferences })
 
       <Card>
         <CardHeader><CardTitle>Conversation</CardTitle></CardHeader>
-        <CardContent><EmptyState title="No messages yet" description="Ticket conversation area is ready for replies and internal notes." /></CardContent>
+        <CardContent className="space-y-4">
+          {messages.length === 0 ? <EmptyState title="No messages yet" description="Start the conversation with a public reply or an internal note." /> : (
+            <div className="space-y-3">
+              {messages.map((message) => {
+                const style = typeStyles[message.message_type] || typeStyles.system_event;
+
+                return (
+                  <div key={message.id} className="rounded-md border bg-muted/20 p-3">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={style.variant}>{style.label}</Badge>
+                        <p className="text-sm font-medium">{message.author?.name || 'System'}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{message.created_at || '—'}</p>
+                    </div>
+                    <p className="whitespace-pre-wrap text-sm">{message.body}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {(can.addPublicReply || can.addInternalNote) && <Separator />}
+
+          {(can.addPublicReply || can.addInternalNote) && (
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold">Add message</h3>
+              <Tabs>
+                <TabsList>
+                  {can.addPublicReply && <TabsTrigger active={composerTab === 'public_reply'} onClick={() => setTab('public_reply')}>Public reply</TabsTrigger>}
+                  {can.addInternalNote && <TabsTrigger active={composerTab === 'internal_note'} onClick={() => setTab('internal_note')}>Internal note</TabsTrigger>}
+                </TabsList>
+                <TabsContent active={composerTab === 'public_reply' || composerTab === 'internal_note'}>
+                  <Textarea placeholder={composerTab === 'internal_note' ? 'Add an internal note for staff...' : 'Write a reply visible to the client...'} value={form.data.body} onChange={(event) => form.setData('body', event.target.value)} />
+                  {form.errors.body && <p className="mt-2 text-sm text-destructive">{form.errors.body}</p>}
+                  {form.errors.message_type && <p className="mt-2 text-sm text-destructive">{form.errors.message_type}</p>}
+                  <div className="mt-3 flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">{composerTab === 'internal_note' ? 'Internal notes are visible to staff only.' : 'Public replies are visible to client users.'}</p>
+                    <Button size="sm" onClick={submitMessage} disabled={form.processing}>Post message</Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
+        </CardContent>
       </Card>
 
       <Card>

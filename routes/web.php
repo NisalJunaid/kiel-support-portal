@@ -11,6 +11,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\TicketMessageController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
@@ -44,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('assets', AssetController::class);
     Route::resource('services', ServiceController::class);
     Route::resource('tickets', TicketController::class);
+    Route::post('tickets/{ticket}/messages', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
 
     Route::get('/{module}', PlaceholderController::class)
         ->whereIn('module', ['reports', 'settings'])
