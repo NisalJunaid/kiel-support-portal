@@ -1,12 +1,10 @@
 import '../css/app.css';
-import { createInertiaApp, usePage } from '@inertiajs/react';
+import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { useEffect } from 'react';
 
-function ThemeBridge({ children }) {
-  const { branding } = usePage().props;
-
+function ThemeBridge({ branding, children }) {
   useEffect(() => {
     if (!branding?.theme_hsl) return;
 
@@ -23,8 +21,10 @@ function ThemeBridge({ children }) {
 createInertiaApp({
   resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
   setup({ el, App, props }) {
+    const branding = props.initialPage?.props?.branding;
+
     createRoot(el).render(
-      <ThemeBridge>
+      <ThemeBridge branding={branding}>
         <App {...props} />
       </ThemeBridge>,
     );
