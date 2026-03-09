@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import FileUploadField from '@/Components/shared/file-upload-field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Textarea } from '@/Components/ui/textarea';
+import { getDomainOptions } from '@/lib/domain-references';
 
 const typeStyles = {
   public_reply: { label: 'Public reply', variant: 'default' },
@@ -22,6 +23,7 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, activity,
   const [composerType, setComposerType] = useState(can.addInternalNote ? 'internal_note' : 'public_reply');
   const form = useForm({ message_type: composerType, body: '', attachments: [] });
   const latestMessage = useMemo(() => messages[0], [messages]);
+  const ticketStatusOptions = useMemo(() => getDomainOptions(domainReferences, 'ticketStatus'), [domainReferences]);
 
   const submitMessage = () => {
     form.transform((data) => ({ ...data, message_type: composerType })).post(`/tickets/${ticket.id}/messages`, { preserveScroll: true, onSuccess: () => form.reset('body', 'attachments') });
@@ -36,7 +38,7 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, activity,
           <div><p className="text-xs text-muted-foreground">Assignee</p><p>{ticket.assigned_user?.name || 'Unassigned'}</p></div>
           <div><p className="text-xs text-muted-foreground">Client</p><p>{ticket.client?.name || '—'}</p></div>
           <div><p className="text-xs text-muted-foreground">Last activity</p><p>{latestMessage?.created_at || ticket.updated_at || '—'}</p></div>
-          {can.update && <div className="grid gap-2"><Select value={ticket.status} onValueChange={(value) => router.patch(`/tickets/${ticket.id}/workflow/status`, { status: value })}><SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger><SelectContent>{domainReferences.ticketStatus.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>}
+          {can.update && <div className="grid gap-2"><Select value={ticket.status} onValueChange={(value) => router.patch(`/tickets/${ticket.id}/workflow/status`, { status: value })}><SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger><SelectContent>{ticketStatusOptions.map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}</SelectContent></Select></div>}
         </CardContent>
       </Card>
 
