@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
                 'canViewAdminReadiness' => $user ? $user->can('viewAdminReadiness', $user) : false,
                 'canViewSystemReference' => $user ? $user->can('viewSystemReference', $user) : false,
                 'canViewClients' => $user ? $user->can('viewAny', \App\Models\ClientCompany::class) : false,
+                'canViewContacts' => $user ? $user->can('viewAny', \App\Models\ClientContact::class) : false,
             ],
             'domainReferences' => DomainReferenceCatalog::all(),
             'flash' => [

@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\ClientCompany;
+use App\Models\ClientContact;
 use App\Models\User;
 use App\Policies\ClientCompanyPolicy;
+use App\Policies\ClientContactPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -14,6 +16,7 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         User::class => UserPolicy::class,
         ClientCompany::class => ClientCompanyPolicy::class,
+        ClientContact::class => ClientContactPolicy::class,
     ];
 
     public function boot(): void
