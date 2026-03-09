@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { EmptyState } from '@/Components/shared/empty-state';
 import { ActivityTimeline } from '@/Components/shared/activity-timeline';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import { EntitySummaryCard } from '@/Components/shared/entity-summary-card';
 import { useState } from 'react';
 
 export default function ClientsShow({ client, contacts, client_users, assets, tickets, services, activity, stats, can, domainReferences }) {
@@ -34,26 +35,11 @@ export default function ClientsShow({ client, contacts, client_users, assets, ti
       </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        <Card>
-          <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Total contacts</p><CardTitle>{stats.contacts_count}</CardTitle></CardHeader>
-          <CardContent className="text-xs text-muted-foreground">{stats.active_contacts_count} active</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Client users</p><CardTitle>{stats.users_count}</CardTitle></CardHeader>
-          <CardContent className="text-xs text-muted-foreground">{stats.users_can_create_tickets_count} can create tickets</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Asset visibility</p><CardTitle>{stats.users_can_view_assets_count}</CardTitle></CardHeader>
-          <CardContent className="text-xs text-muted-foreground">Users with asset access</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Tickets</p><CardTitle>{stats.tickets_count}</CardTitle></CardHeader>
-          <CardContent className="text-xs text-muted-foreground">Open and historical support activity</CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Account manager</p><CardTitle className="text-lg">{client.account_manager?.name || 'Unassigned'}</CardTitle></CardHeader>
-          <CardContent className="text-xs text-muted-foreground">{client.account_manager?.email || 'No manager email available'}</CardContent>
-        </Card>
+        <EntitySummaryCard label="Total contacts" value={stats.contacts_count} hint={`${stats.active_contacts_count} active`} />
+        <EntitySummaryCard label="Client users" value={stats.users_count} hint={`${stats.users_can_create_tickets_count} can create tickets`} />
+        <EntitySummaryCard label="Asset visibility" value={stats.users_can_view_assets_count} hint="Users with asset access" />
+        <EntitySummaryCard label="Tickets" value={stats.tickets_count} hint="Open and historical support activity" />
+        <EntitySummaryCard label="Account manager" value={client.account_manager?.name || 'Unassigned'} hint={client.account_manager?.email || 'No manager email available'} />
       </section>
 
       <Tabs>

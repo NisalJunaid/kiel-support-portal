@@ -4,6 +4,7 @@
 - Application is a Laravel 10 monolith with Inertia.js + React rendered from `resources/js`.
 - Frontend entrypoint is `resources/js/app.jsx` using `@inertiajs/react` and Vite.
 - UI foundation follows shadcn/ui conventions with reusable primitives in `resources/js/Components/ui` and shared app components in `resources/js/Components/shared`.
+- Shared list composition now includes standardized `SectionCard`, `FilterBar`, and `RowActionsDropdown` wrappers to keep index pages visually and structurally consistent while preserving existing behavior.
 - List/index UX now follows a shared operational pattern: searchable + filterable shadcn/ui control rows, reset actions, query-string-preserving Laravel pagination, and shared `ListPagination` rendering for consistent navigation across modules.
 - Authentication uses Laravel session auth with Inertia login page (`/login`) and protected internal routes.
 - Authorization uses Spatie `laravel-permission` + Laravel policies.
@@ -243,6 +244,7 @@
 - `Assets/Index.jsx` now supports search + client/type/status/criticality filters + pagination controls.
 - `Services/Index.jsx` now supports search + client/type/status filters + pagination controls.
 - `Tickets/Index.jsx` now supports search + status/priority/assignee/client filters + pagination controls.
+- `ClientUsers/Index.jsx` now uses shadcn filter controls, row action dropdowns, empty state rendering, and pagination controls consistent with other index pages.
 - Shared list utility: `Components/shared/list-pagination.jsx`.
 - `Reports/Index.jsx`
 - `Placeholder/Index.jsx` (settings only)
@@ -255,6 +257,10 @@
   - `domain-status-badge`
   - `domain-priority-badge`
   - `empty-state`
+  - `section-card`
+  - `filter-bar`
+  - `row-actions-dropdown`
+  - `entity-summary-card`
   - `data-table-shell`
   - `ui/select`
 
