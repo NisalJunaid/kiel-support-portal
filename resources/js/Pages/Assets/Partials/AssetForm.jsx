@@ -3,13 +3,34 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
+import { Switch } from '@/Components/ui/switch';
 import { Textarea } from '@/Components/ui/textarea';
 import { getDomainOptions } from '@/lib/domain-references';
 
-export default function AssetForm({ data, setData, errors, processing, onSubmit, submitLabel, formData, domainReferences }) {
+function getAssetTypeSlug(assetTypes, assetTypeId) {
+  return assetTypes.find((type) => `${type.id}` === `${assetTypeId}`)?.slug;
+}
+
+function renderMetaField(field, value, onChange) {
+  if (field.input === 'textarea') {
+    return <Textarea value={value || ''} onChange={(e) => onChange(e.target.value)} rows={3} />;
+  }
+
+  if (field.input === 'boolean') {
+    return <Switch checked={Boolean(value)} onCheckedChange={(checked) => onChange(checked)} />;
+  }
+
+  return <Input type={field.input === 'number' ? 'number' : field.input === 'date' ? 'date' : field.input === 'url' ? 'url' : 'text'} value={value || ''} onChange={(e) => onChange(e.target.value)} />;
+}
+
+export default function AssetForm({ data, setData, errors, processing, onSubmit, submitLabel, formData, domainReferences, metaFieldsByType }) {
   const statusOptions = getDomainOptions(domainReferences, 'assetStatus');
   const criticalityOptions = getDomainOptions(domainReferences, 'assetCriticality');
   const parents = formData.parentAssets.filter((entry) => !data.client_company_id || `${entry.client_company_id}` === `${data.client_company_id}`);
+  const selectedTypeSlug = getAssetTypeSlug(formData.assetTypes, data.asset_type_id);
+  const selectedMetaFields = metaFieldsByType?.[selectedTypeSlug] || [];
+
+  const updateMeta = (key, value) => setData('meta', { ...data.meta, [key]: value });
 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
@@ -36,11 +57,15 @@ export default function AssetForm({ data, setData, errors, processing, onSubmit,
           <div className="space-y-2"><Label>Start date</Label><Input type="date" value={data.start_date || ''} onChange={(e) => setData('start_date', e.target.value)} /></div>
           <div className="space-y-2"><Label>Renewal date</Label><Input type="date" value={data.renewal_date || ''} onChange={(e) => setData('renewal_date', e.target.value)} /></div>
           <div className="space-y-2"><Label>End date</Label><Input type="date" value={data.end_date || ''} onChange={(e) => setData('end_date', e.target.value)} /></div>
-          <div className="space-y-2"><Label>IP address</Label><Input value={data.meta.ip_address || ''} onChange={(e) => setData('meta', { ...data.meta, ip_address: e.target.value })} /></div>
-          <div className="space-y-2"><Label>Hostname</Label><Input value={data.meta.hostname || ''} onChange={(e) => setData('meta', { ...data.meta, hostname: e.target.value })} /></div>
-          <div className="space-y-2"><Label>Plan</Label><Input value={data.meta.plan || ''} onChange={(e) => setData('meta', { ...data.meta, plan: e.target.value })} /></div>
-          <div className="space-y-2"><Label>Region</Label><Input value={data.meta.region || ''} onChange={(e) => setData('meta', { ...data.meta, region: e.target.value })} /></div>
+          {selectedMetaFields.length === 0 ? <p className="text-sm text-muted-foreground md:col-span-2">No type-specific metadata fields for this asset type.</p> : selectedMetaFields.map((field) => (
+            <div key={field.key} className={field.input === 'textarea' ? 'space-y-2 md:col-span-2' : 'space-y-2'}>
+              <Label>{field.label}</Label>
+              {renderMetaField(field, data.meta?.[field.key], (value) => updateMeta(field.key, value))}
+              <p className="text-xs text-destructive">{errors[`meta.${field.key}`]}</p>
+            </div>
+          ))}
           <div className="space-y-2 md:col-span-2"><Label>Notes</Label><Textarea value={data.notes || ''} onChange={(e) => setData('notes', e.target.value)} rows={4} /></div>
+          <p className="text-xs text-destructive md:col-span-2">{errors.meta}</p>
         </CardContent>
       </Card>
 

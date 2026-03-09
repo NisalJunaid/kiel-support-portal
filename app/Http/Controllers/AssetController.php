@@ -8,6 +8,7 @@ use App\Models\Asset;
 use App\Models\AssetType;
 use App\Models\ClientCompany;
 use App\Models\User;
+use App\Support\AssetMetaFields;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -43,6 +44,7 @@ class AssetController extends Controller
                 'renewal_date' => optional($asset->renewal_date)?->toDateString(),
                 'client' => $asset->clientCompany,
                 'type' => $asset->type,
+                'type_slug' => $asset->type?->slug,
             ]);
 
         return Inertia::render('Assets/Index', [
@@ -62,6 +64,7 @@ class AssetController extends Controller
 
         return Inertia::render('Assets/Create', [
             'formData' => $this->formData((int) $request->integer('client')),
+            'metaFieldsByType' => AssetMetaFields::definitions(),
         ]);
     }
 
@@ -115,6 +118,7 @@ class AssetController extends Controller
                 'meta' => $asset->meta ?? [],
                 'client' => $asset->clientCompany,
                 'type' => $asset->type,
+                'type_slug' => $asset->type?->slug,
                 'parent' => $asset->parent,
                 'children' => $asset->children->map(fn (Asset $child) => [
                     'id' => $child->id,
@@ -135,6 +139,7 @@ class AssetController extends Controller
                 'created_at' => optional($item->created_at)?->toDateTimeString(),
             ])->values(),
             'linkedTickets' => [],
+            'metaFieldsByType' => AssetMetaFields::definitions(),
             'can' => [
                 'update' => $request->user()->can('update', $asset),
                 'delete' => $request->user()->can('delete', $asset),
@@ -149,6 +154,7 @@ class AssetController extends Controller
         return Inertia::render('Assets/Edit', [
             'asset' => $asset,
             'formData' => $this->formData(null, $asset),
+            'metaFieldsByType' => AssetMetaFields::definitions(),
         ]);
     }
 
@@ -185,7 +191,7 @@ class AssetController extends Controller
     private function formData(?int $defaultClientId = null, ?Asset $asset = null): array
     {
         $clients = ClientCompany::query()->orderBy('name')->get(['id', 'name']);
-        $assetTypes = AssetType::query()->where('is_active', true)->orderBy('name')->get(['id', 'name']);
+        $assetTypes = AssetType::query()->where('is_active', true)->orderBy('name')->get(['id', 'name', 'slug']);
         $parents = Asset::query()
             ->when($asset, fn ($query) => $query->where('id', '!=', $asset->id))
             ->orderBy('name')

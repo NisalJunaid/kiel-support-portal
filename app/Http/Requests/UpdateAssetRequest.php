@@ -5,8 +5,11 @@ namespace App\Http\Requests;
 use App\Enums\AssetCriticality;
 use App\Enums\AssetStatus;
 use App\Models\Asset;
+use App\Models\AssetType;
+use App\Support\AssetMetaFields;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class UpdateAssetRequest extends FormRequest
 {
@@ -15,6 +18,24 @@ class UpdateAssetRequest extends FormRequest
         $asset = $this->route('asset');
 
         return $asset instanceof Asset && ($this->user()?->can('update', $asset) ?? false);
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $meta = $this->input('meta', []);
+        $allowedKeys = AssetMetaFields::allowedKeysForSlug($this->assetTypeSlug());
+
+        if (! is_array($meta)) {
+            $meta = [];
+        }
+
+        if ($allowedKeys === []) {
+            $meta = [];
+        } else {
+            $meta = array_intersect_key($meta, array_flip($allowedKeys));
+        }
+
+        $this->merge(['meta' => $meta]);
     }
 
     public function rules(): array
@@ -39,10 +60,35 @@ class UpdateAssetRequest extends FormRequest
             'vendor' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string'],
             'meta' => ['nullable', 'array'],
-            'meta.ip_address' => ['nullable', 'string', 'max:255'],
-            'meta.hostname' => ['nullable', 'string', 'max:255'],
-            'meta.plan' => ['nullable', 'string', 'max:255'],
-            'meta.region' => ['nullable', 'string', 'max:255'],
+            ...AssetMetaFields::rulesForSlug($this->assetTypeSlug()),
         ];
+    }
+
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator) {
+            $meta = $this->input('meta', []);
+
+            if (! is_array($meta)) {
+                return;
+            }
+
+            $unexpectedKeys = array_diff(array_keys($meta), AssetMetaFields::allowedKeysForSlug($this->assetTypeSlug()));
+
+            if ($unexpectedKeys !== []) {
+                $validator->errors()->add('meta', 'Unexpected metadata fields provided for this asset type.');
+            }
+        });
+    }
+
+    private function assetTypeSlug(): ?string
+    {
+        $assetTypeId = $this->input('asset_type_id') ?: $this->route('asset')?->asset_type_id;
+
+        if (! $assetTypeId) {
+            return null;
+        }
+
+        return AssetType::query()->whereKey($assetTypeId)->value('slug');
     }
 }
