@@ -7,6 +7,7 @@ use App\Enums\AssetStatus;
 use App\Enums\ClientStatus;
 use App\Enums\ContactType;
 use App\Enums\ServiceStatus;
+use App\Enums\ServiceType;
 use App\Enums\TicketMessageType;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
@@ -26,6 +27,7 @@ class DomainReferenceCatalog
             'ticketPriority' => self::serialize('Ticket Priority', TicketPriority::cases()),
             'ticketMessageType' => self::serialize('Ticket Message Type', TicketMessageType::cases()),
             'serviceStatus' => self::serialize('Service Status', ServiceStatus::cases()),
+            'serviceType' => self::serialize('Service Type', ServiceType::cases()),
         ];
     }
 

@@ -8,6 +8,7 @@ use App\Models\Asset;
 use App\Models\ClientCompany;
 use App\Models\ClientContact;
 use App\Models\ClientUserProfile;
+use App\Models\Service;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -93,6 +94,7 @@ class ClientCompanyController extends Controller
             'clientUsers.contact:id,full_name',
             'assets:id,client_company_id,name,asset_code,status,criticality,asset_type_id,renewal_date',
             'assets.type:id,name',
+            'services' => fn ($query) => $query->with('assets:id,name,asset_code')->orderBy('name'),
         ]);
 
         $activity = Activity::query()
@@ -149,6 +151,19 @@ class ClientCompanyController extends Controller
                 'renewal_date' => optional($asset->renewal_date)?->toDateString(),
                 'type' => $asset->type,
             ])->values(),
+            'services' => $client->services->map(fn (Service $service) => [
+                'id' => $service->id,
+                'name' => $service->name,
+                'service_type' => $service->service_type?->value,
+                'status' => $service->status?->value,
+                'renewal_cycle' => $service->renewal_cycle,
+                'renewal_date' => optional($service->renewal_date)?->toDateString(),
+                'assets' => $service->assets->map(fn (Asset $asset) => [
+                    'id' => $asset->id,
+                    'name' => $asset->name,
+                    'asset_code' => $asset->asset_code,
+                ])->values(),
+            ])->values(),
             'activity' => $activity->map(fn (Activity $item) => [
                 'id' => $item->id,
                 'event' => $item->event,
@@ -163,6 +178,7 @@ class ClientCompanyController extends Controller
                 'users_can_create_tickets_count' => $client->clientUsers->where('can_create_tickets', true)->count(),
                 'users_can_view_assets_count' => $client->clientUsers->where('can_view_assets', true)->count(),
                 'assets_count' => $client->assets->count(),
+                'services_count' => $client->services->count(),
             ],
             'can' => [
                 'update' => $request->user()->can('update', $client),
@@ -173,6 +189,7 @@ class ClientCompanyController extends Controller
                 'manage_assets' => $canManageWorkspace,
                 'create_asset' => $request->user()->can('create', Asset::class),
                 'create_ticket' => $canManageWorkspace,
+                'create_service' => $request->user()->can('create', Service::class),
             ],
         ]);
     }
