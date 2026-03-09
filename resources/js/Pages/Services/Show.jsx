@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { EmptyState } from '@/Components/shared/empty-state';
+import { ActivityTimeline } from '@/Components/shared/activity-timeline';
 import { useState } from 'react';
 
 export default function ServicesShow({ service, activity, can, domainReferences }) {
@@ -53,17 +54,7 @@ export default function ServicesShow({ service, activity, can, domainReferences 
         </TabsContent>
 
         <TabsContent active={tab === 'activity'}>
-          <Card>
-            <CardHeader><CardTitle>Recent activity</CardTitle></CardHeader>
-            <CardContent>
-              {activity.length === 0 ? <EmptyState title="No activity yet" description="Service changes will appear here." /> : (
-                <Table>
-                  <TableHeader><TableRow><TableHead>Event</TableHead><TableHead>Description</TableHead><TableHead>Actor</TableHead><TableHead>At</TableHead></TableRow></TableHeader>
-                  <TableBody>{activity.map((item) => <TableRow key={item.id}><TableCell className="capitalize">{item.event || 'updated'}</TableCell><TableCell>{item.description}</TableCell><TableCell>{item.causer_name || 'System'}</TableCell><TableCell>{item.created_at}</TableCell></TableRow>)}</TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <ActivityTimeline items={activity} title="Recent activity" description="Service audit trail." emptyDescription="Service changes will appear here." />
         </TabsContent>
       </Tabs>
     </AppLayout>

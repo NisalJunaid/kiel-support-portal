@@ -4,8 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { getDomainBadgeVariant, getDomainLabel } from '@/lib/domain-references';
+import { ActivityTimeline } from '@/Components/shared/activity-timeline';
 
-export default function ContactsShow({ contact, can, domainReferences }) {
+export default function ContactsShow({ contact, activity, can, domainReferences }) {
   return (
     <AppLayout title={contact.full_name} description="Client contact details." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Contacts', href: '/contacts' }, { label: contact.full_name }]}> 
       <div className="flex gap-2">
@@ -30,6 +31,8 @@ export default function ContactsShow({ contact, can, domainReferences }) {
           <p className="md:col-span-2"><span className="font-medium">Notes:</span> <span className="text-muted-foreground whitespace-pre-wrap">{contact.notes || 'No notes recorded.'}</span></p>
         </CardContent>
       </Card>
+
+      <ActivityTimeline items={activity} title="Activity" description="Contact lifecycle and status changes." emptyDescription="Changes on this contact will appear here." />
     </AppLayout>
   );
 }

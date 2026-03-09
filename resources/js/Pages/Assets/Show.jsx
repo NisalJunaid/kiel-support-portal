@@ -8,6 +8,7 @@ import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
 import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { EmptyState } from '@/Components/shared/empty-state';
+import { ActivityTimeline } from '@/Components/shared/activity-timeline';
 
 function formatMetaValue(field, value) {
   if (value === null || value === undefined || value === '') {
@@ -167,37 +168,7 @@ export default function AssetsShow({ asset, activity, linkedTickets, can, domain
         </TabsContent>
 
         <TabsContent active={tab === 'activity'}>
-          <Card>
-            <CardHeader>
-              <CardTitle>Activity</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {activity.length === 0 ? (
-                <EmptyState title="No activity yet" description="Changes on this asset will appear here." />
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Event</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Actor</TableHead>
-                      <TableHead>At</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {activity.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.event}</TableCell>
-                        <TableCell>{item.description}</TableCell>
-                        <TableCell>{item.causer_name || 'System'}</TableCell>
-                        <TableCell>{item.created_at}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <ActivityTimeline items={activity} title="Activity" description="Audit history for this asset." emptyDescription="Changes on this asset will appear here." />
         </TabsContent>
       </Tabs>
     </AppLayout>

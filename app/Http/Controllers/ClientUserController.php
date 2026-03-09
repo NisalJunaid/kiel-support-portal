@@ -15,6 +15,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
+use App\Support\ActivityPresenter;
 
 class ClientUserController extends Controller
 {
@@ -106,6 +108,13 @@ class ClientUserController extends Controller
             ]);
         });
 
+        activity('client-users')
+            ->performedOn($profile)
+            ->causedBy($request->user())
+            ->event('created')
+            ->withProperties(['email' => $profile->user?->email])
+            ->log('Client user created');
+
         return redirect()->route('client-users.show', $profile)->with('success', 'Client user created successfully.');
     }
 
@@ -114,6 +123,13 @@ class ClientUserController extends Controller
         $this->authorize('view', $clientUser);
 
         $clientUser->load(['user:id,name,email,created_at', 'clientCompany:id,name', 'contact:id,full_name,email']);
+
+        $activity = Activity::query()
+            ->where('subject_type', ClientUserProfile::class)
+            ->where('subject_id', $clientUser->id)
+            ->latest()
+            ->limit(12)
+            ->get();
 
         return Inertia::render('ClientUsers/Show', [
             'clientUser' => [
@@ -130,6 +146,7 @@ class ClientUserController extends Controller
                 'created_at' => optional($clientUser->created_at)?->toDateTimeString(),
                 'updated_at' => optional($clientUser->updated_at)?->toDateTimeString(),
             ],
+            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
             'can' => [
                 'update' => $request->user()->can('update', $clientUser),
                 'delete' => $request->user()->can('delete', $clientUser),
@@ -183,6 +200,13 @@ class ClientUserController extends Controller
             $clientUser->user->syncRoles([Roles::CLIENT_USER]);
         });
 
+        activity('client-users')
+            ->performedOn($clientUser)
+            ->causedBy($request->user())
+            ->event('updated')
+            ->withProperties(['email' => $clientUser->user?->email])
+            ->log('Client user updated');
+
         return redirect()->route('client-users.show', $clientUser)->with('success', 'Client user updated successfully.');
     }
 
@@ -190,10 +214,17 @@ class ClientUserController extends Controller
     {
         $this->authorize('delete', $clientUser);
 
-        DB::transaction(function () use ($clientUser) {
+        DB::transaction(function () use ($clientUser, $request) {
             $user = $clientUser->user;
             $clientUser->delete();
             $user?->delete();
+
+            activity('client-users')
+                ->performedOn($clientUser)
+                ->causedBy($request->user())
+                ->event('archived')
+                ->withProperties(['email' => $user?->email])
+                ->log('Client user archived');
         });
 
         return redirect()->route('client-users.index')->with('success', 'Client user removed successfully.');

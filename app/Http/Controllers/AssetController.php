@@ -12,6 +12,7 @@ use App\Models\Ticket;
 use App\Support\AssetMetaFields;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\ActivityPresenter;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
@@ -133,13 +134,7 @@ class AssetController extends Controller
                 'created_at' => optional($asset->created_at)?->toDateTimeString(),
                 'updated_at' => optional($asset->updated_at)?->toDateTimeString(),
             ],
-            'activity' => $activity->map(fn (Activity $item) => [
-                'id' => $item->id,
-                'event' => $item->event,
-                'description' => $item->description,
-                'causer_name' => $item->causer?->name,
-                'created_at' => optional($item->created_at)?->toDateTimeString(),
-            ])->values(),
+            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
             'linkedTickets' => $asset->tickets->map(fn (Ticket $ticket) => [
                 'id' => $ticket->id,
                 'ticket_number' => $ticket->ticket_number,

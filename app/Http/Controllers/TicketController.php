@@ -20,6 +20,7 @@ use App\Services\Tickets\SlaDeadlineService;
 use App\Services\Tickets\TicketMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\ActivityPresenter;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Inertia\Response;
@@ -193,13 +194,7 @@ class TicketController extends Controller
                 'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
                 'created_at' => optional($attachment->created_at)?->toDateTimeString(),
             ])->values(),
-            'activity' => $activity->map(fn (Activity $item) => [
-                'id' => $item->id,
-                'event' => $item->event,
-                'description' => $item->description,
-                'causer_name' => $item->causer?->name,
-                'created_at' => optional($item->created_at)?->toDateTimeString(),
-            ])->values(),
+            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
             'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id, $ticket->service_id),
             'messages' => $messages->map(fn (TicketMessage $message) => [
                 'id' => $message->id,

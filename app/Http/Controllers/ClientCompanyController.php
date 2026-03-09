@@ -14,6 +14,7 @@ use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\ActivityPresenter;
 use Spatie\Activitylog\Models\Activity;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -182,13 +183,7 @@ class ClientCompanyController extends Controller
                     'asset_code' => $asset->asset_code,
                 ])->values(),
             ])->values(),
-            'activity' => $activity->map(fn (Activity $item) => [
-                'id' => $item->id,
-                'event' => $item->event,
-                'description' => $item->description,
-                'causer_name' => $item->causer?->name,
-                'created_at' => optional($item->created_at)?->toDateTimeString(),
-            ])->values(),
+            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
             'stats' => [
                 'contacts_count' => $client->contacts->count(),
                 'active_contacts_count' => $client->contacts->where('is_active', true)->count(),

@@ -8,8 +8,10 @@ use App\Models\ClientCompany;
 use App\Models\ClientContact;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\ActivityPresenter;
 use Inertia\Inertia;
 use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
 
 class ClientContactController extends Controller
 {
@@ -94,6 +96,13 @@ class ClientContactController extends Controller
 
         $contact->load('clientCompany:id,name');
 
+        $activity = Activity::query()
+            ->where('subject_type', ClientContact::class)
+            ->where('subject_id', $contact->id)
+            ->latest()
+            ->limit(12)
+            ->get();
+
         return Inertia::render('Contacts/Show', [
             'contact' => [
                 'id' => $contact->id,
@@ -112,6 +121,7 @@ class ClientContactController extends Controller
                 'created_at' => optional($contact->created_at)?->toDateTimeString(),
                 'updated_at' => optional($contact->updated_at)?->toDateTimeString(),
             ],
+            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
             'can' => [
                 'update' => $request->user()->can('update', $contact),
                 'delete' => $request->user()->can('delete', $contact),
