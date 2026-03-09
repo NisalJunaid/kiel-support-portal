@@ -64,9 +64,9 @@
   - `Ticket` model with enum-backed status/priority casting and relationships to client, requester user/contact, linked asset, and assigned staff.
   - Store/update form requests with client-scoped validation for requester and asset linkage.
   - Policy-backed authorization checks with dedicated `tickets.*` permissions.
-  - Inertia controller actions for index/create/store/show/edit/update/destroy.
-  - Activity logging for create/update/archive ticket lifecycle events.
-  - UI pages: `Tickets/Index`, `Tickets/Create`, `Tickets/Edit`, `Tickets/Show` using shadcn cards/forms/tables/badges.
+  - Inertia controller actions for index/create/store/show/edit/update/destroy plus workflow mutation endpoints.
+  - Activity logging for create/update/archive ticket lifecycle events and operational workflow actions (assignment, status/priority transitions, resolve/close/reopen).
+  - UI pages: `Tickets/Index`, `Tickets/Create`, `Tickets/Edit`, `Tickets/Show` using shadcn cards/forms/tables/badges plus in-page workflow controls and compact list-row actions.
   - Ticket conversation module: `ticket_messages` persistence with enum-backed `message_type` (`public_reply`, `internal_note`, `system_event`), staff/internal visibility controls, composer UX in `Tickets/Show`, and automatic system-event generation for key lifecycle changes.
   - Ticket attachments module: secure private-file storage on local disk with `ticket_attachments` metadata, upload flows on ticket create and message composer, server-side file validation (type/size/count), and authenticated download route bound to ticket authorization.
   - Client workspace integration: client tickets tab and create-in-context ticket action.
@@ -94,6 +94,12 @@
 - `Resource /services` -> `ServiceController` (`services.*`) [auth + policy]
 - `Resource /tickets` -> `TicketController` (`tickets.*`) [auth + policy]
 - `POST /tickets/{ticket}/messages` -> `TicketMessageController@store` (`tickets.messages.store`) [auth + policy]
+- `PATCH /tickets/{ticket}/workflow/assignment` -> `TicketWorkflowController@assign` (`tickets.workflow.assignment`) [auth + policy]
+- `PATCH /tickets/{ticket}/workflow/status` -> `TicketWorkflowController@status` (`tickets.workflow.status`) [auth + policy]
+- `PATCH /tickets/{ticket}/workflow/priority` -> `TicketWorkflowController@priority` (`tickets.workflow.priority`) [auth + policy]
+- `POST /tickets/{ticket}/workflow/resolve` -> `TicketWorkflowController@resolve` (`tickets.workflow.resolve`) [auth + policy]
+- `POST /tickets/{ticket}/workflow/close` -> `TicketWorkflowController@close` (`tickets.workflow.close`) [auth + policy]
+- `POST /tickets/{ticket}/workflow/reopen` -> `TicketWorkflowController@reopen` (`tickets.workflow.reopen`) [auth + policy]
 - `GET /tickets/{ticket}/attachments/{attachment}` -> `TicketAttachmentController@show` (`tickets.attachments.show`) [auth + policy]
 - `GET /{module}` for `reports|settings` -> `PlaceholderController` (`module.show`) [auth]
 
@@ -195,3 +201,4 @@
   - `domain-priority-badge`
   - `empty-state`
   - `data-table-shell`
+  - `ui/select`

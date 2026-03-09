@@ -61,6 +61,7 @@ class TicketController extends Controller
         return Inertia::render('Tickets/Index', [
             'tickets' => $tickets,
             'filters' => compact('search', 'status', 'priority'),
+            'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
             'can' => [
                 'create' => $request->user()->can('create', Ticket::class),
                 'update' => $request->user()->can('tickets.update'),
