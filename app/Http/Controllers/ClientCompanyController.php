@@ -6,6 +6,7 @@ use App\Http\Requests\StoreClientCompanyRequest;
 use App\Http\Requests\UpdateClientCompanyRequest;
 use App\Models\ClientCompany;
 use App\Models\ClientContact;
+use App\Models\ClientUserProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,6 +48,15 @@ class ClientCompanyController extends Controller
             'filters' => [
                 'search' => $search,
             ],
+            'client_users' => $client->clientUsers->map(fn (ClientUserProfile $profile) => [
+                'id' => $profile->id,
+                'name' => $profile->user?->name,
+                'email' => $profile->user?->email,
+                'role_label' => $profile->role_label,
+                'contact' => $profile->contact,
+                'can_create_tickets' => $profile->can_create_tickets,
+                'can_view_assets' => $profile->can_view_assets,
+            ])->values(),
             'can' => [
                 'create' => $request->user()->can('create', ClientCompany::class),
                 'update' => $request->user()->can('update', ClientCompany::class),
@@ -83,7 +93,12 @@ class ClientCompanyController extends Controller
     {
         $this->authorize('view', $client);
 
-        $client->load(['accountManager:id,name,email', 'contacts' => fn ($query) => $query->orderByDesc('is_active')->orderBy('full_name')]);
+        $client->load([
+            'accountManager:id,name,email',
+            'contacts' => fn ($query) => $query->orderByDesc('is_active')->orderBy('full_name'),
+            'clientUsers.user:id,name,email',
+            'clientUsers.contact:id,full_name',
+        ]);
 
         return Inertia::render('Clients/Show', [
             'client' => [
@@ -112,11 +127,21 @@ class ClientCompanyController extends Controller
                 'contact_type' => $contact->contact_type?->value,
                 'is_active' => $contact->is_active,
             ])->values(),
+            'client_users' => $client->clientUsers->map(fn (ClientUserProfile $profile) => [
+                'id' => $profile->id,
+                'name' => $profile->user?->name,
+                'email' => $profile->user?->email,
+                'role_label' => $profile->role_label,
+                'contact' => $profile->contact,
+                'can_create_tickets' => $profile->can_create_tickets,
+                'can_view_assets' => $profile->can_view_assets,
+            ])->values(),
             'can' => [
                 'update' => $request->user()->can('update', $client),
                 'delete' => $request->user()->can('delete', $client),
                 'create_contact' => $request->user()->can('create', ClientContact::class),
                 'update_contact' => $request->user()->can('contacts.update'),
+                'create_client_user' => $request->user()->can('create', ClientUserProfile::class),
             ],
         ]);
     }

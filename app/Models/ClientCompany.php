@@ -42,4 +42,9 @@ class ClientCompany extends Model
     {
         return $this->hasMany(ClientContact::class);
     }
+
+    public function clientUsers(): HasMany
+    {
+        return $this->hasMany(ClientUserProfile::class);
+    }
 }

@@ -6,6 +6,7 @@ const nav = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { label: 'Clients', href: '/clients', icon: Building2, requires: 'canViewClients' },
   { label: 'Contacts', href: '/contacts', icon: Users, requires: 'canViewContacts' },
+  { label: 'Client Users', href: '/client-users', icon: Users, requires: 'canViewClientUsers' },
   { label: 'Assets', href: '/assets', icon: Boxes },
   { label: 'Tickets', href: '/tickets', icon: Ticket },
   { label: 'Services', href: '/services', icon: Briefcase },

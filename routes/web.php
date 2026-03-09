@@ -5,6 +5,7 @@ use App\Http\Controllers\Administration\SystemReferenceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClientCompanyController;
 use App\Http\Controllers\ClientContactController;
+use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,9 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('contacts/{contact}/toggle-active', [ClientContactController::class, 'toggleActive'])->name('contacts.toggle-active');
     Route::resource('contacts', ClientContactController::class);
+
+    Route::resource('client-users', ClientUserController::class)
+        ->parameters(['client-users' => 'clientUser']);
 
     Route::get('/{module}', PlaceholderController::class)
         ->whereIn('module', ['assets', 'tickets', 'services', 'reports', 'settings'])

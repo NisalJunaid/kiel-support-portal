@@ -7,6 +7,7 @@
 - Authentication uses Laravel session auth with Inertia login page (`/login`) and protected internal routes.
 - Authorization uses Spatie `laravel-permission` + Laravel policies.
 - Audit trail support is implemented via Spatie `laravel-activitylog` for client company and client contact mutations.
+- Client user identities are stored in `users` and extended through `client_user_profiles` for client-company scoped access flags.
 
 ## Implemented Modules
 - Authentication flow baseline (login/logout + session regeneration).
@@ -28,12 +29,21 @@
   - Activity logging for create/update/deactivate/reactivate/archive events.
   - UI pages: `Contacts/Index`, `Contacts/Create`, `Contacts/Edit`, `Contacts/Show`.
   - Client detail integration: contacts section on `Clients/Show` with type/status badges and create-in-context link.
+- **Client Users module (admin/staff CRUD):**
+  - New `client_user_profiles` table linked to users, client companies, and optional contacts.
+  - `ClientUserProfile` model with profile-level access flags and role label.
+  - Policy + request validation for admin/staff lifecycle management.
+  - Inertia controller actions for index/create/store/show/edit/update/destroy.
+  - Automatic base role assignment to `client-user` on create/update.
+  - UI pages: `ClientUsers/Index`, `ClientUsers/Create`, `ClientUsers/Edit`, `ClientUsers/Show`.
+  - Client detail integration: users tab on `Clients/Show`.
 
 ## Pending Modules
 - Password reset and profile management flows.
-- Full CRUD features for client users, assets, tickets, services, reports, and settings.
+- Full CRUD features for assets, tickets, services, reports, and settings.
 - Pagination controls component polish for larger datasets.
 - Granular permission matrix expansion for non-client modules.
+- Client-facing authorization enforcement that consumes profile flags in ticket/asset/contact modules.
 
 ## Route Inventory
 - `GET /` -> auth-aware redirect to `/login` or `/dashboard`
@@ -46,12 +56,14 @@
 - `Resource /clients` -> `ClientCompanyController` (`clients.*`) [auth + policy]
 - `PATCH /contacts/{contact}/toggle-active` -> `ClientContactController@toggleActive` (`contacts.toggle-active`) [auth + policy]
 - `Resource /contacts` -> `ClientContactController` (`contacts.*`) [auth + policy]
+- `Resource /client-users` -> `ClientUserController` (`client-users.*`) [auth + policy]
 - `GET /{module}` for `assets|tickets|services|reports|settings` -> `PlaceholderController` (`module.show`) [auth]
 
 ## Model Inventory
 - `App\Models\User`
-- `App\Models\ClientCompany` (soft deletes, account manager relation, contacts relation)
-- `App\Models\ClientContact` (soft deletes, belongs to client company)
+- `App\Models\ClientCompany` (soft deletes, account manager relation, contacts relation, client users relation)
+- `App\Models\ClientContact` (soft deletes, belongs to client company, optional reverse link for client user profiles)
+- `App\Models\ClientUserProfile` (belongs to user/client company/optional contact)
 - Spatie permission models:
   - `Spatie\Permission\Models\Role`
   - `Spatie\Permission\Models\Permission`
@@ -74,8 +86,13 @@
   - `contacts.create`
   - `contacts.update`
   - `contacts.delete`
+- Seeded client user permissions:
+  - `client-users.view`
+  - `client-users.create`
+  - `client-users.update`
+  - `client-users.delete`
 - Permission assignment baseline:
-  - `super-admin|admin|staff`: full client/contact CRUD permissions
+  - `super-admin|admin|staff`: full client/contact/client-user CRUD permissions
   - `support-agent`: `clients.view`
 - Gate override: `super-admin` bypass in `AuthServiceProvider`.
 
@@ -92,6 +109,10 @@
 - `Contacts/Create.jsx`
 - `Contacts/Edit.jsx`
 - `Contacts/Show.jsx`
+- `ClientUsers/Index.jsx`
+- `ClientUsers/Create.jsx`
+- `ClientUsers/Edit.jsx`
+- `ClientUsers/Show.jsx`
 - `Placeholder/Index.jsx`
 - Shared shell/components:
   - `app-sidebar`
