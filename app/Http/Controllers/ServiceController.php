@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateServiceRequest;
 use App\Models\Asset;
 use App\Models\ClientCompany;
 use App\Models\Service;
+use App\Models\SlaPlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,7 +23,7 @@ class ServiceController extends Controller
         $search = trim((string) $request->string('search'));
 
         $services = Service::query()
-            ->with(['clientCompany:id,name', 'assets:id,name,asset_code,status'])
+            ->with(['clientCompany:id,name', 'assets:id,name,asset_code,status', 'slaPlan:id,name'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
                     $inner->where('name', 'like', "%{$search}%")
@@ -97,6 +98,7 @@ class ServiceController extends Controller
         $service->load([
             'clientCompany:id,name,client_code',
             'assets:id,name,asset_code,status,criticality,client_company_id',
+            'slaPlan:id,name,response_minutes,resolution_minutes',
         ]);
 
         $activity = Activity::query()
@@ -114,6 +116,7 @@ class ServiceController extends Controller
                 'service_type' => $service->service_type?->value,
                 'status' => $service->status?->value,
                 'sla_plan_id' => $service->sla_plan_id,
+                'sla_plan' => $service->slaPlan ? ['id' => $service->slaPlan->id, 'name' => $service->slaPlan->name] : null,
                 'renewal_cycle' => $service->renewal_cycle,
                 'start_date' => optional($service->start_date)?->toDateString(),
                 'renewal_date' => optional($service->renewal_date)?->toDateString(),
@@ -212,6 +215,7 @@ class ServiceController extends Controller
         return [
             'clients' => $clients,
             'assets' => $assets,
+            'slaPlans' => SlaPlan::query()->orderBy('name')->get(['id', 'name']),
             'defaultClientId' => $defaultClientId,
         ];
     }

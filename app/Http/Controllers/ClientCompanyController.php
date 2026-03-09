@@ -9,6 +9,7 @@ use App\Models\ClientCompany;
 use App\Models\ClientContact;
 use App\Models\ClientUserProfile;
 use App\Models\Service;
+use App\Models\SlaPlan;
 use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -66,6 +67,7 @@ class ClientCompanyController extends Controller
 
         return Inertia::render('Clients/Create', [
             'managers' => $this->accountManagers(),
+            'slaPlans' => SlaPlan::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
@@ -90,6 +92,7 @@ class ClientCompanyController extends Controller
 
         $client->load([
             'accountManager:id,name,email',
+            'slaPlan:id,name,response_minutes,resolution_minutes',
             'contacts' => fn ($query) => $query->orderByDesc('is_active')->orderBy('full_name'),
             'clientUsers.user:id,name,email',
             'clientUsers.contact:id,full_name',
@@ -125,6 +128,8 @@ class ClientCompanyController extends Controller
                 'notes' => $client->notes,
                 'onboarded_at' => optional($client->onboarded_at)?->toDateString(),
                 'account_manager' => $client->accountManager,
+                'sla_plan_id' => $client->sla_plan_id,
+                'sla_plan' => $client->slaPlan ? ['id' => $client->slaPlan->id, 'name' => $client->slaPlan->name] : null,
                 'created_at' => $client->created_at?->toDateString(),
                 'updated_at' => $client->updated_at?->toDateString(),
             ],
@@ -215,6 +220,7 @@ class ClientCompanyController extends Controller
         return Inertia::render('Clients/Edit', [
             'client' => $client,
             'managers' => $this->accountManagers(),
+            'slaPlans' => SlaPlan::query()->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

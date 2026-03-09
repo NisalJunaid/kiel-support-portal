@@ -31,7 +31,7 @@ class StoreServiceRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'service_type' => ['required', Rule::enum(ServiceType::class)],
             'status' => ['required', Rule::enum(ServiceStatus::class)],
-            'sla_plan_id' => ['nullable', 'integer'],
+            'sla_plan_id' => ['nullable', 'exists:sla_plans,id'],
             'renewal_cycle' => ['nullable', 'string', 'max:80'],
             'start_date' => ['nullable', 'date'],
             'renewal_date' => ['nullable', 'date'],

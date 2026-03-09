@@ -37,6 +37,7 @@ class UpdateClientCompanyRequest extends FormRequest
             'notes' => ['nullable', 'string'],
             'onboarded_at' => ['nullable', 'date'],
             'account_manager_id' => ['nullable', 'exists:users,id'],
+            'sla_plan_id' => ['nullable', 'exists:sla_plans,id'],
         ];
     }
 }

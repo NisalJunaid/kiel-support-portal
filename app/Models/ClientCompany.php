@@ -27,6 +27,7 @@ class ClientCompany extends Model
         'notes',
         'onboarded_at',
         'account_manager_id',
+        'sla_plan_id',
     ];
 
     protected $casts = [
@@ -36,6 +37,12 @@ class ClientCompany extends Model
     public function accountManager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'account_manager_id');
+    }
+
+
+    public function slaPlan(): BelongsTo
+    {
+        return $this->belongsTo(SlaPlan::class);
     }
 
     public function contacts(): HasMany

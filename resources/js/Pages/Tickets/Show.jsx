@@ -23,11 +23,12 @@ const typeStyles = {
   system_event: { label: 'System event', variant: 'secondary' },
 };
 
-export default function TicketsShow({ ticket, activity, can, domainReferences, messages, attachments, formData }) {
+export default function TicketsShow({ ticket, activity, can, domainReferences, messages, attachments, formData, slaIndicators }) {
   const [composerTab, setComposerTab] = useState('public_reply');
   const form = useForm({ message_type: 'public_reply', body: '', attachments: [] });
 
   const statusOptions = getDomainOptions(domainReferences, 'ticketStatus');
+  const slaBadgeClass = (state) => ({ breached: 'bg-red-100 text-red-700', at_risk: 'bg-amber-100 text-amber-700', healthy: 'bg-emerald-100 text-emerald-700', none: 'bg-muted text-muted-foreground' }[state] || 'bg-muted text-muted-foreground');
   const priorityOptions = getDomainOptions(domainReferences, 'ticketPriority');
 
   const submitMessage = () => {
@@ -111,6 +112,7 @@ export default function TicketsShow({ ticket, activity, can, domainReferences, m
       <section className="grid gap-4 md:grid-cols-3">
         <Card><CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Client</p><CardTitle className="text-base">{ticket.client?.name || '—'}</CardTitle></CardHeader><CardContent>{ticket.client && <Link className="text-sm underline" href={`/clients/${ticket.client.id}`}>Open client</Link>}</CardContent></Card>
         <Card><CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Linked asset</p><CardTitle className="text-base">{ticket.asset?.name || 'None'}</CardTitle></CardHeader><CardContent>{ticket.asset && <Link className="text-sm underline" href={`/assets/${ticket.asset.id}`}>Open asset</Link>}</CardContent></Card>
+        <Card><CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Linked service</p><CardTitle className="text-base">{ticket.service?.name || 'None'}</CardTitle></CardHeader><CardContent>{ticket.service && <Link className="text-sm underline" href={`/services/${ticket.service.id}`}>Open service</Link>}</CardContent></Card>
         <Card><CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Assignee</p><CardTitle className="text-base">{ticket.assigned_user?.name || 'Unassigned'}</CardTitle></CardHeader><CardContent className="text-sm">Team: {ticket.assigned_team || '—'}</CardContent></Card>
       </section>
 
@@ -123,8 +125,9 @@ export default function TicketsShow({ ticket, activity, can, domainReferences, m
           <p><span className="font-medium">Requester user:</span> {ticket.requester_user?.name || '—'}</p>
           <p><span className="font-medium">Requester contact:</span> {ticket.requester_contact?.full_name || '—'}</p>
           <p><span className="font-medium">Updated:</span> {ticket.updated_at || '—'}</p>
-          <p><span className="font-medium">First response due:</span> {ticket.first_response_due_at || '—'}</p>
-          <p><span className="font-medium">Resolution due:</span> {ticket.resolution_due_at || '—'}</p>
+          <p><span className="font-medium">SLA plan:</span> {ticket.sla_plan?.name || 'None'}</p>
+          <p><span className="font-medium">First response due:</span> {ticket.first_response_due_at || '—'} <Badge variant="outline" className={slaBadgeClass(slaIndicators?.first_response?.state)}>{slaIndicators?.first_response?.label || 'No SLA'}</Badge></p>
+          <p><span className="font-medium">Resolution due:</span> {ticket.resolution_due_at || '—'} <Badge variant="outline" className={slaBadgeClass(slaIndicators?.resolution?.state)}>{slaIndicators?.resolution?.label || 'No SLA'}</Badge></p>
           <p><span className="font-medium">Resolved at:</span> {ticket.resolved_at || '—'}</p>
           <p><span className="font-medium">Closed at:</span> {ticket.closed_at || '—'}</p>
           <p className="md:col-span-2"><span className="font-medium">Description:</span> {ticket.description}</p>

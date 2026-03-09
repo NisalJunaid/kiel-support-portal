@@ -20,6 +20,7 @@ class Ticket extends Model
         'requester_user_id',
         'requester_contact_id',
         'asset_id',
+        'service_id',
         'title',
         'description',
         'category',
@@ -30,6 +31,7 @@ class Ticket extends Model
         'source',
         'assigned_team',
         'assigned_user_id',
+        'sla_plan_id',
         'first_response_due_at',
         'resolution_due_at',
         'resolved_at',
@@ -65,6 +67,16 @@ class Ticket extends Model
     public function asset(): BelongsTo
     {
         return $this->belongsTo(Asset::class);
+    }
+
+    public function service(): BelongsTo
+    {
+        return $this->belongsTo(Service::class);
+    }
+
+    public function slaPlan(): BelongsTo
+    {
+        return $this->belongsTo(SlaPlan::class);
     }
 
     public function assignedUser(): BelongsTo

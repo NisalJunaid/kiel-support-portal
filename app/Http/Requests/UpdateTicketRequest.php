@@ -33,6 +33,10 @@ class UpdateTicketRequest extends FormRequest
                 'nullable',
                 Rule::exists('assets', 'id')->where(fn ($query) => $query->where('client_company_id', $this->input('client_company_id'))),
             ],
+            'service_id' => [
+                'nullable',
+                Rule::exists('services', 'id')->where(fn ($query) => $query->where('client_company_id', $this->input('client_company_id'))),
+            ],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
             'category' => ['required', 'string', 'max:120'],
@@ -43,6 +47,7 @@ class UpdateTicketRequest extends FormRequest
             'source' => ['required', 'string', 'max:80'],
             'assigned_team' => ['nullable', 'string', 'max:120'],
             'assigned_user_id' => ['nullable', Rule::exists('users', 'id')],
+            'sla_plan_id' => ['nullable', 'exists:sla_plans,id'],
             'first_response_due_at' => ['nullable', 'date'],
             'resolution_due_at' => ['nullable', 'date', 'after_or_equal:first_response_due_at'],
             'resolved_at' => ['nullable', 'date'],
