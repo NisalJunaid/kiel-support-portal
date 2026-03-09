@@ -8,6 +8,7 @@ use App\Models\Asset;
 use App\Models\AssetType;
 use App\Models\ClientCompany;
 use App\Models\User;
+use App\Models\Ticket;
 use App\Support\AssetMetaFields;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -92,6 +93,7 @@ class AssetController extends Controller
             'parent:id,name,asset_code',
             'children:id,parent_asset_id,name,asset_code,status,criticality',
             'assignedStaff:id,name,email',
+            'tickets:id,ticket_number,title,status,priority',
         ]);
 
         $activity = Activity::query()
@@ -138,7 +140,13 @@ class AssetController extends Controller
                 'causer_name' => $item->causer?->name,
                 'created_at' => optional($item->created_at)?->toDateTimeString(),
             ])->values(),
-            'linkedTickets' => [],
+            'linkedTickets' => $asset->tickets->map(fn (Ticket $ticket) => [
+                'id' => $ticket->id,
+                'ticket_number' => $ticket->ticket_number,
+                'title' => $ticket->title,
+                'status' => $ticket->status?->value,
+                'priority' => $ticket->priority?->value,
+            ])->values(),
             'metaFieldsByType' => AssetMetaFields::definitions(),
             'can' => [
                 'update' => $request->user()->can('update', $asset),

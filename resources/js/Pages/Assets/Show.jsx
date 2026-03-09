@@ -5,6 +5,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
+import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { EmptyState } from '@/Components/shared/empty-state';
 
@@ -31,6 +32,12 @@ export default function AssetsShow({ asset, activity, linkedTickets, can, domain
       breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Assets', href: '/assets' }, { label: asset.name }]}
     >
       <div className="flex gap-2">
+        <Button asChild variant="secondary" size="sm">
+          <Link href={`/tickets/create?client=${asset.client?.id}&asset=${asset.id}`}>Create ticket</Link>
+        </Button>
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/tickets?search=${asset.asset_code}`}>View tickets</Link>
+        </Button>
         {can.update && (
           <Button asChild variant="outline" size="sm">
             <Link href={`/assets/${asset.id}/edit`}>Edit</Link>
@@ -150,8 +157,13 @@ export default function AssetsShow({ asset, activity, linkedTickets, can, domain
 
         <TabsContent active={tab === 'tickets'}>
           {linkedTickets.length === 0 ? (
-            <EmptyState title="No linked tickets yet" description="Ticket integration is ready for linking once tickets are available." />
-          ) : null}
+            <EmptyState title="No linked tickets yet" description="Create a ticket from this asset to track incidents or requests." />
+          ) : (
+            <Table>
+              <TableHeader><TableRow><TableHead>Ticket</TableHead><TableHead>Title</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead></TableRow></TableHeader>
+              <TableBody>{linkedTickets.map((ticket) => <TableRow key={ticket.id}><TableCell><Link href={`/tickets/${ticket.id}`} className="font-medium hover:underline">{ticket.ticket_number}</Link></TableCell><TableCell>{ticket.title}</TableCell><TableCell><DomainPriorityBadge domainReferences={domainReferences} value={ticket.priority} /></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></TableCell></TableRow>)}</TableBody>
+            </Table>
+          )}
         </TabsContent>
 
         <TabsContent active={tab === 'activity'}>

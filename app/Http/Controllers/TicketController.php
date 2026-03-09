@@ -1,0 +1,245 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Actions\Tickets\GenerateTicketNumber;
+use App\Http\Requests\StoreTicketRequest;
+use App\Http\Requests\UpdateTicketRequest;
+use App\Models\Asset;
+use App\Models\ClientCompany;
+use App\Models\ClientContact;
+use App\Models\ClientUserProfile;
+use App\Models\Ticket;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
+use Inertia\Response;
+use Spatie\Activitylog\Models\Activity;
+
+class TicketController extends Controller
+{
+    public function index(Request $request): Response
+    {
+        $this->authorize('viewAny', Ticket::class);
+
+        $search = trim((string) $request->string('search'));
+        $status = $request->string('status')->toString();
+        $priority = $request->string('priority')->toString();
+
+        $tickets = Ticket::query()
+            ->with(['clientCompany:id,name', 'asset:id,name,asset_code', 'assignedUser:id,name'])
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('ticket_number', 'like', "%{$search}%")
+                        ->orWhere('title', 'like', "%{$search}%")
+                        ->orWhere('category', 'like', "%{$search}%");
+                });
+            })
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($priority, fn ($query) => $query->where('priority', $priority))
+            ->latest('updated_at')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn (Ticket $ticket) => [
+                'id' => $ticket->id,
+                'ticket_number' => $ticket->ticket_number,
+                'title' => $ticket->title,
+                'priority' => $ticket->priority?->value,
+                'status' => $ticket->status?->value,
+                'client' => $ticket->clientCompany,
+                'asset' => $ticket->asset,
+                'assignee' => $ticket->assignedUser,
+                'updated_at' => optional($ticket->updated_at)?->diffForHumans(),
+            ]);
+
+        return Inertia::render('Tickets/Index', [
+            'tickets' => $tickets,
+            'filters' => compact('search', 'status', 'priority'),
+            'can' => [
+                'create' => $request->user()->can('create', Ticket::class),
+                'update' => $request->user()->can('tickets.update'),
+                'delete' => $request->user()->can('tickets.delete'),
+            ],
+        ]);
+    }
+
+    public function create(Request $request): Response
+    {
+        $this->authorize('create', Ticket::class);
+
+        return Inertia::render('Tickets/Create', [
+            'formData' => $this->formData(
+                $request->integer('client') ?: null,
+                $request->integer('asset') ?: null,
+            ),
+            'defaults' => [
+                'status' => 'new',
+                'priority' => 'medium',
+                'source' => 'portal',
+            ],
+        ]);
+    }
+
+    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber): RedirectResponse
+    {
+        $data = $request->validated();
+        $data['ticket_number'] = $generateTicketNumber->execute();
+
+        $ticket = Ticket::create($data);
+
+        if ($ticket->asset_id) {
+            DB::table('asset_ticket_links')->updateOrInsert(
+                ['asset_id' => $ticket->asset_id, 'ticket_id' => $ticket->id],
+                ['updated_at' => now(), 'created_at' => now()],
+            );
+        }
+
+        activity('tickets')
+            ->performedOn($ticket)
+            ->causedBy($request->user())
+            ->event('created')
+            ->withProperties([
+                'ticket_number' => $ticket->ticket_number,
+                'status' => $ticket->status?->value,
+                'priority' => $ticket->priority?->value,
+            ])
+            ->log('Ticket created');
+
+        return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket created successfully.');
+    }
+
+    public function show(Request $request, Ticket $ticket): Response
+    {
+        $this->authorize('view', $ticket);
+
+        $ticket->load([
+            'clientCompany:id,name,client_code',
+            'asset:id,name,asset_code',
+            'requesterUser:id,name,email',
+            'requesterContact:id,full_name,email',
+            'assignedUser:id,name,email',
+        ]);
+
+        $activity = Activity::query()
+            ->where('subject_type', Ticket::class)
+            ->where('subject_id', $ticket->id)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return Inertia::render('Tickets/Show', [
+            'ticket' => [
+                ...$ticket->toArray(),
+                'priority' => $ticket->priority?->value,
+                'status' => $ticket->status?->value,
+                'client' => $ticket->clientCompany,
+                'asset' => $ticket->asset,
+                'requester_user' => $ticket->requesterUser,
+                'requester_contact' => $ticket->requesterContact,
+                'assigned_user' => $ticket->assignedUser,
+                'first_response_due_at' => optional($ticket->first_response_due_at)?->toDateTimeString(),
+                'resolution_due_at' => optional($ticket->resolution_due_at)?->toDateTimeString(),
+                'resolved_at' => optional($ticket->resolved_at)?->toDateTimeString(),
+                'closed_at' => optional($ticket->closed_at)?->toDateTimeString(),
+                'updated_at' => optional($ticket->updated_at)?->toDateTimeString(),
+            ],
+            'activity' => $activity->map(fn (Activity $item) => [
+                'id' => $item->id,
+                'event' => $item->event,
+                'description' => $item->description,
+                'causer_name' => $item->causer?->name,
+                'created_at' => optional($item->created_at)?->toDateTimeString(),
+            ])->values(),
+            'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id),
+            'can' => [
+                'update' => $request->user()->can('update', $ticket),
+                'delete' => $request->user()->can('delete', $ticket),
+            ],
+        ]);
+    }
+
+    public function edit(Ticket $ticket): Response
+    {
+        $this->authorize('update', $ticket);
+
+        return Inertia::render('Tickets/Edit', [
+            'ticket' => [
+                ...$ticket->toArray(),
+                'priority' => $ticket->priority?->value,
+                'status' => $ticket->status?->value,
+                'first_response_due_at' => optional($ticket->first_response_due_at)?->format('Y-m-d\TH:i'),
+                'resolution_due_at' => optional($ticket->resolution_due_at)?->format('Y-m-d\TH:i'),
+                'resolved_at' => optional($ticket->resolved_at)?->format('Y-m-d\TH:i'),
+                'closed_at' => optional($ticket->closed_at)?->format('Y-m-d\TH:i'),
+            ],
+            'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id),
+        ]);
+    }
+
+    public function update(UpdateTicketRequest $request, Ticket $ticket): RedirectResponse
+    {
+        $ticket->update($request->validated());
+
+        DB::table('asset_ticket_links')->where('ticket_id', $ticket->id)->delete();
+        if ($ticket->asset_id) {
+            DB::table('asset_ticket_links')->updateOrInsert(
+                ['asset_id' => $ticket->asset_id, 'ticket_id' => $ticket->id],
+                ['updated_at' => now(), 'created_at' => now()],
+            );
+        }
+
+        activity('tickets')
+            ->performedOn($ticket)
+            ->causedBy($request->user())
+            ->event('updated')
+            ->withProperties([
+                'ticket_number' => $ticket->ticket_number,
+                'status' => $ticket->status?->value,
+                'priority' => $ticket->priority?->value,
+            ])
+            ->log('Ticket updated');
+
+        return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket updated successfully.');
+    }
+
+    public function destroy(Request $request, Ticket $ticket): RedirectResponse
+    {
+        $this->authorize('delete', $ticket);
+
+        DB::table('asset_ticket_links')->where('ticket_id', $ticket->id)->delete();
+        $ticket->delete();
+
+        activity('tickets')
+            ->performedOn($ticket)
+            ->causedBy($request->user())
+            ->event('archived')
+            ->withProperties(['ticket_number' => $ticket->ticket_number])
+            ->log('Ticket archived');
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket archived successfully.');
+    }
+
+    private function formData(?int $defaultClientId = null, ?int $defaultAssetId = null): array
+    {
+        return [
+            'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name', 'client_code']),
+            'contacts' => ClientContact::query()->orderBy('full_name')->get(['id', 'full_name', 'client_company_id']),
+            'assets' => Asset::query()->orderBy('name')->get(['id', 'name', 'asset_code', 'client_company_id']),
+            'clientUsers' => ClientUserProfile::query()
+                ->with('user:id,name,email')
+                ->orderBy('id')
+                ->get(['id', 'user_id', 'client_company_id'])
+                ->map(fn (ClientUserProfile $profile) => [
+                    'id' => $profile->user_id,
+                    'name' => $profile->user?->name,
+                    'email' => $profile->user?->email,
+                    'client_company_id' => $profile->client_company_id,
+                ])->values(),
+            'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
+            'defaultClientId' => $defaultClientId,
+            'defaultAssetId' => $defaultAssetId,
+        ];
+    }
+}
