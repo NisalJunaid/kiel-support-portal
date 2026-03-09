@@ -43,6 +43,25 @@ class HandleInertiaRequests extends Middleware
                 'canViewActivity' => $user ? $user->hasAnyRole(['super-admin', 'admin', 'staff']) : false,
             ],
             'domainReferences' => DomainReferenceCatalog::all(),
+            'notifications' => $user ? [
+                'unread_count' => $user->unreadNotifications()->count(),
+                'recent' => $user->notifications()
+                    ->latest()
+                    ->limit(5)
+                    ->get()
+                    ->map(fn ($notification) => [
+                        'id' => $notification->id,
+                        'title' => $notification->data['title'] ?? 'Notification',
+                        'message' => $notification->data['message'] ?? '',
+                        'url' => $notification->data['url'] ?? null,
+                        'read_at' => optional($notification->read_at)?->toDateTimeString(),
+                        'created_at' => optional($notification->created_at)?->toDateTimeString(),
+                    ])
+                    ->values(),
+            ] : [
+                'unread_count' => 0,
+                'recent' => [],
+            ],
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

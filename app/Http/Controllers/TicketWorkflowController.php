@@ -6,6 +6,7 @@ use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\Notifications\TicketNotificationService;
 use App\Services\Tickets\TicketMessageService;
 use App\Services\Tickets\TicketWorkflowService;
 use Illuminate\Http\RedirectResponse;
@@ -14,7 +15,7 @@ use Illuminate\Validation\Rule;
 
 class TicketWorkflowController extends Controller
 {
-    public function assign(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService): RedirectResponse
+    public function assign(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService, TicketNotificationService $ticketNotificationService): RedirectResponse
     {
         $this->authorize('update', $ticket);
 
@@ -40,12 +41,13 @@ class TicketWorkflowController extends Controller
                 ->log('Ticket assignment updated');
 
             $ticketMessageService->createSystemEvent($ticket, $change['description']);
+            $ticketNotificationService->notifyTicketAssigned($ticket, $assignee, $request->user());
         }
 
         return back()->with('success', 'Ticket assignment updated.');
     }
 
-    public function status(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService): RedirectResponse
+    public function status(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService, TicketNotificationService $ticketNotificationService): RedirectResponse
     {
         $this->authorize('update', $ticket);
 
@@ -68,6 +70,7 @@ class TicketWorkflowController extends Controller
                 ->log('Ticket status changed');
 
             $ticketMessageService->createSystemEvent($ticket, $change['description']);
+            $ticketNotificationService->notifyStatusChanged($ticket, $change['from'] ?? 'unknown', $change['to'] ?? 'unknown', $request->user());
         }
 
         return back()->with('success', 'Ticket status updated.');
@@ -101,22 +104,22 @@ class TicketWorkflowController extends Controller
         return back()->with('success', 'Ticket priority updated.');
     }
 
-    public function resolve(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService): RedirectResponse
+    public function resolve(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService, TicketNotificationService $ticketNotificationService): RedirectResponse
     {
-        return $this->transitionViaAction($request, $ticket, $workflowService, $ticketMessageService, TicketStatus::Resolved, 'resolved');
+        return $this->transitionViaAction($request, $ticket, $workflowService, $ticketMessageService, $ticketNotificationService, TicketStatus::Resolved, 'resolved');
     }
 
-    public function close(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService): RedirectResponse
+    public function close(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService, TicketNotificationService $ticketNotificationService): RedirectResponse
     {
-        return $this->transitionViaAction($request, $ticket, $workflowService, $ticketMessageService, TicketStatus::Closed, 'closed');
+        return $this->transitionViaAction($request, $ticket, $workflowService, $ticketMessageService, $ticketNotificationService, TicketStatus::Closed, 'closed');
     }
 
-    public function reopen(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService): RedirectResponse
+    public function reopen(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService, TicketNotificationService $ticketNotificationService): RedirectResponse
     {
-        return $this->transitionViaAction($request, $ticket, $workflowService, $ticketMessageService, TicketStatus::Open, 'reopened');
+        return $this->transitionViaAction($request, $ticket, $workflowService, $ticketMessageService, $ticketNotificationService, TicketStatus::Open, 'reopened');
     }
 
-    private function transitionViaAction(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService, TicketStatus $toStatus, string $event): RedirectResponse
+    private function transitionViaAction(Request $request, Ticket $ticket, TicketWorkflowService $workflowService, TicketMessageService $ticketMessageService, TicketNotificationService $ticketNotificationService, TicketStatus $toStatus, string $event): RedirectResponse
     {
         $this->authorize('update', $ticket);
 
@@ -135,6 +138,7 @@ class TicketWorkflowController extends Controller
                 ->log(sprintf('Ticket %s', $event));
 
             $ticketMessageService->createSystemEvent($ticket, $change['description']);
+            $ticketNotificationService->notifyStatusChanged($ticket, $change['from'] ?? 'unknown', $change['to'] ?? 'unknown', $request->user());
         }
 
         return back()->with('success', sprintf('Ticket %s.', $event));

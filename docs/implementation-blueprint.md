@@ -61,6 +61,12 @@
 
 
 
+- **Notifications module (ticket event feed + in-app center):**
+  - Laravel database notifications are enabled via the `notifications` table with shared Inertia props for unread count + recent items in the app shell.
+  - Ticket event notifications now dispatch for ticket created, assignment updates, new public replies, and status changes.
+  - New in-app notification center page (`/notifications`) supports pagination plus mark-read/mark-all-read actions.
+  - Topbar bell dropdown now shows unread badge + latest notifications with direct ticket navigation.
+
 - **SLA plans + indicators module (practical v1):**
   - New `sla_plans` table/model with response/resolution targets and optional business-hour/escalation JSON payloads.
   - Client companies and services can now reference an `sla_plan_id`; tickets can reference both `service_id` and resolved `sla_plan_id`.
@@ -112,6 +118,9 @@
 - `Resource /sla-plans` -> `SlaPlanController` (`sla-plans.*`, except show) [auth + policy]
 - `Resource /tickets` -> `TicketController` (`tickets.*`) [auth + policy]
 - `GET /activity` -> `ActivityController@index` (`activity.index`) [auth + role:super-admin|admin|staff]
+- `GET /notifications` -> `NotificationController@index` (`notifications.index`) [auth]
+- `PATCH /notifications/read-all` -> `NotificationController@markAllAsRead` (`notifications.read-all`) [auth]
+- `PATCH /notifications/{notification}/read` -> `NotificationController@markAsRead` (`notifications.read`) [auth]
 - `POST /tickets/{ticket}/messages` -> `TicketMessageController@store` (`tickets.messages.store`) [auth + policy]
 - `PATCH /tickets/{ticket}/workflow/assignment` -> `TicketWorkflowController@assign` (`tickets.workflow.assignment`) [auth + policy]
 - `PATCH /tickets/{ticket}/workflow/status` -> `TicketWorkflowController@status` (`tickets.workflow.status`) [auth + policy]
@@ -134,6 +143,7 @@
 - `App\Models\Ticket` (soft deletes, belongs to client/requester/asset/assignee with status/priority enums, has many conversation messages)
 - `App\Models\TicketMessage` (belongs to ticket and optional author user, enum-backed message type for public/internal/system semantics)
 - `App\Models\TicketAttachment` (belongs to ticket, optional ticket message context, uploader, and private file metadata)
+- `Illuminate\Notifications\DatabaseNotification` (Laravel persisted in-app notification records)
 - Spatie permission models:
   - `Spatie\Permission\Models\Role`
   - `Spatie\Permission\Models\Permission`
@@ -218,6 +228,7 @@
 - `Tickets/Index.jsx`
 - `Tickets/Create.jsx` (includes initial attachment upload section)
 - `Tickets/Edit.jsx`
+- `Notifications/Index.jsx`
 - `Tickets/Show.jsx` (chronological conversation thread + public reply/internal note composer with validation feedback + attachment upload/list/download UX)
 - `Clients/Index.jsx` now supports search + status/account-manager filters + pagination controls.
 - `Contacts/Index.jsx` now supports search + client/type/active-state filters + pagination controls.

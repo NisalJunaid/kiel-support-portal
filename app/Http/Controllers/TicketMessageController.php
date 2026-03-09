@@ -7,11 +7,12 @@ use App\Http\Requests\StoreTicketMessageRequest;
 use App\Models\Ticket;
 use App\Services\Tickets\TicketAttachmentService;
 use App\Services\Tickets\TicketMessageService;
+use App\Services\Notifications\TicketNotificationService;
 use Illuminate\Http\RedirectResponse;
 
 class TicketMessageController extends Controller
 {
-    public function store(StoreTicketMessageRequest $request, Ticket $ticket, TicketMessageService $ticketMessageService, TicketAttachmentService $ticketAttachmentService): RedirectResponse
+    public function store(StoreTicketMessageRequest $request, Ticket $ticket, TicketMessageService $ticketMessageService, TicketAttachmentService $ticketAttachmentService, TicketNotificationService $ticketNotificationService): RedirectResponse
     {
         $type = TicketMessageType::from($request->string('message_type')->toString());
 
@@ -23,6 +24,11 @@ class TicketMessageController extends Controller
         );
 
         $ticketAttachmentService->storeForMessage($ticket, $message, $request->user(), $request->file('attachments', []));
+
+
+        if ($ticketNotificationService->shouldNotifyForMessageType($type)) {
+            $ticketNotificationService->notifyPublicReply($ticket, $request->user());
+        }
 
         activity('tickets')
             ->performedOn($ticket)
