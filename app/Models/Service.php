@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Service extends Model
@@ -40,8 +41,19 @@ class Service extends Model
         return $this->belongsTo(ClientCompany::class);
     }
 
+
+    public function slaPlan(): BelongsTo
+    {
+        return $this->belongsTo(SlaPlan::class);
+    }
+
     public function assets(): BelongsToMany
     {
         return $this->belongsToMany(Asset::class)->withTimestamps();
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class);
     }
 }

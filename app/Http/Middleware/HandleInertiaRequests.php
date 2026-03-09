@@ -39,6 +39,7 @@ class HandleInertiaRequests extends Middleware
                 'canViewAssets' => $user ? $user->can('viewAny', \App\Models\Asset::class) : false,
                 'canViewServices' => $user ? $user->can('viewAny', \App\Models\Service::class) : false,
                 'canViewTickets' => $user ? $user->can('viewAny', \App\Models\Ticket::class) : false,
+                'canViewSlaPlans' => $user ? $user->can('viewAny', \App\Models\SlaPlan::class) : false,
             ],
             'domainReferences' => DomainReferenceCatalog::all(),
             'flash' => [

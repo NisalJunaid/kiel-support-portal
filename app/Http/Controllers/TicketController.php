@@ -10,10 +10,13 @@ use App\Models\Asset;
 use App\Models\ClientCompany;
 use App\Models\ClientContact;
 use App\Models\ClientUserProfile;
+use App\Models\Service;
+use App\Models\SlaPlan;
 use App\Models\Ticket;
 use App\Models\TicketMessage;
 use App\Models\User;
 use App\Services\Tickets\TicketAttachmentService;
+use App\Services\Tickets\SlaDeadlineService;
 use App\Services\Tickets\TicketMessageService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,7 +27,7 @@ use Spatie\Activitylog\Models\Activity;
 
 class TicketController extends Controller
 {
-    public function index(Request $request): Response
+    public function index(Request $request, SlaDeadlineService $slaDeadlineService): Response
     {
         $this->authorize('viewAny', Ticket::class);
 
@@ -33,7 +36,7 @@ class TicketController extends Controller
         $priority = $request->string('priority')->toString();
 
         $tickets = Ticket::query()
-            ->with(['clientCompany:id,name', 'asset:id,name,asset_code', 'assignedUser:id,name'])
+            ->with(['clientCompany:id,name', 'asset:id,name,asset_code', 'service:id,name', 'slaPlan:id,name', 'assignedUser:id,name'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($inner) use ($search) {
                     $inner->where('ticket_number', 'like', "%{$search}%")
@@ -54,8 +57,14 @@ class TicketController extends Controller
                 'status' => $ticket->status?->value,
                 'client' => $ticket->clientCompany,
                 'asset' => $ticket->asset,
+                'service' => $ticket->service,
+                'sla_plan' => $ticket->slaPlan ? ['id' => $ticket->slaPlan->id, 'name' => $ticket->slaPlan->name] : null,
                 'assignee' => $ticket->assignedUser,
                 'updated_at' => optional($ticket->updated_at)?->diffForHumans(),
+                'first_response_due_at' => optional($ticket->first_response_due_at)?->toDateTimeString(),
+                'resolution_due_at' => optional($ticket->resolution_due_at)?->toDateTimeString(),
+                'sla_response_indicator' => $slaDeadlineService->computeIndicator($ticket, 'first_response_due_at'),
+                'sla_resolution_indicator' => $slaDeadlineService->computeIndicator($ticket, 'resolution_due_at'),
             ]);
 
         return Inertia::render('Tickets/Index', [
@@ -78,6 +87,7 @@ class TicketController extends Controller
             'formData' => $this->formData(
                 $request->integer('client') ?: null,
                 $request->integer('asset') ?: null,
+                $request->integer('service') ?: null,
             ),
             'defaults' => [
                 'status' => 'new',
@@ -87,10 +97,16 @@ class TicketController extends Controller
         ]);
     }
 
-    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber, TicketMessageService $ticketMessageService, TicketAttachmentService $ticketAttachmentService): RedirectResponse
+    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber, TicketMessageService $ticketMessageService, TicketAttachmentService $ticketAttachmentService, SlaDeadlineService $slaDeadlineService): RedirectResponse
     {
         $data = $request->validated();
         $data['ticket_number'] = $generateTicketNumber->execute();
+
+        $planId = $slaDeadlineService->resolvePlanId($data);
+        $calculatedDeadlines = $slaDeadlineService->calculateDeadlines($planId, now());
+        $data['sla_plan_id'] = $data['sla_plan_id'] ?? $calculatedDeadlines['sla_plan_id'];
+        $data['first_response_due_at'] = $data['first_response_due_at'] ?? $calculatedDeadlines['first_response_due_at'];
+        $data['resolution_due_at'] = $data['resolution_due_at'] ?? $calculatedDeadlines['resolution_due_at'];
 
         $ticket = Ticket::create($data);
 
@@ -119,13 +135,15 @@ class TicketController extends Controller
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket created successfully.');
     }
 
-    public function show(Request $request, Ticket $ticket): Response
+    public function show(Request $request, Ticket $ticket, SlaDeadlineService $slaDeadlineService): Response
     {
         $this->authorize('view', $ticket);
 
         $ticket->load([
             'clientCompany:id,name,client_code',
             'asset:id,name,asset_code',
+            'service:id,name',
+            'slaPlan:id,name,response_minutes,resolution_minutes',
             'requesterUser:id,name,email',
             'requesterContact:id,full_name,email',
             'assignedUser:id,name,email',
@@ -155,6 +173,8 @@ class TicketController extends Controller
                 'status' => $ticket->status?->value,
                 'client' => $ticket->clientCompany,
                 'asset' => $ticket->asset,
+                'service' => $ticket->service,
+                'sla_plan' => $ticket->slaPlan ? ['id' => $ticket->slaPlan->id, 'name' => $ticket->slaPlan->name] : null,
                 'requester_user' => $ticket->requesterUser,
                 'requester_contact' => $ticket->requesterContact,
                 'assigned_user' => $ticket->assignedUser,
@@ -180,7 +200,7 @@ class TicketController extends Controller
                 'causer_name' => $item->causer?->name,
                 'created_at' => optional($item->created_at)?->toDateTimeString(),
             ])->values(),
-            'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id),
+            'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id, $ticket->service_id),
             'messages' => $messages->map(fn (TicketMessage $message) => [
                 'id' => $message->id,
                 'message_type' => $message->message_type?->value,
@@ -198,6 +218,10 @@ class TicketController extends Controller
                     'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
                 ])->values(),
             ])->values(),
+            'slaIndicators' => [
+                'first_response' => $slaDeadlineService->computeIndicator($ticket, 'first_response_due_at'),
+                'resolution' => $slaDeadlineService->computeIndicator($ticket, 'resolution_due_at'),
+            ],
             'can' => [
                 'update' => $request->user()->can('update', $ticket),
                 'delete' => $request->user()->can('delete', $ticket),
@@ -221,17 +245,24 @@ class TicketController extends Controller
                 'resolved_at' => optional($ticket->resolved_at)?->format('Y-m-d\TH:i'),
                 'closed_at' => optional($ticket->closed_at)?->format('Y-m-d\TH:i'),
             ],
-            'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id),
+            'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id, $ticket->service_id),
         ]);
     }
 
-    public function update(UpdateTicketRequest $request, Ticket $ticket, TicketMessageService $ticketMessageService): RedirectResponse
+    public function update(UpdateTicketRequest $request, Ticket $ticket, TicketMessageService $ticketMessageService, SlaDeadlineService $slaDeadlineService): RedirectResponse
     {
         $previousStatus = $ticket->status?->value;
         $previousPriority = $ticket->priority?->value;
         $previousAssignee = $ticket->assignedUser?->name;
 
-        $ticket->update($request->validated());
+        $payload = $request->validated();
+        $planId = $slaDeadlineService->resolvePlanId($payload);
+        $calculatedDeadlines = $slaDeadlineService->calculateDeadlines($planId, now());
+        $payload['sla_plan_id'] = $payload['sla_plan_id'] ?? $calculatedDeadlines['sla_plan_id'];
+        $payload['first_response_due_at'] = $payload['first_response_due_at'] ?? $calculatedDeadlines['first_response_due_at'];
+        $payload['resolution_due_at'] = $payload['resolution_due_at'] ?? $calculatedDeadlines['resolution_due_at'];
+
+        $ticket->update($payload);
 
         DB::table('asset_ticket_links')->where('ticket_id', $ticket->id)->delete();
         if ($ticket->asset_id) {
@@ -293,12 +324,14 @@ class TicketController extends Controller
         return redirect()->route('tickets.index')->with('success', 'Ticket archived successfully.');
     }
 
-    private function formData(?int $defaultClientId = null, ?int $defaultAssetId = null): array
+    private function formData(?int $defaultClientId = null, ?int $defaultAssetId = null, ?int $defaultServiceId = null): array
     {
         return [
             'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name', 'client_code']),
             'contacts' => ClientContact::query()->orderBy('full_name')->get(['id', 'full_name', 'client_company_id']),
             'assets' => Asset::query()->orderBy('name')->get(['id', 'name', 'asset_code', 'client_company_id']),
+            'services' => Service::query()->orderBy('name')->get(['id', 'name', 'client_company_id']),
+            'slaPlans' => SlaPlan::query()->orderBy('name')->get(['id', 'name', 'response_minutes', 'resolution_minutes']),
             'clientUsers' => ClientUserProfile::query()
                 ->with('user:id,name,email')
                 ->orderBy('id')
@@ -312,6 +345,7 @@ class TicketController extends Controller
             'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
             'defaultClientId' => $defaultClientId,
             'defaultAssetId' => $defaultAssetId,
+            'defaultServiceId' => $defaultServiceId,
         ];
     }
 }

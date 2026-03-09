@@ -10,6 +10,7 @@ import { EmptyState } from '@/Components/shared/empty-state';
 import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { Badge } from '@/Components/ui/badge';
 import { getDomainOptions } from '@/lib/domain-references';
 
 export default function TicketsIndex({ tickets, filters, can, domainReferences, staff }) {
@@ -18,6 +19,8 @@ export default function TicketsIndex({ tickets, filters, can, domainReferences, 
   const [priority, setPriority] = useState(filters.priority || 'all');
   const statusOptions = getDomainOptions(domainReferences, 'ticketStatus');
   const priorityOptions = getDomainOptions(domainReferences, 'ticketPriority');
+
+  const slaBadgeClass = (state) => ({ breached: 'bg-red-100 text-red-700', at_risk: 'bg-amber-100 text-amber-700', healthy: 'bg-emerald-100 text-emerald-700', none: 'bg-muted text-muted-foreground' }[state] || 'bg-muted text-muted-foreground');
 
   const updateTicket = (ticketId, endpoint, payload = {}) => {
     router.patch(`/tickets/${ticketId}/workflow/${endpoint}`, payload, { preserveScroll: true });
@@ -37,8 +40,8 @@ export default function TicketsIndex({ tickets, filters, can, domainReferences, 
 
           {tickets.data.length === 0 ? <EmptyState title="No tickets found" description="Create your first support ticket or refine filters." /> : (
             <Table>
-              <TableHeader><TableRow><TableHead>Ticket</TableHead><TableHead>Title</TableHead><TableHead>Client</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead>Assignee</TableHead><TableHead>Updated</TableHead><TableHead /></TableRow></TableHeader>
-              <TableBody>{tickets.data.map((ticket) => <TableRow key={ticket.id}><TableCell><Link href={`/tickets/${ticket.id}`} className="font-medium hover:underline">{ticket.ticket_number}</Link></TableCell><TableCell>{ticket.title}</TableCell><TableCell>{ticket.client?.name || '—'}</TableCell><TableCell><DomainPriorityBadge domainReferences={domainReferences} value={ticket.priority} /></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></TableCell><TableCell>{ticket.assignee?.name || 'Unassigned'}</TableCell><TableCell>{ticket.updated_at}</TableCell><TableCell className="text-right"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm">Actions</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => router.visit(`/tickets/${ticket.id}`)}>View</DropdownMenuItem>{can.update && <>
+              <TableHeader><TableRow><TableHead>Ticket</TableHead><TableHead>Title</TableHead><TableHead>Client</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead>SLA</TableHead><TableHead>Assignee</TableHead><TableHead>Updated</TableHead><TableHead /></TableRow></TableHeader>
+              <TableBody>{tickets.data.map((ticket) => <TableRow key={ticket.id}><TableCell><Link href={`/tickets/${ticket.id}`} className="font-medium hover:underline">{ticket.ticket_number}</Link></TableCell><TableCell>{ticket.title}</TableCell><TableCell>{ticket.client?.name || '—'}</TableCell><TableCell><DomainPriorityBadge domainReferences={domainReferences} value={ticket.priority} /></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></TableCell><TableCell><div className="flex flex-col gap-1"><Badge className={slaBadgeClass(ticket.sla_response_indicator?.state)} variant="outline">Response: {ticket.sla_response_indicator?.label || '—'}</Badge><Badge className={slaBadgeClass(ticket.sla_resolution_indicator?.state)} variant="outline">Resolution: {ticket.sla_resolution_indicator?.label || '—'}</Badge></div></TableCell><TableCell>{ticket.assignee?.name || 'Unassigned'}</TableCell><TableCell>{ticket.updated_at}</TableCell><TableCell className="text-right"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" size="sm">Actions</Button></DropdownMenuTrigger><DropdownMenuContent align="end"><DropdownMenuItem onSelect={() => router.visit(`/tickets/${ticket.id}`)}>View</DropdownMenuItem>{can.update && <>
                 <DropdownMenuItem onSelect={() => updateTicket(ticket.id, 'assignment', { assigned_user_id: null })}>Unassign</DropdownMenuItem>
                 {staff.map((user) => <DropdownMenuItem key={user.id} onSelect={() => updateTicket(ticket.id, 'assignment', { assigned_user_id: user.id })}>Assign to {user.name}</DropdownMenuItem>)}
                 <DropdownMenuItem onSelect={() => router.post(`/tickets/${ticket.id}/workflow/resolve`)}>Resolve</DropdownMenuItem>

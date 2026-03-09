@@ -9,7 +9,7 @@ function FieldError({ message }) {
   return <p className="text-xs text-red-600">{message}</p>;
 }
 
-export default function ClientForm({ data, setData, errors, processing, onSubmit, managers = [], submitLabel = 'Save client' }) {
+export default function ClientForm({ data, setData, errors, processing, onSubmit, managers = [], slaPlans = [], submitLabel = 'Save client' }) {
   return (
     <form onSubmit={onSubmit} className="space-y-6">
       <Card>
@@ -41,6 +41,15 @@ export default function ClientForm({ data, setData, errors, processing, onSubmit
               {managers.map((manager) => <option key={manager.id} value={manager.id}>{manager.name}</option>)}
             </select>
             <FieldError message={errors.account_manager_id} />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="sla_plan_id">Default SLA plan</Label>
+            <select id="sla_plan_id" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.sla_plan_id ?? ''} onChange={(e) => setData('sla_plan_id', e.target.value)}>
+              <option value="">No default SLA</option>
+              {slaPlans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}
+            </select>
+            <FieldError message={errors.sla_plan_id} />
           </div>
 
           {['billing_address', 'technical_address', 'notes'].map((field) => (
