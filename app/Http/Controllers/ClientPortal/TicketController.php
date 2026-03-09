@@ -156,6 +156,9 @@ class TicketController extends Controller
                 'uploaded_by' => $attachment->uploader?->name,
                 'created_at' => optional($attachment->created_at)->toDateTimeString(),
             ])->values(),
+            'can' => [
+                'addPublicReply' => $request->user()->can('addPublicReply', $ticket),
+            ],
         ]);
     }
 }

@@ -30,6 +30,8 @@ class BrandingSettingsController extends Controller
             'primary_color' => $request->string('primary_color')->toString(),
             'secondary_color' => $request->string('secondary_color')->toString(),
             'accent_color' => $request->string('accent_color')->toString(),
+            'surface_border_color' => $request->string('surface_border_color')->toString(),
+            'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
             'logo_path' => $current['logo_path'],
         ];
 

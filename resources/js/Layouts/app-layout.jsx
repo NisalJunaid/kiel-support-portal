@@ -22,8 +22,10 @@ export default function AppLayout({ children, title, description, breadcrumbs = 
     });
   };
 
+  const sidebarWidth = sidebarCollapsed ? '78px' : '256px';
+
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-background" style={{ '--sidebar-width': sidebarWidth }}>
       <div className="hidden md:block">
         <AppSidebar collapsed={sidebarCollapsed} url={url} auth={props.auth} authorization={props.authorization} branding={props.branding} />
       </div>

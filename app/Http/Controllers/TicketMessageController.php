@@ -40,6 +40,6 @@ class TicketMessageController extends Controller
             ])
             ->log('Ticket message added');
 
-        return redirect()->route('tickets.show', $ticket)->with('success', $type === TicketMessageType::InternalNote ? 'Internal note added.' : 'Reply sent.');
+        return back()->with('success', $type === TicketMessageType::InternalNote ? 'Internal note added.' : 'Reply sent.');
     }
 }

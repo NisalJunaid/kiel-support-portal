@@ -109,6 +109,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/tickets/create', [ClientPortalTicketController::class, 'create'])->name('tickets.create');
         Route::post('/tickets', [ClientPortalTicketController::class, 'store'])->name('tickets.store');
         Route::get('/tickets/{ticket}', [ClientPortalTicketController::class, 'show'])->name('tickets.show');
+        Route::post('/tickets/{ticket}/messages', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
         Route::get('/assets', [ClientPortalAssetController::class, 'index'])->name('assets.index');
         Route::get('/contacts', [ClientPortalContactController::class, 'index'])->name('contacts.index');
     });

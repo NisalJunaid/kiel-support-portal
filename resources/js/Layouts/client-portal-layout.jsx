@@ -15,8 +15,8 @@ export default function ClientPortalLayout({ children, title, description }) {
   const { url, props } = usePage();
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
+    <div className="min-h-screen bg-background">
+      <header className="border-b bg-card">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div>
             <p className="text-xs uppercase tracking-widest text-muted-foreground">Kiel</p>
@@ -29,7 +29,7 @@ export default function ClientPortalLayout({ children, title, description }) {
       </header>
 
       <div className="mx-auto grid max-w-7xl gap-6 px-6 py-6 md:grid-cols-[220px_1fr]">
-        <aside className="rounded-lg border bg-white p-3">
+        <aside className="rounded-lg border bg-card p-3">
           <nav className="space-y-1">
             {nav
               .filter((item) => !item.requires || props.authorization?.[item.requires])
