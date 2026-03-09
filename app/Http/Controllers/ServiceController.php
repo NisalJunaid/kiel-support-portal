@@ -10,6 +10,7 @@ use App\Models\Service;
 use App\Models\SlaPlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use App\Support\ActivityPresenter;
 use Inertia\Inertia;
 use Inertia\Response;
 use Spatie\Activitylog\Models\Activity;
@@ -133,13 +134,7 @@ class ServiceController extends Controller
                 'created_at' => optional($service->created_at)?->toDateTimeString(),
                 'updated_at' => optional($service->updated_at)?->toDateTimeString(),
             ],
-            'activity' => $activity->map(fn (Activity $item) => [
-                'id' => $item->id,
-                'event' => $item->event,
-                'description' => $item->description,
-                'causer_name' => $item->causer?->name,
-                'created_at' => optional($item->created_at)?->toDateTimeString(),
-            ])->values(),
+            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
             'can' => [
                 'update' => $request->user()->can('update', $service),
                 'delete' => $request->user()->can('delete', $service),

@@ -6,7 +6,7 @@
 - UI foundation follows shadcn/ui conventions with reusable primitives in `resources/js/Components/ui` and shared app components in `resources/js/Components/shared`.
 - Authentication uses Laravel session auth with Inertia login page (`/login`) and protected internal routes.
 - Authorization uses Spatie `laravel-permission` + Laravel policies.
-- Audit trail support is implemented via Spatie `laravel-activitylog` for client company, contact, and asset mutations.
+- Audit trail support is implemented via Spatie `laravel-activitylog` for client companies, contacts, client users, assets, services, and tickets, with a shared presenter for consistent timeline payloads.
 - Client user identities are stored in `users` and extended through `client_user_profiles` for client-company scoped access flags.
 - Asset modeling uses `asset_types` + `assets` with a constrained enum surface (status/criticality) and JSON `meta` payloads driven by a centralized type-to-field definition map (`App\Support\AssetMetaFields`).
 
@@ -67,7 +67,13 @@
   - Ticket list/detail now show SLA indicators (on-track/due-soon/breached/no-deadline) and linked SLA plan context.
   - Sidebar navigation now exposes SLA plans for authorized users.
 
-- **Tickets module (full CRUD + client/asset/requester linkage):**
+- **Activity visibility module (staff/admin audit UX):**
+  - Added reusable `ActivityTimeline` shadcn-based component for readable audit events across detail pages.
+  - Added central activity index page (`/activity`) with module filter + pagination for staff/admin roles.
+  - Added activity sections on contact and client-user detail pages and standardized timeline rendering on client/asset/service/ticket detail views.
+  - Expanded logging coverage to client user create/update/archive lifecycle actions.
+
+- **Tickets module (full CRUD + client/asset/requester linkage):
   - New soft-deletable `tickets` table with required business fields and nullable requester/asset/assignee columns.
   - Reliable sequential ticket number generation via `ticket_sequences` row-level locking action (`GenerateTicketNumber`).
   - `Ticket` model with enum-backed status/priority casting and relationships to client, requester user/contact, linked asset, and assigned staff.
@@ -103,6 +109,7 @@
 - `Resource /services` -> `ServiceController` (`services.*`) [auth + policy]
 - `Resource /sla-plans` -> `SlaPlanController` (`sla-plans.*`, except show) [auth + policy]
 - `Resource /tickets` -> `TicketController` (`tickets.*`) [auth + policy]
+- `GET /activity` -> `ActivityController@index` (`activity.index`) [auth + role:super-admin|admin|staff]
 - `POST /tickets/{ticket}/messages` -> `TicketMessageController@store` (`tickets.messages.store`) [auth + policy]
 - `PATCH /tickets/{ticket}/workflow/assignment` -> `TicketWorkflowController@assign` (`tickets.workflow.assignment`) [auth + policy]
 - `PATCH /tickets/{ticket}/workflow/status` -> `TicketWorkflowController@status` (`tickets.workflow.status`) [auth + policy]
@@ -205,6 +212,7 @@
 - `SlaPlans/Index.jsx`
 - `SlaPlans/Create.jsx`
 - `SlaPlans/Edit.jsx`
+- `Activity/Index.jsx`
 - `Tickets/Index.jsx`
 - `Tickets/Create.jsx` (includes initial attachment upload section)
 - `Tickets/Edit.jsx`

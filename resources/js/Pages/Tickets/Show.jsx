@@ -9,6 +9,7 @@ import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { EmptyState } from '@/Components/shared/empty-state';
+import { ActivityTimeline } from '@/Components/shared/activity-timeline';
 import { Badge } from '@/Components/ui/badge';
 import { Textarea } from '@/Components/ui/textarea';
 import { Separator } from '@/Components/ui/separator';
@@ -200,17 +201,7 @@ export default function TicketsShow({ ticket, activity, can, domainReferences, m
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader><CardTitle>Activity log</CardTitle></CardHeader>
-        <CardContent>
-          {activity.length === 0 ? <EmptyState title="No activity yet" description="Ticket changes will appear here." /> : (
-            <Table>
-              <TableHeader><TableRow><TableHead>Event</TableHead><TableHead>Description</TableHead><TableHead>Actor</TableHead><TableHead>At</TableHead></TableRow></TableHeader>
-              <TableBody>{activity.map((item) => <TableRow key={item.id}><TableCell>{item.event}</TableCell><TableCell>{item.description}</TableCell><TableCell>{item.causer_name || 'System'}</TableCell><TableCell>{item.created_at}</TableCell></TableRow>)}</TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <ActivityTimeline items={activity} title="Activity log" description="Ticket workflow and reply events." emptyDescription="Ticket changes will appear here." />
     </AppLayout>
   );
 }

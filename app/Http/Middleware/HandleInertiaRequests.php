@@ -40,6 +40,7 @@ class HandleInertiaRequests extends Middleware
                 'canViewServices' => $user ? $user->can('viewAny', \App\Models\Service::class) : false,
                 'canViewTickets' => $user ? $user->can('viewAny', \App\Models\Ticket::class) : false,
                 'canViewSlaPlans' => $user ? $user->can('viewAny', \App\Models\SlaPlan::class) : false,
+                'canViewActivity' => $user ? $user->hasAnyRole(['super-admin', 'admin', 'staff']) : false,
             ],
             'domainReferences' => DomainReferenceCatalog::all(),
             'flash' => [

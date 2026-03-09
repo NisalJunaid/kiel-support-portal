@@ -7,6 +7,7 @@ import { Badge } from '@/Components/ui/badge';
 import { getDomainBadgeVariant, getDomainLabel } from '@/lib/domain-references';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
 import { EmptyState } from '@/Components/shared/empty-state';
+import { ActivityTimeline } from '@/Components/shared/activity-timeline';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { useState } from 'react';
 
@@ -165,17 +166,7 @@ export default function ClientsShow({ client, contacts, client_users, assets, ti
         </TabsContent>
 
         <TabsContent active={tab === 'activity'}>
-          <Card>
-            <CardHeader><CardTitle>Recent activity</CardTitle><p className="text-sm text-muted-foreground">Latest account-level audit trail events.</p></CardHeader>
-            <CardContent>
-              {activity.length === 0 ? <EmptyState title="No activity yet" description="Changes on this client account will appear here." /> : (
-                <Table>
-                  <TableHeader><TableRow><TableHead>Event</TableHead><TableHead>Description</TableHead><TableHead>Actor</TableHead><TableHead>At</TableHead></TableRow></TableHeader>
-                  <TableBody>{activity.map((item) => <TableRow key={item.id}><TableCell className="capitalize">{item.event || 'updated'}</TableCell><TableCell>{item.description}</TableCell><TableCell>{item.causer_name || 'System'}</TableCell><TableCell>{item.created_at}</TableCell></TableRow>)}</TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <ActivityTimeline items={activity} title="Recent activity" description="Latest account-level audit trail events." emptyDescription="Changes on this client account will appear here." />
         </TabsContent>
       </Tabs>
     </AppLayout>

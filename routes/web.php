@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Administration\ReadinessController;
+use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\Administration\SystemReferenceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -49,6 +50,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('services', ServiceController::class);
     Route::resource('sla-plans', SlaPlanController::class)->parameters(['sla-plans' => 'sla_plan'])->except(['show']);
     Route::resource('tickets', TicketController::class);
+    Route::get('/activity', [ActivityController::class, 'index'])
+        ->middleware('role:super-admin|admin|staff')
+        ->name('activity.index');
+
     Route::post('tickets/{ticket}/messages', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
     Route::patch('tickets/{ticket}/workflow/assignment', [TicketWorkflowController::class, 'assign'])->name('tickets.workflow.assignment');
     Route::patch('tickets/{ticket}/workflow/status', [TicketWorkflowController::class, 'status'])->name('tickets.workflow.status');

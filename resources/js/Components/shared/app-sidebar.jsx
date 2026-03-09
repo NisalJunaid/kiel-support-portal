@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Building2, Users, Boxes, Ticket, Briefcase, Timer, BarChart3, Settings, Shield } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, Boxes, Ticket, Briefcase, Timer, BarChart3, Settings, Shield, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const nav = [
@@ -11,6 +11,7 @@ const nav = [
   { label: 'Tickets', href: '/tickets', icon: Ticket, requires: 'canViewTickets' },
   { label: 'Services', href: '/services', icon: Briefcase, requires: 'canViewServices' },
   { label: 'SLA Plans', href: '/sla-plans', icon: Timer, requires: 'canViewSlaPlans' },
+  { label: 'Activity', href: '/activity', icon: History, requires: 'canViewActivity' },
   { label: 'Reports', href: '/reports', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },
   { label: 'Administration', href: '/administration', icon: Shield, requires: 'canViewAdminReadiness' },
