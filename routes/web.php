@@ -3,6 +3,7 @@
 use App\Http\Controllers\Administration\ReadinessController;
 use App\Http\Controllers\Administration\SystemReferenceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\ClientCompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
 use Illuminate\Support\Facades\Route;
@@ -27,7 +28,9 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:super-admin|admin|staff')
         ->name('administration.system-reference');
 
+    Route::resource('clients', ClientCompanyController::class)->parameters(['clients' => 'client']);
+
     Route::get('/{module}', PlaceholderController::class)
-        ->whereIn('module', ['clients', 'contacts', 'assets', 'tickets', 'services', 'reports', 'settings'])
+        ->whereIn('module', ['contacts', 'assets', 'tickets', 'services', 'reports', 'settings'])
         ->name('module.show');
 });
