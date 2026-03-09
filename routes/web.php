@@ -11,6 +11,7 @@ use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlaceholderController;
+use App\Http\Controllers\ReportsController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SlaPlanController;
 use App\Http\Controllers\TicketAttachmentController;
@@ -67,7 +68,11 @@ Route::middleware('auth')->group(function () {
     Route::post('tickets/{ticket}/workflow/reopen', [TicketWorkflowController::class, 'reopen'])->name('tickets.workflow.reopen');
     Route::get('tickets/{ticket}/attachments/{attachment}', [TicketAttachmentController::class, 'show'])->name('tickets.attachments.show');
 
+    Route::get('/reports', ReportsController::class)
+        ->middleware('role:super-admin|admin|staff')
+        ->name('reports.index');
+
     Route::get('/{module}', PlaceholderController::class)
-        ->whereIn('module', ['reports', 'settings'])
+        ->whereIn('module', ['settings'])
         ->name('module.show');
 });

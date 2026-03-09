@@ -95,9 +95,16 @@
   - Client workspace integration: client tickets tab and create-in-context ticket action.
   - Asset workspace integration: linked ticket tab plus quick actions to create/view tickets in context.
 
+- **Reports module (operational summaries + renewal watchlists):**
+  - Added server-driven reports endpoint (`/reports`) restricted to super-admin/admin/staff roles.
+  - Implemented aggregate backend queries for tickets by status/priority/client, SLA compliance summary, and renewal windows for assets/services.
+  - Added `Reports/Index` Inertia page using shadcn/ui cards, tables, badges, and empty states.
+  - Included lightweight export placeholder guidance card (no premature export endpoint complexity).
+  - Added sidebar access control via shared `canViewReports` authorization flag.
+
 ## Pending Modules
 - Password reset and profile management flows.
-- Full CRUD features for reports and settings.
+- Full CRUD features for settings.
 - Pagination controls component polish for larger datasets.
 - Granular permission matrix expansion for non-client modules.
 
@@ -129,7 +136,8 @@
 - `POST /tickets/{ticket}/workflow/close` -> `TicketWorkflowController@close` (`tickets.workflow.close`) [auth + policy]
 - `POST /tickets/{ticket}/workflow/reopen` -> `TicketWorkflowController@reopen` (`tickets.workflow.reopen`) [auth + policy]
 - `GET /tickets/{ticket}/attachments/{attachment}` -> `TicketAttachmentController@show` (`tickets.attachments.show`) [auth + policy]
-- `GET /{module}` for `reports|settings` -> `PlaceholderController` (`module.show`) [auth]
+- `GET /reports` -> `ReportsController` (`reports.index`) [auth + role:super-admin|admin|staff]
+- `GET /{module}` for `settings` -> `PlaceholderController` (`module.show`) [auth]
 
 ## Model Inventory
 - `App\Models\User`
@@ -236,7 +244,8 @@
 - `Services/Index.jsx` now supports search + client/type/status filters + pagination controls.
 - `Tickets/Index.jsx` now supports search + status/priority/assignee/client filters + pagination controls.
 - Shared list utility: `Components/shared/list-pagination.jsx`.
-- `Placeholder/Index.jsx`
+- `Reports/Index.jsx`
+- `Placeholder/Index.jsx` (settings only)
 - Shared shell/components:
   - `app-sidebar`
   - `app-header`
