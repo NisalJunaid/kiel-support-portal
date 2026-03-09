@@ -47,4 +47,9 @@ class ClientCompany extends Model
     {
         return $this->hasMany(ClientUserProfile::class);
     }
+
+    public function assets(): HasMany
+    {
+        return $this->hasMany(Asset::class);
+    }
 }

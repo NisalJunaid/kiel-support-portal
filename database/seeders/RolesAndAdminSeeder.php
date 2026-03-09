@@ -29,6 +29,10 @@ class RolesAndAdminSeeder extends Seeder
             'client-users.create',
             'client-users.update',
             'client-users.delete',
+            'assets.view',
+            'assets.create',
+            'assets.update',
+            'assets.delete',
         ];
 
         foreach ($permissions as $permission) {

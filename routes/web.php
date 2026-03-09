@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Administration\ReadinessController;
+use App\Http\Controllers\AssetController;
 use App\Http\Controllers\Administration\SystemReferenceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClientCompanyController;
@@ -38,7 +39,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('client-users', ClientUserController::class)
         ->parameters(['client-users' => 'clientUser']);
 
+    Route::resource('assets', AssetController::class);
+
     Route::get('/{module}', PlaceholderController::class)
-        ->whereIn('module', ['assets', 'tickets', 'services', 'reports', 'settings'])
+        ->whereIn('module', ['tickets', 'services', 'reports', 'settings'])
         ->name('module.show');
 });

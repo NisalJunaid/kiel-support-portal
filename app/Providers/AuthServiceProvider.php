@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Asset;
 use App\Models\ClientCompany;
 use App\Models\ClientContact;
 use App\Models\ClientUserProfile;
 use App\Models\User;
+use App\Policies\AssetPolicy;
 use App\Policies\ClientCompanyPolicy;
 use App\Policies\ClientContactPolicy;
 use App\Policies\ClientUserProfilePolicy;
@@ -17,6 +19,7 @@ class AuthServiceProvider extends ServiceProvider
 {
     protected $policies = [
         User::class => UserPolicy::class,
+        Asset::class => AssetPolicy::class,
         ClientCompany::class => ClientCompanyPolicy::class,
         ClientContact::class => ClientContactPolicy::class,
         ClientUserProfile::class => ClientUserProfilePolicy::class,
