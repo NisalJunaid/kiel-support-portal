@@ -4,6 +4,7 @@
 - Application is a Laravel 10 monolith with Inertia.js + React rendered from `resources/js`.
 - Frontend entrypoint is `resources/js/app.jsx` using `@inertiajs/react` and Vite.
 - UI foundation follows shadcn/ui conventions with reusable primitives in `resources/js/Components/ui` and shared app components in `resources/js/Components/shared`.
+- List/index UX now follows a shared operational pattern: searchable + filterable shadcn/ui control rows, reset actions, query-string-preserving Laravel pagination, and shared `ListPagination` rendering for consistent navigation across modules.
 - Authentication uses Laravel session auth with Inertia login page (`/login`) and protected internal routes.
 - Authorization uses Spatie `laravel-permission` + Laravel policies.
 - Audit trail support is implemented via Spatie `laravel-activitylog` for client companies, contacts, client users, assets, services, and tickets, with a shared presenter for consistent timeline payloads.
@@ -218,6 +219,12 @@
 - `Tickets/Create.jsx` (includes initial attachment upload section)
 - `Tickets/Edit.jsx`
 - `Tickets/Show.jsx` (chronological conversation thread + public reply/internal note composer with validation feedback + attachment upload/list/download UX)
+- `Clients/Index.jsx` now supports search + status/account-manager filters + pagination controls.
+- `Contacts/Index.jsx` now supports search + client/type/active-state filters + pagination controls.
+- `Assets/Index.jsx` now supports search + client/type/status/criticality filters + pagination controls.
+- `Services/Index.jsx` now supports search + client/type/status filters + pagination controls.
+- `Tickets/Index.jsx` now supports search + status/priority/assignee/client filters + pagination controls.
+- Shared list utility: `Components/shared/list-pagination.jsx`.
 - `Placeholder/Index.jsx`
 - Shared shell/components:
   - `app-sidebar`

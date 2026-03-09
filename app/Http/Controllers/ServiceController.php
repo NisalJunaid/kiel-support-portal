@@ -22,6 +22,9 @@ class ServiceController extends Controller
         $this->authorize('viewAny', Service::class);
 
         $search = trim((string) $request->string('search'));
+        $clientId = $request->integer('client_company_id') ?: null;
+        $serviceType = $request->string('service_type')->toString();
+        $status = $request->string('status')->toString();
 
         $services = Service::query()
             ->with(['clientCompany:id,name', 'assets:id,name,asset_code,status', 'slaPlan:id,name'])
@@ -32,6 +35,9 @@ class ServiceController extends Controller
                         ->orWhere('status', 'like', "%{$search}%");
                 });
             })
+            ->when($clientId, fn ($query) => $query->where('client_company_id', $clientId))
+            ->when($serviceType, fn ($query) => $query->where('service_type', $serviceType))
+            ->when($status, fn ($query) => $query->where('status', $status))
             ->latest()
             ->paginate(15)
             ->withQueryString()
@@ -52,7 +58,13 @@ class ServiceController extends Controller
 
         return Inertia::render('Services/Index', [
             'services' => $services,
-            'filters' => ['search' => $search],
+            'filters' => [
+                'search' => $search,
+                'client_company_id' => $clientId,
+                'service_type' => $serviceType,
+                'status' => $status,
+            ],
+            'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
             'can' => [
                 'create' => $request->user()->can('create', Service::class),
                 'update' => $request->user()->can('services.update'),
@@ -105,6 +117,9 @@ class ServiceController extends Controller
         $activity = Activity::query()
             ->where('subject_type', Service::class)
             ->where('subject_id', $service->id)
+            ->when($clientId, fn ($query) => $query->where('client_company_id', $clientId))
+            ->when($serviceType, fn ($query) => $query->where('service_type', $serviceType))
+            ->when($status, fn ($query) => $query->where('status', $status))
             ->latest()
             ->limit(10)
             ->get();

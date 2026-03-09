@@ -21,6 +21,8 @@ class ClientContactController extends Controller
 
         $search = trim((string) $request->string('search'));
         $clientId = $request->integer('client_company_id') ?: null;
+        $contactType = $request->string('contact_type')->toString();
+        $activeState = $request->string('active_state')->toString();
 
         $contacts = ClientContact::query()
             ->with('clientCompany:id,name')
@@ -33,6 +35,8 @@ class ClientContactController extends Controller
                 });
             })
             ->when($clientId, fn ($query) => $query->where('client_company_id', $clientId))
+            ->when($contactType, fn ($query) => $query->where('contact_type', $contactType))
+            ->when($activeState !== '', fn ($query) => $query->where('is_active', $activeState === 'active'))
             ->orderByDesc('is_active')
             ->orderBy('full_name')
             ->paginate(15)
@@ -54,6 +58,8 @@ class ClientContactController extends Controller
             'filters' => [
                 'search' => $search,
                 'client_company_id' => $clientId,
+                'contact_type' => $contactType,
+                'active_state' => $activeState,
             ],
             'clients' => $this->clientOptions(),
             'can' => [

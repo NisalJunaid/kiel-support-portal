@@ -24,6 +24,10 @@ class AssetController extends Controller
         $this->authorize('viewAny', Asset::class);
 
         $search = trim((string) $request->string('search'));
+        $clientId = $request->integer('client_company_id') ?: null;
+        $typeId = $request->integer('asset_type_id') ?: null;
+        $status = $request->string('status')->toString();
+        $criticality = $request->string('criticality')->toString();
 
         $assets = Asset::query()
             ->with(['clientCompany:id,name', 'type:id,name'])
@@ -34,6 +38,10 @@ class AssetController extends Controller
                         ->orWhere('vendor', 'like', "%{$search}%");
                 });
             })
+            ->when($clientId, fn ($query) => $query->where('client_company_id', $clientId))
+            ->when($typeId, fn ($query) => $query->where('asset_type_id', $typeId))
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($criticality, fn ($query) => $query->where('criticality', $criticality))
             ->latest()
             ->paginate(15)
             ->withQueryString()
@@ -51,7 +59,15 @@ class AssetController extends Controller
 
         return Inertia::render('Assets/Index', [
             'assets' => $assets,
-            'filters' => ['search' => $search],
+            'filters' => [
+                'search' => $search,
+                'client_company_id' => $clientId,
+                'asset_type_id' => $typeId,
+                'status' => $status,
+                'criticality' => $criticality,
+            ],
+            'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
+            'assetTypes' => AssetType::query()->orderBy('name')->get(['id', 'name']),
             'can' => [
                 'create' => $request->user()->can('create', Asset::class),
                 'update' => $request->user()->can('assets.update'),
@@ -100,6 +116,10 @@ class AssetController extends Controller
         $activity = Activity::query()
             ->where('subject_type', Asset::class)
             ->where('subject_id', $asset->id)
+            ->when($clientId, fn ($query) => $query->where('client_company_id', $clientId))
+            ->when($typeId, fn ($query) => $query->where('asset_type_id', $typeId))
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($criticality, fn ($query) => $query->where('criticality', $criticality))
             ->latest()
             ->limit(10)
             ->get();
