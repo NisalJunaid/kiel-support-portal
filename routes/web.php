@@ -13,6 +13,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TicketAttachmentController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketMessageController;
+use App\Http\Controllers\TicketWorkflowController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
@@ -47,6 +48,12 @@ Route::middleware('auth')->group(function () {
     Route::resource('services', ServiceController::class);
     Route::resource('tickets', TicketController::class);
     Route::post('tickets/{ticket}/messages', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
+    Route::patch('tickets/{ticket}/workflow/assignment', [TicketWorkflowController::class, 'assign'])->name('tickets.workflow.assignment');
+    Route::patch('tickets/{ticket}/workflow/status', [TicketWorkflowController::class, 'status'])->name('tickets.workflow.status');
+    Route::patch('tickets/{ticket}/workflow/priority', [TicketWorkflowController::class, 'priority'])->name('tickets.workflow.priority');
+    Route::post('tickets/{ticket}/workflow/resolve', [TicketWorkflowController::class, 'resolve'])->name('tickets.workflow.resolve');
+    Route::post('tickets/{ticket}/workflow/close', [TicketWorkflowController::class, 'close'])->name('tickets.workflow.close');
+    Route::post('tickets/{ticket}/workflow/reopen', [TicketWorkflowController::class, 'reopen'])->name('tickets.workflow.reopen');
     Route::get('tickets/{ticket}/attachments/{attachment}', [TicketAttachmentController::class, 'show'])->name('tickets.attachments.show');
 
     Route::get('/{module}', PlaceholderController::class)

@@ -1,6 +1,9 @@
 import AppLayout from '@/Layouts/app-layout';
 import { Link, router, useForm } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
+import { Label } from '@/Components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { getDomainOptions } from '@/lib/domain-references';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
@@ -20,9 +23,12 @@ const typeStyles = {
   system_event: { label: 'System event', variant: 'secondary' },
 };
 
-export default function TicketsShow({ ticket, activity, can, domainReferences, messages, attachments }) {
+export default function TicketsShow({ ticket, activity, can, domainReferences, messages, attachments, formData }) {
   const [composerTab, setComposerTab] = useState('public_reply');
   const form = useForm({ message_type: 'public_reply', body: '', attachments: [] });
+
+  const statusOptions = getDomainOptions(domainReferences, 'ticketStatus');
+  const priorityOptions = getDomainOptions(domainReferences, 'ticketPriority');
 
   const submitMessage = () => {
     form.post(`/tickets/${ticket.id}/messages`, {
@@ -37,12 +43,70 @@ export default function TicketsShow({ ticket, activity, can, domainReferences, m
     form.setData('message_type', tab);
   };
 
+
+  const updateAssignment = (assignedUserId) => {
+    router.patch(`/tickets/${ticket.id}/workflow/assignment`, { assigned_user_id: assignedUserId || null }, { preserveScroll: true });
+  };
+
+  const updateStatus = (status) => {
+    router.patch(`/tickets/${ticket.id}/workflow/status`, { status }, { preserveScroll: true });
+  };
+
+  const updatePriority = (priority) => {
+    router.patch(`/tickets/${ticket.id}/workflow/priority`, { priority }, { preserveScroll: true });
+  };
+
   return (
     <AppLayout title={ticket.ticket_number} description={ticket.title} breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Tickets', href: '/tickets' }, { label: ticket.ticket_number }]}> 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex gap-2"><DomainPriorityBadge domainReferences={domainReferences} value={ticket.priority} /><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></div>
         <div className="flex gap-2">{can.update && <Button asChild size="sm" variant="outline"><Link href={`/tickets/${ticket.id}/edit`}>Edit</Link></Button>}{can.delete && <Button size="sm" variant="outline" onClick={() => { if (confirm('Archive this ticket?')) router.delete(`/tickets/${ticket.id}`); }}>Archive</Button>}</div>
       </div>
+
+
+      {can.update && (
+        <Card>
+          <CardHeader><CardTitle>Workflow controls</CardTitle></CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label>Assignee</Label>
+              <Select value={ticket.assigned_user_id ? String(ticket.assigned_user_id) : 'unassigned'} onValueChange={(value) => updateAssignment(value === 'unassigned' ? '' : value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Unassigned" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unassigned">Unassigned</SelectItem>
+                  {formData.staff.map((user) => <SelectItem key={user.id} value={String(user.id)}>{user.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select value={ticket.status} onValueChange={updateStatus}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Priority</Label>
+              <Select value={ticket.priority} onValueChange={updatePriority}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {priorityOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-3 flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" onClick={() => router.post(`/tickets/${ticket.id}/workflow/resolve`, {}, { preserveScroll: true })}>Resolve</Button>
+              <Button size="sm" variant="outline" onClick={() => router.post(`/tickets/${ticket.id}/workflow/close`, {}, { preserveScroll: true })}>Close</Button>
+              <Button size="sm" variant="outline" onClick={() => router.post(`/tickets/${ticket.id}/workflow/reopen`, {}, { preserveScroll: true })}>Reopen</Button>
+              <Button size="sm" variant="ghost" onClick={() => updateAssignment('')}>Unassign</Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <section className="grid gap-4 md:grid-cols-3">
         <Card><CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Client</p><CardTitle className="text-base">{ticket.client?.name || '—'}</CardTitle></CardHeader><CardContent>{ticket.client && <Link className="text-sm underline" href={`/clients/${ticket.client.id}`}>Open client</Link>}</CardContent></Card>
