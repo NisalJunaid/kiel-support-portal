@@ -329,3 +329,35 @@
 - Added supporting factories to keep feature tests maintainable and expressive:
   - `ClientContactFactory`, `ClientUserProfileFactory`, `AssetTypeFactory`, `AssetFactory`, `TicketFactory`, `TicketMessageFactory`.
 - Test helpers now standardize Inertia request headers and baseline role bootstrap in the new critical-flow test class to reduce per-test setup noise.
+
+## UI/UX Refactor Pass (Latest)
+- Refactored core shadcn primitives for interaction quality and consistency:
+  - `ui/button` now supports polished hover/focus/active transitions across default, secondary, outline, ghost, and destructive variants.
+  - `ui/select` was rebuilt with Radix popper positioning, explicit portal layering, scroll controls, and stronger focus/hover states to resolve selection/display issues in constrained containers.
+- Added missing interaction primitives and wrappers for progressive disclosure and in-context workflows:
+  - `ui/sheet`, `ui/accordion`
+  - reusable `entity-drawer`, `clickable-table-row`, `collapsible-detail-section`
+- App shell responsiveness and navigation ergonomics improved:
+  - Sidebar now supports desktop collapsed state persisted in localStorage.
+  - Mobile sidebar now opens/closes through a sheet.
+  - Header includes accessible sidebar toggle controls.
+- Ticket workspace usability upgrades:
+  - Ticket list rows are now consistently clickable and keyboard-accessible.
+  - Row action menus prevent accidental row-trigger navigation.
+  - Added quick ticket detail drawer from list rows with in-context status/assignment updates.
+  - Ticket detail page now emphasizes primary metadata and conversation first, with lower-priority details moved into accordion-based sections.
+  - Internal notes are visually differentiated for readability.
+- Introduced super-admin branding settings module with persistence:
+  - New `app_settings` table and `AppSetting` model.
+  - New `BrandingSettings` support helper for defaults + theme conversion.
+  - New `Settings/Branding` Inertia page and backend controller/request for validation + persistence.
+  - Logo upload/change/removal stored on `public` disk.
+  - Global theme colors now applied via CSS variables from Inertia shared props (`branding.theme_hsl`).
+  - Sidebar/header branding now consume configurable app name/logo.
+- Route updates:
+  - Added `GET /settings/branding` and `PATCH /settings/branding` (super-admin only).
+
+## Pending Follow-up
+- Extend drawer-based quick-edit workflows to additional entities (clients/assets/contacts) in the same reusable `entity-drawer` pattern.
+- Add dedicated automated feature tests for branding settings authorization + upload lifecycle.
+- Add end-to-end UI checks for select behavior inside nested overlays.
