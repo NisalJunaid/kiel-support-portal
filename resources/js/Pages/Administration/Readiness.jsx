@@ -1,6 +1,8 @@
 import AppLayout from '@/Layouts/app-layout';
+import { Link } from '@inertiajs/react';
 import { Badge } from '@/Components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 
 export default function Readiness({ currentUser, seededRoles, permissionReadinessNote }) {
@@ -29,6 +31,16 @@ export default function Readiness({ currentUser, seededRoles, permissionReadines
           <CardHeader><CardTitle>Permission Readiness</CardTitle></CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">{permissionReadinessNote}</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><CardTitle>Domain Reference</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">Review the canonical status and type values shared by backend enums and frontend components.</p>
+            <Button asChild variant="outline" size="sm">
+              <Link href="/administration/system-reference">Open System Reference</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

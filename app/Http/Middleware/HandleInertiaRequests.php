@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\DomainReferenceCatalog;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -31,7 +32,9 @@ class HandleInertiaRequests extends Middleware
             ],
             'authorization' => [
                 'canViewAdminReadiness' => $user ? $user->can('viewAdminReadiness', $user) : false,
+                'canViewSystemReference' => $user ? $user->can('viewSystemReference', $user) : false,
             ],
+            'domainReferences' => DomainReferenceCatalog::all(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),

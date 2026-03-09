@@ -12,6 +12,7 @@ const nav = [
   { label: 'Reports', href: '/reports', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },
   { label: 'Administration', href: '/administration', icon: Shield, requires: 'canViewAdminReadiness' },
+  { label: 'System Reference', href: '/administration/system-reference', icon: Shield, requires: 'canViewSystemReference' },
 ];
 
 export function AppSidebar() {

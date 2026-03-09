@@ -10,4 +10,9 @@ class UserPolicy
     {
         return $user->hasAnyRole(['super-admin', 'admin', 'staff']);
     }
+
+    public function viewSystemReference(User $user): bool
+    {
+        return $this->viewAdminReadiness($user);
+    }
 }
