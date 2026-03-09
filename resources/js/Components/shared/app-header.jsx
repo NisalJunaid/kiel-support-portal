@@ -11,7 +11,7 @@ export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSideb
   const initials = auth.user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'SU';
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
+    <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
       <div className="flex items-center gap-2">
         <Button variant="ghost" size="icon" className="md:hidden" onClick={onOpenMobileSidebar}><PanelLeft className="h-5 w-5" /></Button>
         <Button variant="ghost" size="icon" className="hidden md:inline-flex" onClick={onToggleSidebar}>

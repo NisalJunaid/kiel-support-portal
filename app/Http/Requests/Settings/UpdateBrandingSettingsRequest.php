@@ -18,6 +18,8 @@ class UpdateBrandingSettingsRequest extends FormRequest
             'primary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'secondary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'accent_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'surface_border_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'dark_mode_enabled' => ['nullable', 'boolean'],
             'logo' => ['nullable', 'image', 'max:2048'],
             'remove_logo' => ['nullable', 'boolean'],
         ];

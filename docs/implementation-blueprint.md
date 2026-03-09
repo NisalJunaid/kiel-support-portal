@@ -12,8 +12,10 @@
 - Client user identities are stored in `users` and extended through `client_user_profiles` for client-company scoped access flags.
 - Asset modeling uses `asset_types` + `assets` with a constrained enum surface (status/criticality) and JSON `meta` payloads driven by a centralized type-to-field definition map (`App\Support\AssetMetaFields`).
 - Staff layout shell components (`AppHeader`, `AppSidebar`, and `FlashMessages`) are now Inertia-agnostic/presentational and receive page props from `AppLayout`, preventing `usePage()` calls from leaking into shared components that can render outside Inertia context.
-- Tickets index row click now opens a wide right-side workspace drawer that loads the full ticket detail workspace (conversation, actions, metadata, attachments, activity) via `drawer_ticket` index state and shared payload composition in `TicketController`.
+- Tickets index row click now opens a layout-aware right-side workspace drawer that anchors to the staff content region (using a sidebar-width CSS variable) so the workspace stretches up to the sidebar boundary in both collapsed and expanded sidebar states.
 - Ticket detail UI is centralized in `Pages/Tickets/Partials/TicketDetailWorkspace.jsx` and reused by both `Tickets/Show` and the tickets index drawer to avoid divergent implementations.
+- Branding settings now include `surface_border_color` and `dark_mode_enabled`, persisted in `app_settings` and propagated as CSS variables/classes (`--surface-border`, `--border`, `--input`, and global `.dark`) via `ThemeBridge` for real-time global theme updates across staff and client portals.
+- Client portal ticket detail now supports policy-gated public replies through the shared `TicketMessageController` endpoint under `/portal/tickets/{ticket}/messages`, while preserving internal-note restrictions through `StoreTicketMessageRequest` and `TicketPolicy`.
 
 ## Implemented Modules
 - Authentication flow baseline (login/logout + session regeneration).

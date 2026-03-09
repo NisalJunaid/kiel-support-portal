@@ -16,6 +16,8 @@ class BrandingSettings
             'primary_color' => '#0f766e',
             'secondary_color' => '#f1f5f9',
             'accent_color' => '#dbeafe',
+            'surface_border_color' => '#94a3b8',
+            'dark_mode_enabled' => false,
         ];
     }
 
@@ -31,6 +33,7 @@ class BrandingSettings
                 'primary' => self::hexToHsl($settings['primary_color']),
                 'secondary' => self::hexToHsl($settings['secondary_color']),
                 'accent' => self::hexToHsl($settings['accent_color']),
+                'surface_border' => self::hexToHsl($settings['surface_border_color']),
             ],
         ];
     }

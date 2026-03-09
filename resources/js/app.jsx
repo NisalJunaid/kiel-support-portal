@@ -12,7 +12,12 @@ function ThemeBridge({ branding, children }) {
     root.style.setProperty('--primary', branding.theme_hsl.primary);
     root.style.setProperty('--secondary', branding.theme_hsl.secondary);
     root.style.setProperty('--accent', branding.theme_hsl.accent);
+    root.style.setProperty('--surface-border', branding.theme_hsl.surface_border);
+    root.style.setProperty('--border', branding.theme_hsl.surface_border);
+    root.style.setProperty('--input', branding.theme_hsl.surface_border);
     root.style.setProperty('--ring', branding.theme_hsl.primary);
+
+    root.classList.toggle('dark', Boolean(branding.dark_mode_enabled));
   }, [branding]);
 
   return children;
