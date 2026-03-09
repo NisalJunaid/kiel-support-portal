@@ -52,4 +52,9 @@ class ClientCompany extends Model
     {
         return $this->hasMany(Asset::class);
     }
+
+    public function services(): HasMany
+    {
+        return $this->hasMany(Service::class);
+    }
 }

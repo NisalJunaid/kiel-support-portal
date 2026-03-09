@@ -9,6 +9,7 @@ use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
+use App\Http\Controllers\ServiceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => auth()->check() ? redirect()->route('dashboard') : redirect()->route('login'));
@@ -40,8 +41,9 @@ Route::middleware('auth')->group(function () {
         ->parameters(['client-users' => 'clientUser']);
 
     Route::resource('assets', AssetController::class);
+    Route::resource('services', ServiceController::class);
 
     Route::get('/{module}', PlaceholderController::class)
-        ->whereIn('module', ['tickets', 'services', 'reports', 'settings'])
+        ->whereIn('module', ['tickets', 'reports', 'settings'])
         ->name('module.show');
 });

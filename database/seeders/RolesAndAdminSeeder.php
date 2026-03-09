@@ -33,6 +33,10 @@ class RolesAndAdminSeeder extends Seeder
             'assets.create',
             'assets.update',
             'assets.delete',
+            'services.view',
+            'services.create',
+            'services.update',
+            'services.delete',
         ];
 
         foreach ($permissions as $permission) {

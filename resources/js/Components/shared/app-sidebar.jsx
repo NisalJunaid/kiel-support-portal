@@ -9,7 +9,7 @@ const nav = [
   { label: 'Client Users', href: '/client-users', icon: Users, requires: 'canViewClientUsers' },
   { label: 'Assets', href: '/assets', icon: Boxes, requires: 'canViewAssets' },
   { label: 'Tickets', href: '/tickets', icon: Ticket },
-  { label: 'Services', href: '/services', icon: Briefcase },
+  { label: 'Services', href: '/services', icon: Briefcase, requires: 'canViewServices' },
   { label: 'Reports', href: '/reports', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },
   { label: 'Administration', href: '/administration', icon: Shield, requires: 'canViewAdminReadiness' },

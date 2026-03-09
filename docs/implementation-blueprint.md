@@ -47,9 +47,19 @@
   - Asset UI pages: `Assets/Index`, `Assets/Create`, `Assets/Edit`, `Assets/Show` using shadcn cards/forms/tables/tabs/badges, with type-specific metadata fields rendered dynamically for create/edit/show.
   - Client workspace integration: assets are listed inside `Clients/Show` (assets tab + stats card + add-asset entry action).
 
+- **Services module (full CRUD + asset linking + client integration):**
+  - New soft-deletable `services` table with lifecycle/SLA fields and `asset_service` pivot for many-to-many service-to-asset relationships.
+  - `Service` model with enum-backed `service_type` and `status`, client ownership relation, and linked assets relation.
+  - Store/update form requests with service-specific validation and client-scoped asset linkage validation.
+  - Policy-backed authorization checks with dedicated `services.*` permissions.
+  - Inertia controller actions for index/create/store/show/edit/update/destroy.
+  - Activity logging for create/update/archive events with linked asset context.
+  - UI pages: `Services/Index`, `Services/Create`, `Services/Edit`, `Services/Show` using shadcn cards/forms/tables/tabs/badges.
+  - Client workspace integration: services tab and service stats/actions embedded in `Clients/Show`.
+
 ## Pending Modules
 - Password reset and profile management flows.
-- Full CRUD features for tickets, services, reports, and settings.
+- Full CRUD features for tickets, reports, and settings.
 - Pagination controls component polish for larger datasets.
 - Granular permission matrix expansion for non-client modules.
 - Ticket module implementation to consume `asset_ticket_links` and surface true ticket-to-asset linking UI/workflows.
@@ -67,7 +77,8 @@
 - `Resource /contacts` -> `ClientContactController` (`contacts.*`) [auth + policy]
 - `Resource /client-users` -> `ClientUserController` (`client-users.*`) [auth + policy]
 - `Resource /assets` -> `AssetController` (`assets.*`) [auth + policy]
-- `GET /{module}` for `tickets|services|reports|settings` -> `PlaceholderController` (`module.show`) [auth]
+- `Resource /services` -> `ServiceController` (`services.*`) [auth + policy]
+- `GET /{module}` for `tickets|reports|settings` -> `PlaceholderController` (`module.show`) [auth]
 
 ## Model Inventory
 - `App\Models\User`
@@ -75,7 +86,8 @@
 - `App\Models\ClientContact` (soft deletes, belongs to client company, optional reverse link for client user profiles)
 - `App\Models\ClientUserProfile` (belongs to user/client company/optional contact)
 - `App\Models\AssetType` (asset categorization + optional meta)
-- `App\Models\Asset` (soft deletes, belongs to client/type/parent/staff, has child assets)
+- `App\Models\Asset` (soft deletes, belongs to client/type/parent/staff, has child assets, many-to-many services)
+- `App\Models\Service` (soft deletes, belongs to client, many-to-many assets)
 - Spatie permission models:
   - `Spatie\Permission\Models\Role`
   - `Spatie\Permission\Models\Permission`
@@ -108,8 +120,13 @@
   - `assets.create`
   - `assets.update`
   - `assets.delete`
+- Seeded service permissions:
+  - `services.view`
+  - `services.create`
+  - `services.update`
+  - `services.delete`
 - Permission assignment baseline:
-  - `super-admin|admin|staff`: full client/contact/client-user/asset CRUD permissions
+  - `super-admin|admin|staff`: full client/contact/client-user/asset/service CRUD permissions
   - `support-agent`: `clients.view`
 - Gate override: `super-admin` bypass in `AuthServiceProvider`.
 
@@ -134,6 +151,10 @@
 - `Assets/Create.jsx`
 - `Assets/Edit.jsx`
 - `Assets/Show.jsx`
+- `Services/Index.jsx`
+- `Services/Create.jsx`
+- `Services/Edit.jsx`
+- `Services/Show.jsx`
 - `Placeholder/Index.jsx`
 - Shared shell/components:
   - `app-sidebar`

@@ -10,7 +10,7 @@ import { EmptyState } from '@/Components/shared/empty-state';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { useState } from 'react';
 
-export default function ClientsShow({ client, contacts, client_users, assets, activity, stats, can, domainReferences }) {
+export default function ClientsShow({ client, contacts, client_users, assets, services, activity, stats, can, domainReferences }) {
   const [tab, setTab] = useState('overview');
 
   return (
@@ -25,13 +25,14 @@ export default function ClientsShow({ client, contacts, client_users, assets, ac
           {can.create_contact && <Button asChild size="sm"><Link href={`/contacts/create?client=${client.id}`}>Add contact</Link></Button>}
           {can.create_client_user && <Button asChild size="sm"><Link href={`/client-users/create?client=${client.id}`}>Add user</Link></Button>}
           {can.create_asset && <Button asChild size="sm" variant="secondary"><Link href={`/assets/create?client=${client.id}`}>Add asset</Link></Button>}
+          {can.create_service && <Button asChild size="sm" variant="secondary"><Link href={`/services/create?client=${client.id}`}>Add service</Link></Button>}
           {can.create_ticket && <Button asChild size="sm" variant="secondary"><Link href="/tickets">Create ticket</Link></Button>}
           {can.update && <Button asChild variant="outline" size="sm"><Link href={`/clients/${client.id}/edit`}>Edit</Link></Button>}
           {can.delete && <Button size="sm" variant="outline" onClick={() => { if (confirm('Archive this client company?')) router.delete(`/clients/${client.id}`); }}>Archive</Button>}
         </div>
       </div>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         <Card>
           <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Total contacts</p><CardTitle>{stats.contacts_count}</CardTitle></CardHeader>
           <CardContent className="text-xs text-muted-foreground">{stats.active_contacts_count} active</CardContent>
@@ -43,6 +44,10 @@ export default function ClientsShow({ client, contacts, client_users, assets, ac
         <Card>
           <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Asset visibility</p><CardTitle>{stats.users_can_view_assets_count}</CardTitle></CardHeader>
           <CardContent className="text-xs text-muted-foreground">Users with asset access</CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Services</p><CardTitle>{stats.services_count}</CardTitle></CardHeader>
+          <CardContent className="text-xs text-muted-foreground">Managed support/subscription relationships</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Account manager</p><CardTitle className="text-lg">{client.account_manager?.name || 'Unassigned'}</CardTitle></CardHeader>
@@ -138,7 +143,20 @@ export default function ClientsShow({ client, contacts, client_users, assets, ac
         </TabsContent>
 
         <TabsContent active={tab === 'services'}>
-          <EmptyState title="Services workspace ready" description="Services module will surface account services, contracts, and SLA data here." />
+          <Card>
+            <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+              <div><CardTitle>Services</CardTitle><p className="text-sm text-muted-foreground">Support and management services associated with this account.</p></div>
+              {can.create_service && <Button asChild size="sm"><Link href={`/services/create?client=${client.id}`}>Add service</Link></Button>}
+            </CardHeader>
+            <CardContent>
+              {services.length === 0 ? <EmptyState title="No services yet" description="Create a service subscription to track SLA and support relationship separately from raw assets." /> : (
+                <Table>
+                  <TableHeader><TableRow><TableHead>Service</TableHead><TableHead>Type</TableHead><TableHead>Status</TableHead><TableHead>Linked assets</TableHead><TableHead>Renewal</TableHead></TableRow></TableHeader>
+                  <TableBody>{services.map((service) => <TableRow key={service.id}><TableCell><Link className="font-medium hover:underline" href={`/services/${service.id}`}>{service.name}</Link><p className="text-xs text-muted-foreground">{service.renewal_cycle || 'No cycle'}</p></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="serviceType" value={service.service_type} /></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="serviceStatus" value={service.status} /></TableCell><TableCell>{service.assets.length === 0 ? <span className="text-xs text-muted-foreground">None</span> : service.assets.map((asset) => <Badge key={asset.id} variant="outline" className="mr-1">{asset.name}</Badge>)}</TableCell><TableCell>{service.renewal_date || '—'}</TableCell></TableRow>)}</TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent active={tab === 'activity'}>
