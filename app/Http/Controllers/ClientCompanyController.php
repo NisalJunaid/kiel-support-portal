@@ -47,6 +47,10 @@ class ClientCompanyController extends Controller
                 'status' => $client->status,
                 'primary_email' => $client->primary_email,
                 'account_manager' => $client->accountManager?->name,
+                'can' => [
+                    'update' => $request->user()->can('update', $client),
+                    'delete' => $request->user()->can('delete', $client),
+                ],
             ]);
 
         return Inertia::render('Clients/Index', [
@@ -56,8 +60,6 @@ class ClientCompanyController extends Controller
             ],
             'can' => [
                 'create' => $request->user()->can('create', ClientCompany::class),
-                'update' => $request->user()->can('update', ClientCompany::class),
-                'delete' => $request->user()->can('delete', ClientCompany::class),
             ],
         ]);
     }
