@@ -8,7 +8,7 @@
 - Authorization uses Spatie `laravel-permission` + Laravel policies.
 - Audit trail support is implemented via Spatie `laravel-activitylog` for client company, contact, and asset mutations.
 - Client user identities are stored in `users` and extended through `client_user_profiles` for client-company scoped access flags.
-- Asset modeling uses `asset_types` + `assets` with a constrained enum surface (status/criticality) and a simple JSON `meta` payload for type-specific fields.
+- Asset modeling uses `asset_types` + `assets` with a constrained enum surface (status/criticality) and JSON `meta` payloads driven by a centralized type-to-field definition map (`App\Support\AssetMetaFields`).
 
 ## Implemented Modules
 - Authentication flow baseline (login/logout + session regeneration).
@@ -41,10 +41,10 @@
 - **Assets module (full CRUD + client integration):**
   - New `asset_types` and soft-deletable `assets` tables, plus `asset_ticket_links` bridge table for ticket-link readiness.
   - `AssetType` and `Asset` models with client, type, parent/child, and assigned staff relationships.
-  - Store/update form requests with enum-backed validation and simple meta field validation (`ip_address`, `hostname`, `plan`, `region`).
+  - Store/update form requests now normalize and validate `meta` keys by asset type slug via `AssetMetaFields` (e.g., hosting account, email hosting, website, domain).
   - Asset policy + route/controller authorization checks backed by `assets.*` permissions.
   - Activity logging for create/update/archive events on assets.
-  - Asset UI pages: `Assets/Index`, `Assets/Create`, `Assets/Edit`, `Assets/Show` using shadcn cards/forms/tables/tabs/badges.
+  - Asset UI pages: `Assets/Index`, `Assets/Create`, `Assets/Edit`, `Assets/Show` using shadcn cards/forms/tables/tabs/badges, with type-specific metadata fields rendered dynamically for create/edit/show.
   - Client workspace integration: assets are listed inside `Clients/Show` (assets tab + stats card + add-asset entry action).
 
 ## Pending Modules
