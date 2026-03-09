@@ -26,6 +26,8 @@ class ClientCompanyController extends Controller
         $this->authorize('viewAny', ClientCompany::class);
 
         $search = trim((string) $request->string('search'));
+        $status = $request->string('status')->toString();
+        $accountManagerId = $request->integer('account_manager_id') ?: null;
 
         $clients = ClientCompany::query()
             ->with('accountManager:id,name')
@@ -37,6 +39,8 @@ class ClientCompanyController extends Controller
                         ->orWhere('primary_email', 'like', "%{$search}%");
                 });
             })
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($accountManagerId, fn ($query) => $query->where('account_manager_user_id', $accountManagerId))
             ->latest()
             ->paginate(10)
             ->withQueryString()
@@ -57,7 +61,10 @@ class ClientCompanyController extends Controller
             'clients' => $clients,
             'filters' => [
                 'search' => $search,
+                'status' => $status,
+                'account_manager_id' => $accountManagerId,
             ],
+            'accountManagers' => $this->accountManagers(),
             'can' => [
                 'create' => $request->user()->can('create', ClientCompany::class),
             ],

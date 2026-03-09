@@ -35,6 +35,8 @@ class TicketController extends Controller
         $search = trim((string) $request->string('search'));
         $status = $request->string('status')->toString();
         $priority = $request->string('priority')->toString();
+        $assigneeId = $request->integer('assigned_user_id') ?: null;
+        $clientId = $request->integer('client_company_id') ?: null;
 
         $tickets = Ticket::query()
             ->with(['clientCompany:id,name', 'asset:id,name,asset_code', 'service:id,name', 'slaPlan:id,name', 'assignedUser:id,name'])
@@ -47,6 +49,8 @@ class TicketController extends Controller
             })
             ->when($status, fn ($query) => $query->where('status', $status))
             ->when($priority, fn ($query) => $query->where('priority', $priority))
+            ->when($assigneeId, fn ($query) => $query->where('assigned_user_id', $assigneeId))
+            ->when($clientId, fn ($query) => $query->where('client_company_id', $clientId))
             ->latest('updated_at')
             ->paginate(15)
             ->withQueryString()
@@ -70,8 +74,15 @@ class TicketController extends Controller
 
         return Inertia::render('Tickets/Index', [
             'tickets' => $tickets,
-            'filters' => compact('search', 'status', 'priority'),
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'priority' => $priority,
+                'assigned_user_id' => $assigneeId,
+                'client_company_id' => $clientId,
+            ],
             'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
+            'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
             'can' => [
                 'create' => $request->user()->can('create', Ticket::class),
                 'update' => $request->user()->can('tickets.update'),
@@ -338,6 +349,7 @@ class TicketController extends Controller
                     'client_company_id' => $profile->client_company_id,
                 ])->values(),
             'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
+            'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
             'defaultClientId' => $defaultClientId,
             'defaultAssetId' => $defaultAssetId,
             'defaultServiceId' => $defaultServiceId,
