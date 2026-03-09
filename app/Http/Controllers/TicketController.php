@@ -73,6 +73,17 @@ class TicketController extends Controller
                 'sla_resolution_indicator' => $slaDeadlineService->computeIndicator($ticket, 'resolution_due_at'),
             ]);
 
+        $drawerTicketId = $request->integer('drawer_ticket') ?: null;
+        $drawerTicket = null;
+
+        if ($drawerTicketId) {
+            $candidate = Ticket::query()->find($drawerTicketId);
+
+            if ($candidate && $request->user()->can('view', $candidate)) {
+                $drawerTicket = $this->ticketWorkspacePayload($request, $candidate, $slaDeadlineService);
+            }
+        }
+
         return Inertia::render('Tickets/Index', [
             'tickets' => $tickets,
             'filters' => [
@@ -82,6 +93,7 @@ class TicketController extends Controller
                 'assigned_user_id' => $assigneeId,
                 'client_company_id' => $clientId,
             ],
+            'drawerTicket' => $drawerTicket,
             'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
             'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
             'can' => [
@@ -154,89 +166,10 @@ class TicketController extends Controller
     {
         $this->authorize('view', $ticket);
 
-        $ticket->load([
-            'clientCompany:id,name,client_code',
-            'asset:id,name,asset_code',
-            'service:id,name',
-            'slaPlan:id,name,response_minutes,resolution_minutes',
-            'requesterUser:id,name,email',
-            'requesterContact:id,full_name,email',
-            'assignedUser:id,name,email',
-            'messages.author:id,name,email',
-            'attachments.uploader:id,name',
-            'messages.attachments.uploader:id,name',
-        ]);
-
-        $isClientScopedUser = $request->user()?->hasRole('client-user') ?? false;
-
-        $messages = $ticket->messages
-            ->when($isClientScopedUser, fn ($collection) => $collection->filter(fn (TicketMessage $message) => $message->isVisibleToClient()))
-            ->sortBy('created_at')
-            ->values();
-
-        $activity = Activity::query()
-            ->where('subject_type', Ticket::class)
-            ->where('subject_id', $ticket->id)
-            ->latest()
-            ->limit(10)
-            ->get();
 
         return Inertia::render('Tickets/Show', [
-            'ticket' => [
-                ...$ticket->toArray(),
-                'priority' => $ticket->priority?->value,
-                'status' => $ticket->status?->value,
-                'client' => $ticket->clientCompany,
-                'asset' => $ticket->asset,
-                'service' => $ticket->service,
-                'sla_plan' => $ticket->slaPlan ? ['id' => $ticket->slaPlan->id, 'name' => $ticket->slaPlan->name] : null,
-                'requester_user' => $ticket->requesterUser,
-                'requester_contact' => $ticket->requesterContact,
-                'assigned_user' => $ticket->assignedUser,
-                'first_response_due_at' => optional($ticket->first_response_due_at)?->toDateTimeString(),
-                'resolution_due_at' => optional($ticket->resolution_due_at)?->toDateTimeString(),
-                'resolved_at' => optional($ticket->resolved_at)?->toDateTimeString(),
-                'closed_at' => optional($ticket->closed_at)?->toDateTimeString(),
-                'updated_at' => optional($ticket->updated_at)?->toDateTimeString(),
-            ],
-            'attachments' => $ticket->attachments->map(fn ($attachment) => [
-                'id' => $attachment->id,
-                'name' => $attachment->original_name,
-                'mime_type' => $attachment->mime_type,
-                'size_bytes' => $attachment->size_bytes,
-                'uploaded_by' => $attachment->uploader?->name,
-                'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
-                'created_at' => optional($attachment->created_at)?->toDateTimeString(),
-            ])->values(),
-            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
+            ...$this->ticketWorkspacePayload($request, $ticket, $slaDeadlineService),
             'formData' => $this->formData($ticket->client_company_id, $ticket->asset_id, $ticket->service_id),
-            'messages' => $messages->map(fn (TicketMessage $message) => [
-                'id' => $message->id,
-                'message_type' => $message->message_type?->value,
-                'message_type_label' => $message->message_type?->label(),
-                'body' => $message->body,
-                'author' => $message->author,
-                'is_system' => $message->message_type === TicketMessageType::SystemEvent,
-                'created_at' => optional($message->created_at)?->toDateTimeString(),
-                'attachments' => $message->attachments->map(fn ($attachment) => [
-                    'id' => $attachment->id,
-                    'name' => $attachment->original_name,
-                    'mime_type' => $attachment->mime_type,
-                    'size_bytes' => $attachment->size_bytes,
-                    'uploaded_by' => $attachment->uploader?->name,
-                    'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
-                ])->values(),
-            ])->values(),
-            'slaIndicators' => [
-                'first_response' => $slaDeadlineService->computeIndicator($ticket, 'first_response_due_at'),
-                'resolution' => $slaDeadlineService->computeIndicator($ticket, 'resolution_due_at'),
-            ],
-            'can' => [
-                'update' => $request->user()->can('update', $ticket),
-                'delete' => $request->user()->can('delete', $ticket),
-                'addPublicReply' => $request->user()->can('addPublicReply', $ticket),
-                'addInternalNote' => $request->user()->can('addInternalNote', $ticket),
-            ],
         ]);
     }
 
@@ -331,6 +264,94 @@ class TicketController extends Controller
         $ticketMessageService->createSystemEvent($ticket, sprintf('Ticket %s was archived.', $ticket->ticket_number));
 
         return redirect()->route('tickets.index')->with('success', 'Ticket archived successfully.');
+    }
+
+
+    private function ticketWorkspacePayload(Request $request, Ticket $ticket, SlaDeadlineService $slaDeadlineService): array
+    {
+        $ticket->load([
+            'clientCompany:id,name,client_code',
+            'asset:id,name,asset_code',
+            'service:id,name',
+            'slaPlan:id,name,response_minutes,resolution_minutes',
+            'requesterUser:id,name,email',
+            'requesterContact:id,full_name,email',
+            'assignedUser:id,name,email',
+            'messages.author:id,name,email',
+            'attachments.uploader:id,name',
+            'messages.attachments.uploader:id,name',
+        ]);
+
+        $isClientScopedUser = $request->user()?->hasRole('client-user') ?? false;
+
+        $messages = $ticket->messages
+            ->when($isClientScopedUser, fn ($collection) => $collection->filter(fn (TicketMessage $message) => $message->isVisibleToClient()))
+            ->sortBy('created_at')
+            ->values();
+
+        $activity = Activity::query()
+            ->where('subject_type', Ticket::class)
+            ->where('subject_id', $ticket->id)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        return [
+            'ticket' => [
+                ...$ticket->toArray(),
+                'priority' => $ticket->priority?->value,
+                'status' => $ticket->status?->value,
+                'client' => $ticket->clientCompany,
+                'asset' => $ticket->asset,
+                'service' => $ticket->service,
+                'sla_plan' => $ticket->slaPlan ? ['id' => $ticket->slaPlan->id, 'name' => $ticket->slaPlan->name] : null,
+                'requester_user' => $ticket->requesterUser,
+                'requester_contact' => $ticket->requesterContact,
+                'assigned_user' => $ticket->assignedUser,
+                'first_response_due_at' => optional($ticket->first_response_due_at)?->toDateTimeString(),
+                'resolution_due_at' => optional($ticket->resolution_due_at)?->toDateTimeString(),
+                'resolved_at' => optional($ticket->resolved_at)?->toDateTimeString(),
+                'closed_at' => optional($ticket->closed_at)?->toDateTimeString(),
+                'updated_at' => optional($ticket->updated_at)?->toDateTimeString(),
+            ],
+            'attachments' => $ticket->attachments->map(fn ($attachment) => [
+                'id' => $attachment->id,
+                'name' => $attachment->original_name,
+                'mime_type' => $attachment->mime_type,
+                'size_bytes' => $attachment->size_bytes,
+                'uploaded_by' => $attachment->uploader?->name,
+                'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
+                'created_at' => optional($attachment->created_at)?->toDateTimeString(),
+            ])->values(),
+            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
+            'messages' => $messages->map(fn (TicketMessage $message) => [
+                'id' => $message->id,
+                'message_type' => $message->message_type?->value,
+                'message_type_label' => $message->message_type?->label(),
+                'body' => $message->body,
+                'author' => $message->author,
+                'is_system' => $message->message_type === TicketMessageType::SystemEvent,
+                'created_at' => optional($message->created_at)?->toDateTimeString(),
+                'attachments' => $message->attachments->map(fn ($attachment) => [
+                    'id' => $attachment->id,
+                    'name' => $attachment->original_name,
+                    'mime_type' => $attachment->mime_type,
+                    'size_bytes' => $attachment->size_bytes,
+                    'uploaded_by' => $attachment->uploader?->name,
+                    'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
+                ])->values(),
+            ])->values(),
+            'slaIndicators' => [
+                'first_response' => $slaDeadlineService->computeIndicator($ticket, 'first_response_due_at'),
+                'resolution' => $slaDeadlineService->computeIndicator($ticket, 'resolution_due_at'),
+            ],
+            'can' => [
+                'update' => $request->user()->can('update', $ticket),
+                'delete' => $request->user()->can('delete', $ticket),
+                'addPublicReply' => $request->user()->can('addPublicReply', $ticket),
+                'addInternalNote' => $request->user()->can('addInternalNote', $ticket),
+            ],
+        ];
     }
 
     private function formData(?int $defaultClientId = null, ?int $defaultAssetId = null, ?int $defaultServiceId = null): array

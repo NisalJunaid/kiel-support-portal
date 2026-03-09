@@ -11,6 +11,9 @@
 - Audit trail support is implemented via Spatie `laravel-activitylog` for client companies, contacts, client users, assets, services, and tickets, with a shared presenter for consistent timeline payloads.
 - Client user identities are stored in `users` and extended through `client_user_profiles` for client-company scoped access flags.
 - Asset modeling uses `asset_types` + `assets` with a constrained enum surface (status/criticality) and JSON `meta` payloads driven by a centralized type-to-field definition map (`App\Support\AssetMetaFields`).
+- Staff layout shell components (`AppHeader`, `AppSidebar`, and `FlashMessages`) are now Inertia-agnostic/presentational and receive page props from `AppLayout`, preventing `usePage()` calls from leaking into shared components that can render outside Inertia context.
+- Tickets index row click now opens a wide right-side workspace drawer that loads the full ticket detail workspace (conversation, actions, metadata, attachments, activity) via `drawer_ticket` index state and shared payload composition in `TicketController`.
+- Ticket detail UI is centralized in `Pages/Tickets/Partials/TicketDetailWorkspace.jsx` and reused by both `Tickets/Show` and the tickets index drawer to avoid divergent implementations.
 
 ## Implemented Modules
 - Authentication flow baseline (login/logout + session regeneration).

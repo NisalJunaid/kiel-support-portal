@@ -1,13 +1,11 @@
-import { Link, usePage, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Bell, PanelLeft, PanelLeftClose } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 
-export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSidebar }) {
-  const { auth, notifications, authorization, branding } = usePage().props;
-
+export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSidebar, auth, notifications, authorization, branding }) {
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
   const initials = auth.user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'SU';

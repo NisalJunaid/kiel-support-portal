@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { LayoutDashboard, Building2, Users, Boxes, Ticket, Briefcase, Timer, BarChart3, Settings, Shield, History, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,19 +19,17 @@ const nav = [
   { label: 'System Reference', href: '/administration/system-reference', icon: Shield, requires: 'canViewSystemReference' },
 ];
 
-export function AppSidebar({ collapsed = false, onNavigate }) {
-  const { url, props } = usePage();
-
-  if (!props.auth?.user || !props.authorization?.isStaffWorkspace) return null;
+export function AppSidebar({ collapsed = false, onNavigate, url, auth, authorization, branding }) {
+  if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
   return (
     <aside className={cn('h-full border-r bg-white p-3 transition-all', collapsed ? 'w-[78px]' : 'w-64')}>
       <div className={cn('mb-6 flex items-center gap-2 rounded-md border bg-muted/40 p-2', collapsed && 'justify-center')}>
-        {props.branding?.logo_url ? <img src={props.branding.logo_url} alt="Brand logo" className="h-8 w-8 rounded object-cover" /> : <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">K</div>}
-        {!collapsed && <div><p className="text-[11px] uppercase tracking-widest text-muted-foreground">Kiel</p><p className="text-sm font-semibold leading-tight">{props.branding?.app_name || 'Support Portal'}</p></div>}
+        {branding?.logo_url ? <img src={branding.logo_url} alt="Brand logo" className="h-8 w-8 rounded object-cover" /> : <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">K</div>}
+        {!collapsed && <div><p className="text-[11px] uppercase tracking-widest text-muted-foreground">Kiel</p><p className="text-sm font-semibold leading-tight">{branding?.app_name || 'Support Portal'}</p></div>}
       </div>
       <nav className="space-y-1">
-        {nav.filter((item) => !item.requires || props.authorization?.[item.requires]).map((item) => {
+        {nav.filter((item) => !item.requires || authorization?.[item.requires]).map((item) => {
           const Icon = item.icon;
           const active = url.startsWith(item.href);
 
