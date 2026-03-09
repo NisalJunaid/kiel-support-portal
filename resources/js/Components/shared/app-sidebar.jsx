@@ -13,7 +13,7 @@ const nav = [
   { label: 'SLA Plans', href: '/sla-plans', icon: Timer, requires: 'canViewSlaPlans' },
   { label: 'Activity', href: '/activity', icon: History, requires: 'canViewActivity' },
   { label: 'Notifications', href: '/notifications', icon: Bell },
-  { label: 'Reports', href: '/reports', icon: BarChart3 },
+  { label: 'Reports', href: '/reports', icon: BarChart3, requires: 'canViewReports' },
   { label: 'Settings', href: '/settings', icon: Settings },
   { label: 'Administration', href: '/administration', icon: Shield, requires: 'canViewAdminReadiness' },
   { label: 'System Reference', href: '/administration/system-reference', icon: Shield, requires: 'canViewSystemReference' },
