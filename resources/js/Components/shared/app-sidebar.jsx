@@ -8,7 +8,7 @@ const nav = [
   { label: 'Contacts', href: '/contacts', icon: Users, requires: 'canViewContacts' },
   { label: 'Client Users', href: '/client-users', icon: Users, requires: 'canViewClientUsers' },
   { label: 'Assets', href: '/assets', icon: Boxes, requires: 'canViewAssets' },
-  { label: 'Tickets', href: '/tickets', icon: Ticket },
+  { label: 'Tickets', href: '/tickets', icon: Ticket, requires: 'canViewTickets' },
   { label: 'Services', href: '/services', icon: Briefcase, requires: 'canViewServices' },
   { label: 'Reports', href: '/reports', icon: BarChart3 },
   { label: 'Settings', href: '/settings', icon: Settings },

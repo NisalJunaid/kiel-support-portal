@@ -10,7 +10,7 @@ import { EmptyState } from '@/Components/shared/empty-state';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { useState } from 'react';
 
-export default function ClientsShow({ client, contacts, client_users, assets, services, activity, stats, can, domainReferences }) {
+export default function ClientsShow({ client, contacts, client_users, assets, tickets, services, activity, stats, can, domainReferences }) {
   const [tab, setTab] = useState('overview');
 
   return (
@@ -26,7 +26,7 @@ export default function ClientsShow({ client, contacts, client_users, assets, se
           {can.create_client_user && <Button asChild size="sm"><Link href={`/client-users/create?client=${client.id}`}>Add user</Link></Button>}
           {can.create_asset && <Button asChild size="sm" variant="secondary"><Link href={`/assets/create?client=${client.id}`}>Add asset</Link></Button>}
           {can.create_service && <Button asChild size="sm" variant="secondary"><Link href={`/services/create?client=${client.id}`}>Add service</Link></Button>}
-          {can.create_ticket && <Button asChild size="sm" variant="secondary"><Link href="/tickets">Create ticket</Link></Button>}
+          {can.create_ticket && <Button asChild size="sm" variant="secondary"><Link href={`/tickets/create?client=${client.id}`}>Create ticket</Link></Button>}
           {can.update && <Button asChild variant="outline" size="sm"><Link href={`/clients/${client.id}/edit`}>Edit</Link></Button>}
           {can.delete && <Button size="sm" variant="outline" onClick={() => { if (confirm('Archive this client company?')) router.delete(`/clients/${client.id}`); }}>Archive</Button>}
         </div>
@@ -46,8 +46,8 @@ export default function ClientsShow({ client, contacts, client_users, assets, se
           <CardContent className="text-xs text-muted-foreground">Users with asset access</CardContent>
         </Card>
         <Card>
-          <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Services</p><CardTitle>{stats.services_count}</CardTitle></CardHeader>
-          <CardContent className="text-xs text-muted-foreground">Managed support/subscription relationships</CardContent>
+          <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Tickets</p><CardTitle>{stats.tickets_count}</CardTitle></CardHeader>
+          <CardContent className="text-xs text-muted-foreground">Open and historical support activity</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><p className="text-sm text-muted-foreground">Account manager</p><CardTitle className="text-lg">{client.account_manager?.name || 'Unassigned'}</CardTitle></CardHeader>
@@ -139,7 +139,12 @@ export default function ClientsShow({ client, contacts, client_users, assets, se
         </TabsContent>
 
         <TabsContent active={tab === 'tickets'}>
-          <EmptyState title="Tickets workspace ready" description="Ticket module entry is available. Use Create ticket to start ticket operations for this account." />
+          {tickets.length === 0 ? <EmptyState title="No tickets yet" description="Use Create ticket to log support issues for this client." /> : (
+            <Table>
+              <TableHeader><TableRow><TableHead>Ticket</TableHead><TableHead>Title</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead>Asset</TableHead><TableHead>Assignee</TableHead></TableRow></TableHeader>
+              <TableBody>{tickets.map((ticket) => <TableRow key={ticket.id}><TableCell><Link className="font-medium hover:underline" href={`/tickets/${ticket.id}`}>{ticket.ticket_number}</Link></TableCell><TableCell>{ticket.title}</TableCell><TableCell>{getDomainLabel(domainReferences, 'ticketPriority', ticket.priority)}</TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></TableCell><TableCell>{ticket.asset?.name || '—'}</TableCell><TableCell>{ticket.assignee?.name || 'Unassigned'}</TableCell></TableRow>)}</TableBody>
+            </Table>
+          )}
         </TabsContent>
 
         <TabsContent active={tab === 'services'}>

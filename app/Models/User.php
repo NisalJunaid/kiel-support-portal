@@ -40,16 +40,21 @@ class User extends Authenticatable
         'remember_token',
     ];
 
-    public function clientUserProfile(): HasOne
-    {
-        return $this->hasOne(ClientUserProfile::class);
-    }
-
     /**
      * The attributes that should be cast.
      *
      * @var array<string, string>
      */
+    public function requestedTickets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Ticket::class, "requester_user_id");
+    }
+
+    public function assignedTickets(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Ticket::class, "assigned_user_id");
+    }
+
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',

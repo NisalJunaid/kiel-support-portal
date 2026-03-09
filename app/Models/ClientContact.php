@@ -43,4 +43,9 @@ class ClientContact extends Model
     {
         return $this->hasMany(ClientUserProfile::class, "contact_id");
     }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class, "requester_contact_id");
+    }
 }

@@ -72,4 +72,9 @@ class Asset extends Model
     {
         return $this->belongsToMany(Service::class)->withTimestamps();
     }
+
+    public function tickets(): BelongsToMany
+    {
+        return $this->belongsToMany(Ticket::class, "asset_ticket_links")->withTimestamps();
+    }
 }
