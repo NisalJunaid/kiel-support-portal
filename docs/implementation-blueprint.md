@@ -14,7 +14,7 @@
 - Authentication flow baseline (login/logout + session regeneration).
 - Roles & permissions foundation with seeded roles and baseline module permissions.
 - Support bootstrap user seeding includes idempotent defaults for `admin@mail.com` (role `admin`) and `client@mail.com` (role `client-user`), with automatic role creation when permission tables are available.
-- Dashboard page (`/dashboard`) with summary cards and queue shell.
+- Dashboard page (`/dashboard`) now powered by live operational queries (ticket queues, overdue/awaiting-client/high-priority counts, renewal watchlists, active client count, and quick links to key modules).
 - Administration readiness + system reference pages.
 - **Client Companies module (full CRUD):**
   - Migration + soft-deletable model + factory.
@@ -187,7 +187,7 @@
 
 ## UI Page Inventory
 - `Auth/Login.jsx`
-- `Dashboard/Index.jsx`
+- `Dashboard/Index.jsx` (live KPI cards + priority/awaiting-client queues + renewal watch tables + quick links)
 - `Administration/Readiness.jsx`
 - `Administration/SystemReference.jsx`
 - `Clients/Index.jsx`
