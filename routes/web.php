@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Administration\ReadinessController;
+use App\Http\Controllers\Administration\SystemReferenceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
@@ -21,6 +22,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/administration', ReadinessController::class)
         ->middleware('role:super-admin|admin|staff')
         ->name('administration.readiness');
+
+    Route::get('/administration/system-reference', SystemReferenceController::class)
+        ->middleware('role:super-admin|admin|staff')
+        ->name('administration.system-reference');
 
     Route::get('/{module}', PlaceholderController::class)
         ->whereIn('module', ['clients', 'contacts', 'assets', 'tickets', 'services', 'reports', 'settings'])

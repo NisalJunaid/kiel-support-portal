@@ -25,6 +25,8 @@
   - permission readiness note
 - Authentication-aware shell foundation (sidebar + topbar + breadcrumbs + flash area).
 - Dashboard page (`/dashboard`) with metric cards and a priority queue table shell.
+- Domain vocabulary baseline implemented via backend enums + shared Inertia reference payload.
+- Internal system reference page (`/administration/system-reference`) to verify canonical statuses/types with reusable badge previews.
 - Placeholder module pages and navigation routes:
   - `/clients`
   - `/contacts`
@@ -37,6 +39,7 @@
 ## Pending Modules
 - Password reset and profile management flows.
 - Full CRUD features for clients, contacts, client users, assets, tickets, services, reports, and administration.
+- Wire enum-backed values into module forms/filters as CRUD screens are implemented.
 - Granular permission matrix per module/action.
 - Activity/audit log integration.
 
@@ -47,6 +50,7 @@
 - `POST /logout` -> `AuthenticatedSessionController@destroy` (`logout`)
 - `GET /dashboard` -> `DashboardController` (`dashboard`) [auth]
 - `GET /administration` -> `ReadinessController` (`administration.readiness`) [auth + role:super-admin|admin|staff]
+- `GET /administration/system-reference` -> `SystemReferenceController` (`administration.system-reference`) [auth + role:super-admin|admin|staff]
 - `GET /{module}` constrained to configured modules -> `PlaceholderController` (`module.show`) [auth]
 
 ## Model Inventory
@@ -54,6 +58,27 @@
 - Spatie permission package models:
   - `Spatie\Permission\Models\Role`
   - `Spatie\Permission\Models\Permission`
+
+
+## Enum Inventory
+- `App\Enums\UserType`: `internal`, `client`
+- `App\Enums\ClientStatus`: `prospect`, `active`, `onboarding`, `suspended`, `archived`
+- `App\Enums\ContactType`: `primary`, `billing`, `technical`, `escalation`
+- `App\Enums\AssetStatus`: `provisioning`, `online`, `degraded`, `offline`, `retired`
+- `App\Enums\AssetCriticality`: `low`, `medium`, `high`, `mission_critical`
+- `App\Enums\TicketStatus`: `new`, `open`, `pending_client`, `in_progress`, `resolved`, `closed`
+- `App\Enums\TicketPriority`: `low`, `medium`, `high`, `urgent`
+- `App\Enums\TicketMessageType`: `public_reply`, `internal_note`, `system_event`
+- `App\Enums\ServiceStatus`: `operational`, `maintenance`, `degraded`, `major_outage`, `retired`
+- Shared transport contract: `App\Support\DomainReferenceCatalog::all()` emits `{label, options[{value,label,badgeVariant}]}` for each domain key.
+
+## Enum & Shared Convention Notes
+- Backend is source of truth for domain vocabularies using PHP backed enums.
+- Enum options are globally shared to React via Inertia `domainReferences` in `HandleInertiaRequests`.
+- Frontend domain helpers are in `resources/js/lib/domain-references.js` for option lookup, label resolution, and badge variant selection.
+- Reusable badge wrappers:
+  - `DomainStatusBadge` for status/type classifications
+  - `DomainPriorityBadge` for priority/criticality classifications
 
 ## Permission Inventory
 - Seeded baseline roles:
@@ -73,6 +98,7 @@
 - `Auth/Login.jsx`
 - `Dashboard/Index.jsx`
 - `Administration/Readiness.jsx`
+- `Administration/SystemReference.jsx`
 - `Placeholder/Index.jsx`
 - Shared shell components:
   - `app-sidebar`
@@ -80,5 +106,7 @@
   - `page-header`
   - `flash-messages`
   - `status-badge`
+  - `domain-status-badge`
+  - `domain-priority-badge`
   - `empty-state`
   - `data-table-shell`
