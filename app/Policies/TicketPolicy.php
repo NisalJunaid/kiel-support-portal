@@ -27,6 +27,16 @@ class TicketPolicy
         return $user->can('tickets.update');
     }
 
+    public function addPublicReply(User $user, Ticket $ticket): bool
+    {
+        return $this->view($user, $ticket);
+    }
+
+    public function addInternalNote(User $user, Ticket $ticket): bool
+    {
+        return $this->update($user, $ticket);
+    }
+
     public function delete(User $user, Ticket $ticket): bool
     {
         return $user->can('tickets.delete');

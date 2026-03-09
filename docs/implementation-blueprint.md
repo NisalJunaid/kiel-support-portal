@@ -67,6 +67,7 @@
   - Inertia controller actions for index/create/store/show/edit/update/destroy.
   - Activity logging for create/update/archive ticket lifecycle events.
   - UI pages: `Tickets/Index`, `Tickets/Create`, `Tickets/Edit`, `Tickets/Show` using shadcn cards/forms/tables/badges.
+  - Ticket conversation module: `ticket_messages` persistence with enum-backed `message_type` (`public_reply`, `internal_note`, `system_event`), staff/internal visibility controls, composer UX in `Tickets/Show`, and automatic system-event generation for key lifecycle changes.
   - Client workspace integration: client tickets tab and create-in-context ticket action.
   - Asset workspace integration: linked ticket tab plus quick actions to create/view tickets in context.
 
@@ -91,6 +92,7 @@
 - `Resource /assets` -> `AssetController` (`assets.*`) [auth + policy]
 - `Resource /services` -> `ServiceController` (`services.*`) [auth + policy]
 - `Resource /tickets` -> `TicketController` (`tickets.*`) [auth + policy]
+- `POST /tickets/{ticket}/messages` -> `TicketMessageController@store` (`tickets.messages.store`) [auth + policy]
 - `GET /{module}` for `reports|settings` -> `PlaceholderController` (`module.show`) [auth]
 
 ## Model Inventory
@@ -101,7 +103,8 @@
 - `App\Models\AssetType` (asset categorization + optional meta)
 - `App\Models\Asset` (soft deletes, belongs to client/type/parent/staff, has child assets, many-to-many services)
 - `App\Models\Service` (soft deletes, belongs to client, many-to-many assets)
-- `App\Models\Ticket` (soft deletes, belongs to client/requester/asset/assignee with status/priority enums)
+- `App\Models\Ticket` (soft deletes, belongs to client/requester/asset/assignee with status/priority enums, has many conversation messages)
+- `App\Models\TicketMessage` (belongs to ticket and optional author user, enum-backed message type for public/internal/system semantics)
 - Spatie permission models:
   - `Spatie\Permission\Models\Role`
   - `Spatie\Permission\Models\Permission`
@@ -177,7 +180,7 @@
 - `Tickets/Index.jsx`
 - `Tickets/Create.jsx`
 - `Tickets/Edit.jsx`
-- `Tickets/Show.jsx`
+- `Tickets/Show.jsx` (chronological conversation thread + public reply/internal note composer with validation feedback)
 - `Placeholder/Index.jsx`
 - Shared shell/components:
   - `app-sidebar`
