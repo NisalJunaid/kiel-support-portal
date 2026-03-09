@@ -3,8 +3,10 @@ import { Link, router } from '@inertiajs/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
+import { Badge } from '@/Components/ui/badge';
+import { getDomainBadgeVariant, getDomainLabel } from '@/lib/domain-references';
 
-export default function ClientsShow({ client, can, domainReferences }) {
+export default function ClientsShow({ client, contacts, can, domainReferences }) {
   return (
     <AppLayout title={client.name} description="Client company detail view." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Clients', href: '/clients' }, { label: client.name }]}>
       <div className="flex gap-2">
@@ -37,6 +39,22 @@ export default function ClientsShow({ client, can, domainReferences }) {
           <p className="text-muted-foreground whitespace-pre-wrap">{client.notes || 'No notes recorded.'}</p>
           <p><span className="font-medium">Created:</span> {client.created_at}</p>
           <p><span className="font-medium">Last updated:</span> {client.updated_at}</p>
+        </CardContent></Card>
+
+
+        <Card><CardHeader className="flex-row items-center justify-between space-y-0"><CardTitle>Client contacts</CardTitle>{can.create_contact && <Button asChild size="sm"><Link href={`/contacts/create?client=${client.id}`}>Add contact</Link></Button>}</CardHeader><CardContent className="space-y-2 text-sm">
+          {contacts.length === 0 ? <p className="text-muted-foreground">No contacts added yet.</p> : contacts.map((contact) => (
+            <div key={contact.id} className="flex items-center justify-between rounded-md border p-2">
+              <div>
+                <Link href={`/contacts/${contact.id}`} className="font-medium hover:underline">{contact.full_name}</Link>
+                <p className="text-xs text-muted-foreground">{contact.email}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge variant={getDomainBadgeVariant(domainReferences, 'contactType', contact.contact_type)}>{getDomainLabel(domainReferences, 'contactType', contact.contact_type)}</Badge>
+                <Badge variant={contact.is_active ? 'success' : 'secondary'}>{contact.is_active ? 'Active' : 'Inactive'}</Badge>
+              </div>
+            </div>
+          ))}
         </CardContent></Card>
       </section>
     </AppLayout>

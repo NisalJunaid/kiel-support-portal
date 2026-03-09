@@ -4,6 +4,7 @@ use App\Http\Controllers\Administration\ReadinessController;
 use App\Http\Controllers\Administration\SystemReferenceController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClientCompanyController;
+use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PlaceholderController;
 use Illuminate\Support\Facades\Route;
@@ -30,7 +31,10 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('clients', ClientCompanyController::class)->parameters(['clients' => 'client']);
 
+    Route::patch('contacts/{contact}/toggle-active', [ClientContactController::class, 'toggleActive'])->name('contacts.toggle-active');
+    Route::resource('contacts', ClientContactController::class);
+
     Route::get('/{module}', PlaceholderController::class)
-        ->whereIn('module', ['contacts', 'assets', 'tickets', 'services', 'reports', 'settings'])
+        ->whereIn('module', ['assets', 'tickets', 'services', 'reports', 'settings'])
         ->name('module.show');
 });

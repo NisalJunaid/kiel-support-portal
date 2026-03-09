@@ -7,6 +7,9 @@ enum ContactType: string
     case Primary = 'primary';
     case Billing = 'billing';
     case Technical = 'technical';
+    case Management = 'management';
+    case Abuse = 'abuse';
+    case Support = 'support';
     case Escalation = 'escalation';
 
     public function label(): string
@@ -17,9 +20,11 @@ enum ContactType: string
     public function badgeVariant(): string
     {
         return match ($this) {
-            self::Primary, self::Technical => 'info',
+            self::Primary => 'default',
+            self::Technical, self::Support => 'info',
             self::Billing => 'warning',
-            self::Escalation => 'destructive',
+            self::Management => 'success',
+            self::Abuse, self::Escalation => 'destructive',
         };
     }
 }

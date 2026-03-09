@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreClientCompanyRequest;
 use App\Http\Requests\UpdateClientCompanyRequest;
 use App\Models\ClientCompany;
+use App\Models\ClientContact;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -82,7 +83,7 @@ class ClientCompanyController extends Controller
     {
         $this->authorize('view', $client);
 
-        $client->load('accountManager:id,name,email');
+        $client->load(['accountManager:id,name,email', 'contacts' => fn ($query) => $query->orderByDesc('is_active')->orderBy('full_name')]);
 
         return Inertia::render('Clients/Show', [
             'client' => [
@@ -104,9 +105,18 @@ class ClientCompanyController extends Controller
                 'created_at' => $client->created_at?->toDateString(),
                 'updated_at' => $client->updated_at?->toDateString(),
             ],
+            'contacts' => $client->contacts->map(fn (ClientContact $contact) => [
+                'id' => $contact->id,
+                'full_name' => $contact->full_name,
+                'email' => $contact->email,
+                'contact_type' => $contact->contact_type?->value,
+                'is_active' => $contact->is_active,
+            ])->values(),
             'can' => [
                 'update' => $request->user()->can('update', $client),
                 'delete' => $request->user()->can('delete', $client),
+                'create_contact' => $request->user()->can('create', ClientContact::class),
+                'update_contact' => $request->user()->can('contacts.update'),
             ],
         ]);
     }
