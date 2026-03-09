@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Support\Roles;
 
 class User extends Authenticatable
 {
@@ -29,6 +30,11 @@ class User extends Authenticatable
     public function clientUserProfile(): HasOne
     {
         return $this->hasOne(ClientUserProfile::class);
+    }
+
+    public function isClientUser(): bool
+    {
+        return $this->hasRole(Roles::CLIENT_USER);
     }
 
     /**
