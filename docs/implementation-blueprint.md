@@ -37,10 +37,16 @@
   - Automatic base role assignment to `client-user` on create/update.
   - UI pages: `ClientUsers/Index`, `ClientUsers/Create`, `ClientUsers/Edit`, `ClientUsers/Show`.
   - Client detail integration: users tab on `Clients/Show`.
+- **Client Account Workspace (enhanced `Clients/Show`):**
+  - Client detail is now a tabbed account workspace with sections for Overview, Contacts, Users, Assets, Tickets, Services, and Activity.
+  - Contextual actions are surfaced in-page: add contact, add user, add asset (module entry), create ticket (module entry), and edit/archive controls based on authorization.
+  - Contacts and users render with shadcn cards, tables, badges, and empty states.
+  - Workspace-level activity feed is loaded from Spatie activity log entries for the client account.
+  - Summary cards surface key account metrics (contact/user totals and access capability counts).
 
 ## Pending Modules
 - Password reset and profile management flows.
-- Full CRUD features for assets, tickets, services, reports, and settings.
+- Full CRUD features for assets, tickets, services, reports, and settings (workspace tabs currently scaffolded with module-entry empty states).
 - Pagination controls component polish for larger datasets.
 - Granular permission matrix expansion for non-client modules.
 - Client-facing authorization enforcement that consumes profile flags in ticket/asset/contact modules.
@@ -104,7 +110,7 @@
 - `Clients/Index.jsx`
 - `Clients/Create.jsx`
 - `Clients/Edit.jsx`
-- `Clients/Show.jsx`
+- `Clients/Show.jsx` (account workspace tabs + contextual account actions + activity feed)
 - `Contacts/Index.jsx`
 - `Contacts/Create.jsx`
 - `Contacts/Edit.jsx`
