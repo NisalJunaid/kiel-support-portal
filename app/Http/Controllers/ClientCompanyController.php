@@ -10,6 +10,7 @@ use App\Models\ClientUserProfile;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Spatie\Activitylog\Models\Activity;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,15 +49,6 @@ class ClientCompanyController extends Controller
             'filters' => [
                 'search' => $search,
             ],
-            'client_users' => $client->clientUsers->map(fn (ClientUserProfile $profile) => [
-                'id' => $profile->id,
-                'name' => $profile->user?->name,
-                'email' => $profile->user?->email,
-                'role_label' => $profile->role_label,
-                'contact' => $profile->contact,
-                'can_create_tickets' => $profile->can_create_tickets,
-                'can_view_assets' => $profile->can_view_assets,
-            ])->values(),
             'can' => [
                 'create' => $request->user()->can('create', ClientCompany::class),
                 'update' => $request->user()->can('update', ClientCompany::class),
@@ -100,6 +92,15 @@ class ClientCompanyController extends Controller
             'clientUsers.contact:id,full_name',
         ]);
 
+        $activity = Activity::query()
+            ->where('subject_type', ClientCompany::class)
+            ->where('subject_id', $client->id)
+            ->latest()
+            ->limit(10)
+            ->get();
+
+        $canManageWorkspace = $request->user()->hasAnyRole(['super-admin', 'admin', 'staff', 'support-agent']);
+
         return Inertia::render('Clients/Show', [
             'client' => [
                 'id' => $client->id,
@@ -136,12 +137,28 @@ class ClientCompanyController extends Controller
                 'can_create_tickets' => $profile->can_create_tickets,
                 'can_view_assets' => $profile->can_view_assets,
             ])->values(),
+            'activity' => $activity->map(fn (Activity $item) => [
+                'id' => $item->id,
+                'event' => $item->event,
+                'description' => $item->description,
+                'causer_name' => $item->causer?->name,
+                'created_at' => optional($item->created_at)?->toDateTimeString(),
+            ])->values(),
+            'stats' => [
+                'contacts_count' => $client->contacts->count(),
+                'active_contacts_count' => $client->contacts->where('is_active', true)->count(),
+                'users_count' => $client->clientUsers->count(),
+                'users_can_create_tickets_count' => $client->clientUsers->where('can_create_tickets', true)->count(),
+                'users_can_view_assets_count' => $client->clientUsers->where('can_view_assets', true)->count(),
+            ],
             'can' => [
                 'update' => $request->user()->can('update', $client),
                 'delete' => $request->user()->can('delete', $client),
                 'create_contact' => $request->user()->can('create', ClientContact::class),
                 'update_contact' => $request->user()->can('contacts.update'),
                 'create_client_user' => $request->user()->can('create', ClientUserProfile::class),
+                'manage_assets' => $canManageWorkspace,
+                'create_ticket' => $canManageWorkspace,
             ],
         ]);
     }
