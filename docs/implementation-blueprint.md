@@ -289,3 +289,19 @@
 - `POST /portal/tickets` -> `ClientPortal\TicketController@store` (`portal.tickets.store`) [auth + role:client-user + policy + company scoping]
 - `GET /portal/assets` -> `ClientPortal\AssetController@index` (`portal.assets.index`) [auth + role:client-user]
 - `GET /portal/contacts` -> `ClientPortal\ContactController@index` (`portal.contacts.index`) [auth + role:client-user]
+
+
+## Security & Access Hardening Notes (Latest Pass)
+- Tightened client-contact authorization: client users now require `client_user_profiles.can_manage_contacts = true` for both `viewAny` and `view` contact policy checks.
+- Client portal contacts controller now delegates authorization to `ClientContactPolicy::viewAny` instead of bespoke flag checks, keeping policy logic centralized.
+- Inertia shared authorization props were expanded with explicit capability flags (`canCreateClients`, `canCreateTickets`, `canViewNotifications`, `canViewSettings`, `isStaffWorkspace`) to drive consistent UI gating.
+- Staff shell hardening:
+  - Sidebar now fully role/permission filters dashboard + module links and hides notifications/settings based on capability flags.
+  - Header notifications menu is hidden unless the authenticated user can access notifications.
+  - Staff sidebar/header are suppressed for non-staff workspaces.
+- Dashboard data exposure hardening:
+  - Internal dashboard controller now conditionally computes cards, queues, renewal watch sections, and quick links based on policy checks/role checks.
+  - Users without module access no longer receive aggregate data for those modules.
+- Added critical authorization tests covering:
+  - client-user denial of staff-only routes (`/dashboard`, `/clients`, `/notifications`)
+  - client contact portal access requiring `can_manage_contacts` flag.

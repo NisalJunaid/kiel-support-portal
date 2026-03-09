@@ -10,7 +10,7 @@ class ClientContactPolicy
     public function viewAny(User $user): bool
     {
         if ($user->isClientUser()) {
-            return $user->clientUserProfile !== null;
+            return (bool) $user->clientUserProfile?->can_manage_contacts;
         }
 
         return $user->can('contacts.view');
@@ -21,7 +21,7 @@ class ClientContactPolicy
         if ($user->isClientUser()) {
             $profile = $user->clientUserProfile;
 
-            return $profile !== null
+            return (bool) $profile?->can_manage_contacts
                 && $profile->client_company_id === $clientContact->client_company_id;
         }
 

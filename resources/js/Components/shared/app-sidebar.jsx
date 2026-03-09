@@ -3,7 +3,7 @@ import { LayoutDashboard, Building2, Users, Boxes, Ticket, Briefcase, Timer, Bar
 import { cn } from '@/lib/utils';
 
 const nav = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, requires: 'isStaffWorkspace' },
   { label: 'Clients', href: '/clients', icon: Building2, requires: 'canViewClients' },
   { label: 'Contacts', href: '/contacts', icon: Users, requires: 'canViewContacts' },
   { label: 'Client Users', href: '/client-users', icon: Users, requires: 'canViewClientUsers' },
@@ -12,9 +12,9 @@ const nav = [
   { label: 'Services', href: '/services', icon: Briefcase, requires: 'canViewServices' },
   { label: 'SLA Plans', href: '/sla-plans', icon: Timer, requires: 'canViewSlaPlans' },
   { label: 'Activity', href: '/activity', icon: History, requires: 'canViewActivity' },
-  { label: 'Notifications', href: '/notifications', icon: Bell },
+  { label: 'Notifications', href: '/notifications', icon: Bell, requires: 'canViewNotifications' },
   { label: 'Reports', href: '/reports', icon: BarChart3, requires: 'canViewReports' },
-  { label: 'Settings', href: '/settings', icon: Settings },
+  { label: 'Settings', href: '/settings', icon: Settings, requires: 'canViewSettings' },
   { label: 'Administration', href: '/administration', icon: Shield, requires: 'canViewAdminReadiness' },
   { label: 'System Reference', href: '/administration/system-reference', icon: Shield, requires: 'canViewSystemReference' },
 ];
@@ -22,7 +22,7 @@ const nav = [
 export function AppSidebar() {
   const { url, props } = usePage();
 
-  if (!props.auth?.user) {
+  if (!props.auth?.user || !props.authorization?.isStaffWorkspace) {
     return null;
   }
 

@@ -13,7 +13,9 @@ class ContactController extends Controller
     public function index(Request $request): Response
     {
         $profile = $request->user()->clientUserProfile;
-        abort_unless($profile && $profile->can_manage_contacts, 403);
+        abort_unless($profile, 403);
+
+        $this->authorize('viewAny', ClientContact::class);
 
         $contacts = ClientContact::query()
             ->where('client_company_id', $profile->client_company_id)
