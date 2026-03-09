@@ -71,7 +71,7 @@
 - **SLA plans + indicators module (practical v1):**
   - New `sla_plans` table/model with response/resolution targets and optional business-hour/escalation JSON payloads.
   - Client companies and services can now reference an `sla_plan_id`; tickets can reference both `service_id` and resolved `sla_plan_id`.
-  - New admin CRUD surface for SLA plans: `SlaPlans/Index`, `SlaPlans/Create`, `SlaPlans/Edit`.
+  - New admin CRUD surface for SLA plans: `SlaPlans/Index`, `SlaPlans/Create`, `SlaPlans/Edit`, `SlaPlans/Show`.
   - Ticket create/update now auto-resolve SLA source order (`ticket override -> service SLA -> client SLA`) and auto-populate due dates when unset.
   - Ticket list/detail now show SLA indicators (on-track/due-soon/breached/no-deadline) and linked SLA plan context.
   - Sidebar navigation now exposes SLA plans for authorized users.
@@ -106,8 +106,11 @@
 ## Pending Modules
 - Password reset and profile management flows.
 - Full CRUD features for settings.
-- Pagination controls component polish for larger datasets.
+
+## Remaining Backlog (Post-MVP Enhancements)
 - Granular permission matrix expansion for non-client modules.
+- SLA analytics/report export workflows and configurable notifications.
+- Bulk actions for list modules (tickets/assets/services/client users) with confirmation UX.
 
 ## Route Inventory
 - `GET /` -> auth-aware redirect to `/login` or `/dashboard`
@@ -123,7 +126,7 @@
 - `Resource /client-users` -> `ClientUserController` (`client-users.*`) [auth + policy]
 - `Resource /assets` -> `AssetController` (`assets.*`) [auth + policy]
 - `Resource /services` -> `ServiceController` (`services.*`) [auth + policy]
-- `Resource /sla-plans` -> `SlaPlanController` (`sla-plans.*`, except show) [auth + policy]
+- `Resource /sla-plans` -> `SlaPlanController` (`sla-plans.*`) [auth + policy]
 - `Resource /tickets` -> `TicketController` (`tickets.*`) [auth + policy]
 - `GET /activity` -> `ActivityController@index` (`activity.index`) [auth + role:super-admin|admin|staff]
 - `GET /notifications` -> `NotificationController@index` (`notifications.index`) [auth]
@@ -233,6 +236,7 @@
 - `SlaPlans/Index.jsx`
 - `SlaPlans/Create.jsx`
 - `SlaPlans/Edit.jsx`
+- `SlaPlans/Show.jsx`
 - `Activity/Index.jsx`
 - `Tickets/Index.jsx`
 - `Tickets/Create.jsx` (includes initial attachment upload section)
