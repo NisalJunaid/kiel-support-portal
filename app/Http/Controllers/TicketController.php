@@ -18,6 +18,7 @@ use App\Models\User;
 use App\Services\Tickets\TicketAttachmentService;
 use App\Services\Tickets\SlaDeadlineService;
 use App\Services\Tickets\TicketMessageService;
+use App\Services\Notifications\TicketNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Support\ActivityPresenter;
@@ -109,7 +110,7 @@ class TicketController extends Controller
         ]);
     }
 
-    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber, TicketMessageService $ticketMessageService, TicketAttachmentService $ticketAttachmentService, SlaDeadlineService $slaDeadlineService): RedirectResponse
+    public function store(StoreTicketRequest $request, GenerateTicketNumber $generateTicketNumber, TicketMessageService $ticketMessageService, TicketAttachmentService $ticketAttachmentService, SlaDeadlineService $slaDeadlineService, TicketNotificationService $ticketNotificationService): RedirectResponse
     {
         $data = $request->validated();
         $data['ticket_number'] = $generateTicketNumber->execute();
@@ -143,6 +144,8 @@ class TicketController extends Controller
         $ticketMessageService->createSystemEvent($ticket, sprintf('Ticket %s was created with %s priority and %s status.', $ticket->ticket_number, $ticket->priority?->label() ?? 'unknown', $ticket->status?->label() ?? 'unknown'));
 
         $ticketAttachmentService->storeForTicket($ticket, $request->user(), $request->file('attachments', []));
+
+        $ticketNotificationService->notifyTicketCreated($ticket, $request->user());
 
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket created successfully.');
     }

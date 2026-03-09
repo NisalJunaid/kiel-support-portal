@@ -9,6 +9,7 @@ use App\Http\Controllers\ClientCompanyController;
 use App\Http\Controllers\ClientContactController;
 use App\Http\Controllers\ClientUserController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PlaceholderController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\SlaPlanController;
@@ -54,6 +55,9 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:super-admin|admin|staff')
         ->name('activity.index');
 
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::patch('notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('tickets/{ticket}/messages', [TicketMessageController::class, 'store'])->name('tickets.messages.store');
     Route::patch('tickets/{ticket}/workflow/assignment', [TicketWorkflowController::class, 'assign'])->name('tickets.workflow.assignment');
     Route::patch('tickets/{ticket}/workflow/status', [TicketWorkflowController::class, 'status'])->name('tickets.workflow.status');
