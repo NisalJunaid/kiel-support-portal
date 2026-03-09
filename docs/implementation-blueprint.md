@@ -259,6 +259,9 @@
   - `ui/select`
 
 ## Client Portal v1 (Scoped Experience)
+- Added client ticket submission flow in the portal with policy-backed authorization (`can_create_tickets`), server-side company scoping, and SLA-aware ticket creation plus optional attachment upload.
+- Added client ticket create page (`ClientPortal/Tickets/Create`) built with shadcn/ui form controls and asset selection constrained to company-owned assets.
+- Client portal ticket index now exposes a `Create ticket` action when ticket creation is enabled for the authenticated client profile.
 - Added a dedicated client portal route group under `/portal/*` protected by `auth + role:client-user`.
 - Added role-gated internal route group (`super-admin|admin|staff|support-agent|asset-manager`) to prevent client users from entering staff/admin modules.
 - Added `/home` redirect orchestration and updated login redirect target so users land in the correct experience (`/dashboard` for internal users, `/portal/dashboard` for client users).
@@ -270,6 +273,7 @@
 - Added client-facing Inertia pages with polished shadcn/ui cards/tables/empty-states:
   - `ClientPortal/Dashboard`
   - `ClientPortal/Tickets/Index`
+  - `ClientPortal/Tickets/Create`
   - `ClientPortal/Tickets/Show`
   - `ClientPortal/Assets/Index`
   - `ClientPortal/Contacts/Index`
@@ -281,5 +285,7 @@
 - `GET /portal/dashboard` -> `ClientPortal\DashboardController` (`portal.dashboard`) [auth + role:client-user]
 - `GET /portal/tickets` -> `ClientPortal\TicketController@index` (`portal.tickets.index`) [auth + role:client-user]
 - `GET /portal/tickets/{ticket}` -> `ClientPortal\TicketController@show` (`portal.tickets.show`) [auth + role:client-user + policy]
+- `GET /portal/tickets/create` -> `ClientPortal\TicketController@create` (`portal.tickets.create`) [auth + role:client-user + policy]
+- `POST /portal/tickets` -> `ClientPortal\TicketController@store` (`portal.tickets.store`) [auth + role:client-user + policy + company scoping]
 - `GET /portal/assets` -> `ClientPortal\AssetController@index` (`portal.assets.index`) [auth + role:client-user]
 - `GET /portal/contacts` -> `ClientPortal\ContactController@index` (`portal.contacts.index`) [auth + role:client-user]

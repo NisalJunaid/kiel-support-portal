@@ -102,6 +102,8 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:client-user')->prefix('portal')->name('portal.')->group(function () {
         Route::get('/dashboard', ClientPortalDashboardController::class)->name('dashboard');
         Route::get('/tickets', [ClientPortalTicketController::class, 'index'])->name('tickets.index');
+        Route::get('/tickets/create', [ClientPortalTicketController::class, 'create'])->name('tickets.create');
+        Route::post('/tickets', [ClientPortalTicketController::class, 'store'])->name('tickets.store');
         Route::get('/tickets/{ticket}', [ClientPortalTicketController::class, 'show'])->name('tickets.show');
         Route::get('/assets', [ClientPortalAssetController::class, 'index'])->name('assets.index');
         Route::get('/contacts', [ClientPortalContactController::class, 'index'])->name('contacts.index');

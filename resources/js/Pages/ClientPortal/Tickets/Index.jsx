@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import ClientPortalLayout from '@/Layouts/client-portal-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { EmptyState } from '@/Components/shared/empty-state';
 import { ListPagination } from '@/Components/shared/list-pagination';
@@ -8,13 +9,20 @@ import { usePage } from '@inertiajs/react';
 import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
 
-export default function ClientTicketsIndex({ tickets }) {
+export default function ClientTicketsIndex({ tickets, canCreate }) {
   const { props } = usePage();
 
   return (
     <ClientPortalLayout title="My Company Tickets" description="All tickets scoped to your company.">
       <Card>
-        <CardHeader><CardTitle>Tickets</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Tickets</CardTitle>
+          {canCreate ? (
+            <Button asChild size="sm">
+              <Link href="/portal/tickets/create">Create ticket</Link>
+            </Button>
+          ) : null}
+        </CardHeader>
         <CardContent>
           {tickets.data.length === 0 ? <EmptyState title="No tickets found" description="There are no tickets for your company yet." /> : (
             <>
