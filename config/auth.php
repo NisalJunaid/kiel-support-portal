@@ -112,4 +112,10 @@ return [
 
     'password_timeout' => 10800,
 
+    'bootstrap_admin' => [
+        'name' => env('BOOTSTRAP_ADMIN_NAME', 'Kiel Super Admin'),
+        'email' => env('BOOTSTRAP_ADMIN_EMAIL', 'admin@kiel.local'),
+        'password' => env('BOOTSTRAP_ADMIN_PASSWORD', 'password'),
+    ],
+
 ];
