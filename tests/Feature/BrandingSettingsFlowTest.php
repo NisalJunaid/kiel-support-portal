@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\BrandingSettings;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -69,6 +70,51 @@ class BrandingSettingsFlowTest extends TestCase
 
         $this->assertSame('#405060', $hydrated['card_border_color']);
         $this->assertSame('#405060', $hydrated['border_color']);
+    }
+
+    public function test_branding_update_invalidates_cache_and_hydrates_fresh_inertia_props(): void
+    {
+        Role::create(['name' => Roles::SUPER_ADMIN]);
+
+        $user = User::factory()->create();
+        $user->assignRole(Roles::SUPER_ADMIN);
+
+        BrandingSettings::update([
+            'app_name' => 'Before',
+            'primary_color' => '#111111',
+            'secondary_color' => '#222222',
+            'accent_color' => '#333333',
+            'card_border_color' => '#444444',
+            'dark_mode_enabled' => false,
+            'logo_path' => null,
+        ]);
+
+        $cachedBefore = BrandingSettings::cached();
+        $this->assertSame('Before', $cachedBefore['app_name']);
+
+        $this->actingAs($user)->patch('/settings/branding', [
+            'app_name' => 'After',
+            'primary_color' => '#abcdef',
+            'secondary_color' => '#123456',
+            'accent_color' => '#654321',
+            'card_border_color' => '#fedcba',
+            'dark_mode_enabled' => 'true',
+            'remove_logo' => 'false',
+        ])->assertRedirect();
+
+        $this->assertFalse(Cache::has(BrandingSettings::CACHE_KEY));
+
+        $this->actingAs($user)
+            ->withHeaders([
+                'X-Inertia' => 'true',
+                'X-Requested-With' => 'XMLHttpRequest',
+            ])
+            ->get('/settings/branding')
+            ->assertOk()
+            ->assertSee('"app_name":"After"')
+            ->assertSee('"primary_color":"#abcdef"')
+            ->assertSee('"card_border_color":"#fedcba"')
+            ->assertSee('"dark_mode_enabled":true');
     }
 
 }

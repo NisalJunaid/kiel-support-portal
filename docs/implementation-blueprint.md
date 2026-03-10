@@ -20,6 +20,7 @@
 - Inertia bootstrap theme hydration is now Inertia-context-safe: `ThemeBridge` no longer calls `usePage()` from `app.jsx` (outside the Inertia provider) and instead consumes initial branding from boot props while subscribing to Inertia `router.on('success')` updates for cross-page branding synchronization.
 - Branding settings preview now renders inside an isolated CSS-token scope that uses the exact same token builder as the app root, preventing preview-only theme logic drift.
 - Branding settings save submission now uses the Inertia `useForm` pattern correctly by applying `form.transform(...)` before invoking `form.patch(...)` as separate calls, preventing runtime `undefined.patch` crashes while preserving multipart logo uploads and validation error hydration.
+- Branding persistence readback now resolves the `branding` `app_settings` row through the `AppSetting` model instance (`first()?->value`) instead of querying a raw column scalar (`value('value')`), guaranteeing casted array hydration before merging defaults, cache sharing, and global theme token generation.
 - Client portal ticket detail now supports policy-gated public replies through the shared `TicketMessageController` endpoint under `/portal/tickets/{ticket}/messages`, while preserving internal-note restrictions through `StoreTicketMessageRequest` and `TicketPolicy`.
 
 ## Implemented Modules
