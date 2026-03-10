@@ -25,7 +25,13 @@ class BrandingSettings
 
     public static function get(): array
     {
-        $stored = AppSetting::query()->where('key', self::KEY)->value('value') ?? [];
+        $stored = AppSetting::query()
+            ->where('key', self::KEY)
+            ->first()?->value;
+
+        if (! is_array($stored)) {
+            $stored = [];
+        }
 
         if (isset($stored['surface_border_color']) && ! isset($stored['card_border_color'])) {
             $stored['card_border_color'] = $stored['surface_border_color'];
@@ -36,6 +42,7 @@ class BrandingSettings
         }
 
         $settings = array_merge(self::defaults(), $stored);
+        $settings['dark_mode_enabled'] = (bool) ($settings['dark_mode_enabled'] ?? false);
 
         return [
             ...$settings,
