@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
@@ -7,7 +7,7 @@ import { Textarea } from '@/Components/ui/textarea';
 import FileUploadField from '@/Components/shared/file-upload-field';
 import { getDomainOptions } from '@/lib/domain-references';
 
-export default function TicketForm({ data, setData, errors, processing, onSubmit, submitLabel, formData, domainReferences }) {
+export default function TicketForm({ data, setData, errors, processing, onSubmit, submitLabel, formData, domainReferences, onCancel }) {
   const priorityOptions = getDomainOptions(domainReferences, 'ticketPriority');
   const statusOptions = getDomainOptions(domainReferences, 'ticketStatus');
   const contacts = formData.contacts.filter((item) => !data.client_company_id || `${item.client_company_id}` === `${data.client_company_id}`);
@@ -68,7 +68,23 @@ export default function TicketForm({ data, setData, errors, processing, onSubmit
         </CardContent>
       </Card>
 
-      <div className="flex gap-2"><Button disabled={processing}>{submitLabel}</Button><Button variant="outline" asChild><Link href="/tickets">Cancel</Link></Button></div>
+      <div className="flex gap-2">
+        <Button disabled={processing}>{submitLabel}</Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            if (onCancel) {
+              onCancel();
+              return;
+            }
+
+            router.get('/tickets');
+          }}
+        >
+          Cancel
+        </Button>
+      </div>
     </form>
   );
 }

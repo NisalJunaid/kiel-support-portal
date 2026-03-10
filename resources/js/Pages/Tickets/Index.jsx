@@ -96,7 +96,38 @@ export default function TicketsIndex({ tickets, filters, can, domainReferences, 
       </SectionCard>
 
       <EntityCreateDrawer open={createOpen} onOpenChange={setCreateOpen} onCancel={() => { setCreateOpen(false); reset(); }} title="Create ticket" description="Open a new support ticket." processing={processing}>
-        <TicketForm data={data} setData={setData} errors={errors} processing={processing} formData={formData} domainReferences={domainReferences} submitLabel="Create ticket" onSubmit={(e) => { e.preventDefault(); post('/tickets', { forceFormData: true, preserveScroll: true, onSuccess: () => { setCreateOpen(false); reset(); } }); }} />
+        <TicketForm
+          data={data}
+          setData={setData}
+          errors={errors}
+          processing={processing}
+          formData={formData}
+          domainReferences={domainReferences}
+          submitLabel="Create ticket"
+          onCancel={() => {
+            setCreateOpen(false);
+            reset();
+          }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            post('/tickets', {
+              forceFormData: true,
+              preserveScroll: true,
+              onSuccess: (page) => {
+                setCreateOpen(false);
+                reset();
+
+                const createdTicketId = page?.props?.flash?.created_ticket_id;
+                if (createdTicketId) {
+                  openTicketDrawer(createdTicketId);
+                  return;
+                }
+
+                router.reload({ only: ['tickets'], preserveScroll: true, preserveState: true });
+              },
+            });
+          }}
+        />
       </EntityCreateDrawer>
 
       <Sheet open={!!selectedTicketId && !!drawerTicket?.ticket} onOpenChange={(open) => !open && closeTicketDrawer()}>
