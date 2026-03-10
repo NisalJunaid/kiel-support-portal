@@ -367,6 +367,10 @@
   - Added `GET /settings/branding` and `PATCH /settings/branding` (super-admin only).
   - Added `PATCH /settings/branding/dark-mode` for topbar dark-mode persistence (super-admin only).
 
+- Added a shared `EntityCreateDrawer` composition on top of the reusable `entity-drawer` shell so entity create forms can run inside consistent right-side overlays with shared close/cancel behavior and scroll-safe body layout.
+- Major staff create flows are now drawer-first on list pages (tickets, clients, contacts, client users, assets, services, SLA plans) while preserving full-page create routes for direct access/fallback.
+- Store actions for the primary entities now honor a `from_drawer` flag to return back to the current screen after success (instead of forcing show-page redirects), preserving list context and enabling smooth drawer close + refresh UX.
+
 ## Pending Follow-up
 - Extend drawer-based quick-edit workflows to additional entities (clients/assets/contacts) in the same reusable `entity-drawer` pattern.
 - Add dedicated automated feature tests for branding settings authorization + upload lifecycle.

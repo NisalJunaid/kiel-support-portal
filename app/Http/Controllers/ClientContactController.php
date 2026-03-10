@@ -93,6 +93,10 @@ class ClientContactController extends Controller
             ->withProperties(['email' => $contact->email])
             ->log('Client contact created');
 
+        if ($request->boolean('from_drawer')) {
+            return back()->with('success', 'Contact created successfully.');
+        }
+
         return redirect()->route('contacts.show', $contact)->with('success', 'Contact created successfully.');
     }
 

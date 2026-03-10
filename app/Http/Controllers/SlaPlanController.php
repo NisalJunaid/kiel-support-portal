@@ -47,6 +47,10 @@ class SlaPlanController extends Controller
     {
         $plan = SlaPlan::create($request->validated());
 
+        if ($request->boolean('from_drawer')) {
+            return back()->with('success', "SLA plan {$plan->name} created.");
+        }
+
         return redirect()->route('sla-plans.show', $plan)->with('success', "SLA plan {$plan->name} created.");
     }
 
