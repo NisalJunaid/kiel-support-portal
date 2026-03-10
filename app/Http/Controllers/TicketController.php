@@ -87,7 +87,7 @@ class TicketController extends Controller
                 'client_company_id' => $clientId,
             ],
             'drawerTicket' => fn () => $this->resolveDrawerTicketPayload($request, $slaDeadlineService),
-            'staff' => fn () => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
+            'staff' => fn () => $this->staffOptions(),
             'currentUser' => fn () => $request->user()?->only(['id', 'name']),
             'clients' => fn () => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
             'formData' => fn () => $this->formData(),
@@ -393,7 +393,7 @@ class TicketController extends Controller
                 'addPublicReply' => $request->user()->can('addPublicReply', $ticket),
                 'addInternalNote' => $request->user()->can('addInternalNote', $ticket),
             ],
-            'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
+            'staff' => $this->staffOptions(),
         ];
     }
 
@@ -405,6 +405,7 @@ class TicketController extends Controller
             'assets' => Asset::query()->orderBy('name')->get(['id', 'name', 'asset_code', 'client_company_id']),
             'services' => Service::query()->orderBy('name')->get(['id', 'name', 'client_company_id']),
             'slaPlans' => SlaPlan::query()->orderBy('name')->get(['id', 'name', 'response_minutes', 'resolution_minutes']),
+            'staff' => $this->staffOptions(),
             'clientUsers' => ClientUserProfile::query()
                 ->with('user:id,name,email')
                 ->orderBy('id')
@@ -424,6 +425,14 @@ class TicketController extends Controller
             'defaultAssetId' => $defaultAssetId,
             'defaultServiceId' => $defaultServiceId,
         ];
+    }
+
+    private function staffOptions()
+    {
+        return User::query()
+            ->role(['super-admin', 'admin', 'staff', 'support-agent'])
+            ->orderBy('name')
+            ->get(['id', 'name']);
     }
 
     private function resolveDrawerTicketPayload(Request $request, SlaDeadlineService $slaDeadlineService): ?array
