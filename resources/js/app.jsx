@@ -2,26 +2,15 @@ import '../css/app.css';
 import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-import { useEffect, useMemo, useState } from 'react';
-import { applyBrandingTheme, getStoredDarkModePreference } from '@/lib/theme';
+import { useEffect, useState } from 'react';
+import { applyBrandingTheme } from '@/lib/theme';
 
 function ThemeBridge({ branding, children }) {
   const [currentBranding, setCurrentBranding] = useState(branding);
-  const [localDarkModeOverride, setLocalDarkModeOverride] = useState(() => getStoredDarkModePreference());
 
   useEffect(() => {
     setCurrentBranding(branding);
   }, [branding]);
-
-  useEffect(() => {
-    const syncThemePreference = () => setLocalDarkModeOverride(getStoredDarkModePreference());
-
-    window.addEventListener('kiel:theme-preference-changed', syncThemePreference);
-
-    return () => {
-      window.removeEventListener('kiel:theme-preference-changed', syncThemePreference);
-    };
-  }, []);
 
   useEffect(() => {
     const removeSuccessListener = router.on('success', (event) => {
@@ -36,16 +25,17 @@ function ThemeBridge({ branding, children }) {
     };
   }, []);
 
-  const darkModeEnabled = useMemo(() => {
-    if (typeof localDarkModeOverride === 'boolean') return localDarkModeOverride;
-    return Boolean(currentBranding?.dark_mode_enabled);
-  }, [currentBranding?.dark_mode_enabled, localDarkModeOverride]);
+  const darkModeEnabled = Boolean(currentBranding?.dark_mode_enabled);
 
   useEffect(() => {
     const root = document.documentElement;
 
     root.classList.toggle('dark', darkModeEnabled);
     applyBrandingTheme(root, currentBranding, darkModeEnabled);
+
+    if (currentBranding?.app_name) {
+      document.title = currentBranding.app_name;
+    }
   }, [currentBranding, darkModeEnabled]);
 
   return children;

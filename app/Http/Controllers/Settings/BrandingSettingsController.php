@@ -25,14 +25,15 @@ class BrandingSettingsController extends Controller
     public function update(UpdateBrandingSettingsRequest $request): RedirectResponse
     {
         $current = BrandingSettings::get();
+        $validated = $request->validated();
 
         $payload = [
-            'app_name' => $request->string('app_name')->toString(),
-            'primary_color' => $request->string('primary_color')->toString(),
-            'secondary_color' => $request->string('secondary_color')->toString(),
-            'accent_color' => $request->string('accent_color')->toString(),
-            'card_border_color' => $request->string('card_border_color')->toString(),
-            'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
+            'app_name' => $validated['app_name'] ?? $current['app_name'],
+            'primary_color' => $validated['primary_color'] ?? $current['primary_color'],
+            'secondary_color' => $validated['secondary_color'] ?? $current['secondary_color'],
+            'accent_color' => $validated['accent_color'] ?? $current['accent_color'],
+            'card_border_color' => $validated['card_border_color'] ?? $current['card_border_color'],
+            'dark_mode_enabled' => $request->boolean('dark_mode_enabled', $current['dark_mode_enabled']),
             'logo_path' => $current['logo_path'],
         ];
 
