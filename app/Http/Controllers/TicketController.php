@@ -70,6 +70,9 @@ class TicketController extends Controller
                     'service' => $ticket->service,
                     'sla_plan' => $ticket->slaPlan ? ['id' => $ticket->slaPlan->id, 'name' => $ticket->slaPlan->name] : null,
                     'assignee' => $ticket->assignedUser,
+                    'can' => [
+                        'update' => $request->user()->can('update', $ticket),
+                    ],
                     'updated_at' => optional($ticket->updated_at)?->diffForHumans(),
                     'first_response_due_at' => optional($ticket->first_response_due_at)?->toDateTimeString(),
                     'resolution_due_at' => optional($ticket->resolution_due_at)?->toDateTimeString(),
@@ -85,6 +88,7 @@ class TicketController extends Controller
             ],
             'drawerTicket' => fn () => $this->resolveDrawerTicketPayload($request, $slaDeadlineService),
             'staff' => fn () => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
+            'currentUser' => fn () => $request->user()?->only(['id', 'name']),
             'clients' => fn () => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
             'formData' => fn () => $this->formData(),
             'defaults' => [
@@ -387,6 +391,7 @@ class TicketController extends Controller
                 'addPublicReply' => $request->user()->can('addPublicReply', $ticket),
                 'addInternalNote' => $request->user()->can('addInternalNote', $ticket),
             ],
+            'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
         ];
     }
 
