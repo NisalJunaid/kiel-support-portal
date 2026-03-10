@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\UpdateBrandingSettingsRequest;
+use App\Http\Requests\Settings\UpdateBrandingDarkModeRequest;
 use App\Support\BrandingSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -50,5 +51,22 @@ class BrandingSettingsController extends Controller
         BrandingSettings::update($payload);
 
         return back()->with('success', 'Branding settings updated.');
+    }
+
+    public function updateDarkMode(UpdateBrandingDarkModeRequest $request): RedirectResponse
+    {
+        $current = BrandingSettings::get();
+
+        BrandingSettings::update([
+            'app_name' => $current['app_name'],
+            'primary_color' => $current['primary_color'],
+            'secondary_color' => $current['secondary_color'],
+            'accent_color' => $current['accent_color'],
+            'surface_border_color' => $current['surface_border_color'],
+            'logo_path' => $current['logo_path'],
+            'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
+        ]);
+
+        return back();
     }
 }

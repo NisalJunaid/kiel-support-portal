@@ -100,6 +100,9 @@ Route::middleware('auth')->group(function () {
         Route::patch('/settings/branding', [BrandingSettingsController::class, 'update'])
             ->middleware('role:super-admin')
             ->name('settings.branding.update');
+        Route::patch('/settings/branding/dark-mode', [BrandingSettingsController::class, 'updateDarkMode'])
+            ->middleware('role:super-admin')
+            ->name('settings.branding.dark-mode');
 
     });
 
