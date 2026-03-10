@@ -1,9 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Ticket, Boxes, Users } from 'lucide-react';
+import { LayoutDashboard, Ticket, Boxes, Users, Moon, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FlashMessages } from '@/Components/shared/flash-messages';
 import { Button } from '@/Components/ui/button';
+import { Switch } from '@/Components/ui/switch';
 import { resolveBrandLogoUrl } from '@/lib/branding';
+import { useTheme } from '@/lib/theme-context';
 
 const nav = [
   { label: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
@@ -15,20 +17,35 @@ const nav = [
 export default function ClientPortalLayout({ children, title, description }) {
   const { url, props } = usePage();
   const branding = props.branding;
-  const logoUrl = resolveBrandLogoUrl(branding, Boolean(branding?.dark_mode_enabled));
+  const { darkModeEnabled, setDarkModeEnabled } = useTheme();
+  const logoUrl = resolveBrandLogoUrl(branding, darkModeEnabled);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground">
       <header className="border-b bg-card">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            {logoUrl ? <img src={logoUrl} alt={`${branding?.app_name || 'Support portal'} logo`} className="mb-1 h-10 w-40 object-contain" /> : null}
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">{branding?.app_name || 'Kiel Support Portal'}</p>
-            <p className="text-lg font-semibold">Client Portal</p>
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
+          <Link href="/portal/dashboard" className="flex h-12 items-center">
+            {logoUrl ? (
+              <img src={logoUrl} alt={`${branding?.app_name || 'Support portal'} logo`} className="h-10 w-40 object-contain" />
+            ) : (
+              <span className="text-sm font-semibold text-muted-foreground">{branding?.app_name || 'Support Portal'}</span>
+            )}
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5">
+              <Sun className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Switch
+                checked={darkModeEnabled}
+                onCheckedChange={(checked) => setDarkModeEnabled(checked)}
+                aria-label="Toggle dark mode"
+              />
+              <Moon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            </div>
+            <Button asChild variant="outline">
+              <Link href="/logout" method="post" as="button">Log out</Link>
+            </Button>
           </div>
-          <Button asChild variant="outline">
-            <Link href="/logout" method="post" as="button">Log out</Link>
-          </Button>
         </div>
       </header>
 
@@ -42,7 +59,7 @@ export default function ClientPortalLayout({ children, title, description }) {
                 const active = url.startsWith(item.href);
 
                 return (
-                  <Link key={item.href} href={item.href} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm', active ? 'bg-primary text-primary-foreground' : 'hover:bg-accent')}>
+                  <Link key={item.href} href={item.href} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm', active ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent')}>
                     <Icon className="h-4 w-4" />
                     {item.label}
                   </Link>
