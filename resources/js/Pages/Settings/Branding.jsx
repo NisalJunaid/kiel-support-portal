@@ -7,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Button } from '@/Components/ui/button';
 import { ThemePreviewCard } from '@/Components/settings/theme-preview-card';
 import { Switch } from '@/Components/ui/switch';
+import { applyBrandingTheme, hexToHsl } from '@/lib/theme';
 
 export default function Branding({ branding }) {
   const form = useForm({
@@ -33,32 +34,12 @@ export default function Branding({ branding }) {
       dark: root.classList.contains('dark'),
     };
 
-    const h = (hex) => {
-      const clean = hex.replace('#', '');
-      const full = clean.length === 3 ? clean.split('').map((c) => c + c).join('') : clean;
-      const r = parseInt(full.slice(0, 2), 16) / 255;
-      const g = parseInt(full.slice(2, 4), 16) / 255;
-      const b = parseInt(full.slice(4, 6), 16) / 255;
-      const max = Math.max(r, g, b);
-      const min = Math.min(r, g, b);
-      const l = (max + min) / 2;
-      if (max === min) return `0 0% ${Math.round(l * 100)}%`;
-      const d = max - min;
-      const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      let hue = 0;
-      if (max === r) hue = (g - b) / d + (g < b ? 6 : 0);
-      else if (max === g) hue = (b - r) / d + 2;
-      else hue = (r - g) / d + 4;
-      hue /= 6;
-      return `${Math.round(hue * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
-    };
-
-    root.style.setProperty('--primary', h(form.data.primary_color));
-    root.style.setProperty('--secondary', h(form.data.secondary_color));
-    root.style.setProperty('--accent', h(form.data.accent_color));
-    root.style.setProperty('--surface-border', h(form.data.surface_border_color));
-    root.style.setProperty('--border', h(form.data.surface_border_color));
-    root.style.setProperty('--input', h(form.data.surface_border_color));
+    applyBrandingTheme(root, {
+      primary: hexToHsl(form.data.primary_color),
+      secondary: hexToHsl(form.data.secondary_color),
+      accent: hexToHsl(form.data.accent_color),
+      surfaceBorder: hexToHsl(form.data.surface_border_color),
+    });
     root.classList.toggle('dark', Boolean(form.data.dark_mode_enabled));
 
     return () => {

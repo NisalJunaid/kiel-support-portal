@@ -6,8 +6,7 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Switch } from '@/Components/ui/switch';
-
-const DARK_MODE_STORAGE_KEY = 'kiel.theme.dark-mode';
+import { DARK_MODE_STORAGE_KEY } from '@/lib/theme';
 
 export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSidebar, auth, notifications, authorization, branding }) {
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;

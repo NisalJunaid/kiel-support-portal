@@ -3,16 +3,7 @@ import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { useEffect, useMemo, useState } from 'react';
-
-const DARK_MODE_STORAGE_KEY = 'kiel.theme.dark-mode';
-
-function getStoredDarkModePreference() {
-  if (typeof window === 'undefined') return null;
-  const value = window.localStorage.getItem(DARK_MODE_STORAGE_KEY);
-  if (value === '1') return true;
-  if (value === '0') return false;
-  return null;
-}
+import { applyBrandingTheme, getStoredDarkModePreference } from '@/lib/theme';
 
 function ThemeBridge({ branding, children }) {
   const [currentBranding, setCurrentBranding] = useState(branding);
@@ -54,13 +45,12 @@ function ThemeBridge({ branding, children }) {
     if (!currentBranding?.theme_hsl) return;
 
     const root = document.documentElement;
-    root.style.setProperty('--primary', currentBranding.theme_hsl.primary);
-    root.style.setProperty('--secondary', currentBranding.theme_hsl.secondary);
-    root.style.setProperty('--accent', currentBranding.theme_hsl.accent);
-    root.style.setProperty('--surface-border', currentBranding.theme_hsl.surface_border);
-    root.style.setProperty('--border', currentBranding.theme_hsl.surface_border);
-    root.style.setProperty('--input', currentBranding.theme_hsl.surface_border);
-    root.style.setProperty('--ring', currentBranding.theme_hsl.primary);
+    applyBrandingTheme(root, {
+      primary: currentBranding.theme_hsl.primary,
+      secondary: currentBranding.theme_hsl.secondary,
+      accent: currentBranding.theme_hsl.accent,
+      surfaceBorder: currentBranding.theme_hsl.surface_border,
+    });
 
     if (typeof localDarkModeOverride !== 'boolean') {
       root.classList.toggle('dark', Boolean(currentBranding.dark_mode_enabled));

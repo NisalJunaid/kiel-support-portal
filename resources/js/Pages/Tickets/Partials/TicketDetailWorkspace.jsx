@@ -14,9 +14,9 @@ import { Textarea } from '@/Components/ui/textarea';
 import { getDomainOptions } from '@/lib/domain-references';
 
 const typeStyles = {
-  public_reply: { label: 'Public reply', variant: 'default' },
-  internal_note: { label: 'Internal note', variant: 'secondary' },
-  system_event: { label: 'System', variant: 'outline' },
+  public_reply: { label: 'Public reply', variant: 'default', container: 'bg-muted/30 border-border' },
+  internal_note: { label: 'Internal note', variant: 'warning', container: 'bg-warning/10 border-warning/40' },
+  system_event: { label: 'System', variant: 'outline', container: 'bg-secondary/35 border-border' },
 };
 
 export function TicketDetailWorkspace({ ticket, messages, attachments, activity, can, domainReferences, slaIndicators, embedded = false }) {
@@ -47,10 +47,10 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, activity,
         <CardContent className="space-y-3">
           {messages.map((message) => {
             const style = typeStyles[message.message_type] || typeStyles.system_event;
-            return <div key={message.id} className={`rounded-md border p-3 ${message.message_type === 'internal_note' ? 'border-amber-200 bg-amber-50/40' : 'bg-muted/20'}`}><div className="mb-2 flex items-center justify-between"><div className="flex items-center gap-2"><Badge variant={style.variant}>{style.label}</Badge><span className="text-sm font-medium">{message.author?.name || 'System'}</span></div><span className="text-xs text-muted-foreground">{message.created_at}</span></div><p className="whitespace-pre-wrap text-sm">{message.body}</p><AttachmentList attachments={message.attachments} emptyText="No message attachments." /></div>;
+            return <div key={message.id} className={`rounded-md border p-3 ${style.container}`}><div className="mb-2 flex items-center justify-between"><div className="flex items-center gap-2"><Badge variant={style.variant}>{style.label}</Badge><span className="text-sm font-medium">{message.author?.name || 'System'}</span></div><span className="text-xs text-muted-foreground">{message.created_at}</span></div><p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p><AttachmentList attachments={message.attachments} emptyText="No message attachments." /></div>;
           })}
 
-          {(can.addPublicReply || can.addInternalNote) && <div className="space-y-2 rounded-md border p-3"><p className="text-sm font-medium">Add update</p><Select value={composerType} onValueChange={setComposerType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{can.addPublicReply && <SelectItem value="public_reply">Public reply</SelectItem>}{can.addInternalNote && <SelectItem value="internal_note">Internal note</SelectItem>}</SelectContent></Select><Textarea value={form.data.body} onChange={(e) => form.setData('body', e.target.value)} placeholder="Write your message..." /><FileUploadField id="message-attachments" label="Attach files" onChange={(e) => form.setData('attachments', Array.from(e.target.files || []))} /><Button size="sm" onClick={submitMessage} disabled={form.processing}>Post message</Button></div>}
+          {(can.addPublicReply || can.addInternalNote) && <div className="space-y-2 rounded-md border bg-muted/20 p-3"><p className="text-sm font-medium">Add update</p><Select value={composerType} onValueChange={setComposerType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{can.addPublicReply && <SelectItem value="public_reply">Public reply</SelectItem>}{can.addInternalNote && <SelectItem value="internal_note">Internal note</SelectItem>}</SelectContent></Select><Textarea value={form.data.body} onChange={(e) => form.setData('body', e.target.value)} placeholder="Write your message..." /><FileUploadField id="message-attachments" label="Attach files" onChange={(e) => form.setData('attachments', Array.from(e.target.files || []))} /><Button size="sm" onClick={submitMessage} disabled={form.processing}>Post message</Button></div>}
         </CardContent>
       </Card>
 
