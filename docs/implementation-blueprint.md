@@ -23,7 +23,7 @@
 - Inertia bootstrap theme hydration is now Inertia-context-safe: `ThemeBridge` no longer calls `usePage()` from `app.jsx` (outside the Inertia provider) and instead consumes initial branding from boot props while subscribing to Inertia `router.on('success')` updates for cross-page branding synchronization.
 - Client portal header now uses logo-first branding (no duplicated text labels), includes an in-header light/dark toggle wired to shared `ThemeBridge` context, and resolves light/dark logo assets from the active mode while preserving logout/navigation behavior.
 - Theme mode is now globally controlled by `ThemeBridge` context with localStorage-backed per-browser preference (`ksp-theme-mode`), so both staff and client portal surfaces re-render immediately on toggle while still inheriting shared branding tokens.
-- Login experience now uses a responsive split-auth layout with prominent theme-aware brand logo rendering, refreshed form hierarchy, and a subtle SVG/CSS tech background animation that honors `prefers-reduced-motion` while preserving existing `/login` auth flow.
+- Login experience now uses a centered single-card auth layout with only the theme-aware brand logo above the core sign-in fields, simplifying visual hierarchy while preserving the existing `/login` auth flow and validation behavior.
 - Branding settings preview now renders inside an isolated CSS-token scope that uses the exact same token builder as the app root, preventing preview-only theme logic drift.
 - Staff sidebar branding now renders a full-width logo treatment in expanded mode with compact collapsed fallback, and both staff/client portal brand surfaces now resolve light/dark logos using theme-aware fallback order (dark -> light -> legacy logo -> letter fallback).
 - Branding settings save submission now uses the Inertia `useForm` pattern correctly by applying `form.transform(...)` before invoking `form.patch(...)` as separate calls, preventing runtime `undefined.patch` crashes while preserving multipart logo uploads and validation error hydration.
@@ -228,7 +228,7 @@
 
 ## UI Page Inventory
 - `Auth/Login.jsx`
-- `Components/auth/animated-auth-background.jsx` (reusable low-noise animated tech backdrop for auth surfaces)
+- `Components/auth/animated-auth-background.jsx` (legacy reusable auth backdrop component retained in codebase but no longer used by the simplified login page)
 - `Dashboard/Index.jsx` (live KPI cards + priority/awaiting-client queues + renewal watch tables + quick links)
 - `Administration/Readiness.jsx`
 - `Administration/SystemReference.jsx`
