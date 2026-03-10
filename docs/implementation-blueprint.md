@@ -391,6 +391,7 @@
 
 ## Branding/Settings Reliability Hardening (Latest)
 - Root-cause hardening for branding persistence + hydration:
+  - Branding settings request now accepts legacy `border_color` / `surface_border_color` aliases and normalizes them to canonical `card_border_color`, preventing validation-redirect loops from mismatched payload keys.
   - Branding form submissions now normalize boolean fields (`dark_mode_enabled`, `remove_logo`) in `UpdateBrandingSettingsRequest::prepareForValidation`, preventing multipart/form-data boolean coercion edge cases from causing silent validation failure.
   - Dark-mode patch submissions now normalize `dark_mode_enabled` in `UpdateBrandingDarkModeRequest::prepareForValidation` for consistent backend acceptance.
   - Branding controller update flow now reads from validated payload and merges with current values to avoid accidental field drops when optional values are omitted.
@@ -405,3 +406,5 @@
   - Branding save action now sends explicit numeric boolean payloads and uses a full-page prop refresh (`preserveState: false`) to keep form state aligned with persisted values.
   - Added a destructive alert block when branding validation fails, making failed saves visible.
 - Added `tests/Feature/BrandingSettingsFlowTest.php` to cover super-admin branding persistence and boolean payload coercion behavior.
+
+- Added regression test coverage for legacy border-color payload alias handling in branding save flow (`test_super_admin_can_save_branding_when_border_color_alias_is_submitted`).

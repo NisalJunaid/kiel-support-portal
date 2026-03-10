@@ -43,4 +43,32 @@ class BrandingSettingsFlowTest extends TestCase
         $this->assertSame('#445566', $hydrated['card_border_color']);
         $this->assertSame('#445566', $hydrated['border_color']);
     }
+
+    public function test_super_admin_can_save_branding_when_border_color_alias_is_submitted(): void
+    {
+        Role::create(['name' => Roles::SUPER_ADMIN]);
+
+        $user = User::factory()->create();
+        $user->assignRole(Roles::SUPER_ADMIN);
+
+        $this->actingAs($user)->patch('/settings/branding', [
+            'app_name' => 'Kiel Portal',
+            'primary_color' => '#102030',
+            'secondary_color' => '#203040',
+            'accent_color' => '#304050',
+            'border_color' => '#405060',
+            'dark_mode_enabled' => 'false',
+        ])->assertRedirect();
+
+        $record = AppSetting::query()->where('key', BrandingSettings::KEY)->first();
+
+        $this->assertNotNull($record);
+        $this->assertSame('#405060', $record->value['card_border_color']);
+
+        $hydrated = BrandingSettings::get();
+
+        $this->assertSame('#405060', $hydrated['card_border_color']);
+        $this->assertSame('#405060', $hydrated['border_color']);
+    }
+
 }

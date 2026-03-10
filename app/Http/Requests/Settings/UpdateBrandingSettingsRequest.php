@@ -8,7 +8,12 @@ class UpdateBrandingSettingsRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
+        $cardBorderColor = $this->input('card_border_color')
+            ?? $this->input('border_color')
+            ?? $this->input('surface_border_color');
+
         $this->merge([
+            'card_border_color' => $cardBorderColor,
             'dark_mode_enabled' => filter_var($this->input('dark_mode_enabled'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
             'remove_logo' => filter_var($this->input('remove_logo'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
         ]);
