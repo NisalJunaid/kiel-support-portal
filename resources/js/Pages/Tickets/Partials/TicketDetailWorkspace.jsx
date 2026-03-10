@@ -10,6 +10,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import FileUploadField from '@/Components/shared/file-upload-field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/Components/ui/sheet';
 import { Textarea } from '@/Components/ui/textarea';
 import { getDomainOptions } from '@/lib/domain-references';
 
@@ -21,6 +22,7 @@ const typeStyles = {
 
 export function TicketDetailWorkspace({ ticket, messages, attachments, activity, can, domainReferences, slaIndicators, embedded = false }) {
   const [composerType, setComposerType] = useState(can.addInternalNote ? 'internal_note' : 'public_reply');
+  const [activityDrawerOpen, setActivityDrawerOpen] = useState(false);
   const form = useForm({ message_type: composerType, body: '', attachments: [] });
   const latestMessage = useMemo(() => messages[0], [messages]);
   const ticketStatusOptions = useMemo(() => getDomainOptions(domainReferences, 'ticketStatus'), [domainReferences]);
@@ -30,7 +32,7 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, activity,
   };
 
   return (
-    <div className={embedded ? 'space-y-4' : 'space-y-6'}>
+    <div className={embedded ? 'space-y-4 pb-6' : 'space-y-6'}>
       <Card>
         <CardContent className="grid gap-4 p-4 md:grid-cols-2 lg:grid-cols-6">
           <div><p className="text-xs text-muted-foreground">Status</p><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></div>
@@ -65,7 +67,32 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, activity,
       </Card>
 
       <Card><CardHeader><CardTitle>Ticket attachments</CardTitle></CardHeader><CardContent><AttachmentList attachments={attachments} emptyText="No files attached directly to this ticket." /></CardContent></Card>
-      <ActivityTimeline items={activity} title="Activity log" description="Ticket workflow and reply events." emptyDescription="Ticket changes will appear here." />
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">
+          <div>
+            <CardTitle>Activity log</CardTitle>
+            <p className="text-sm text-muted-foreground">Open the full audit timeline in a nested drawer.</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={() => setActivityDrawerOpen(true)}>Open activity log</Button>
+        </CardHeader>
+      </Card>
+
+      <Sheet open={activityDrawerOpen} onOpenChange={setActivityDrawerOpen}>
+        <SheetContent
+          side="right"
+          overlayClassName="z-[130] bg-black/45"
+          className="z-[140] w-full border-l bg-card text-card-foreground sm:max-w-2xl"
+        >
+          <SheetHeader>
+            <SheetTitle>Activity log · {ticket.ticket_number}</SheetTitle>
+            <SheetDescription>Ticket workflow and reply events.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 h-[calc(100%-2rem)] overflow-y-auto pr-1">
+            <ActivityTimeline items={activity} title="Activity log" description="Ticket workflow and reply events." emptyDescription="Ticket changes will appear here." />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

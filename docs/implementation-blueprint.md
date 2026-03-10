@@ -12,7 +12,7 @@
 - Client user identities are stored in `users` and extended through `client_user_profiles` for client-company scoped access flags.
 - Asset modeling uses `asset_types` + `assets` with a constrained enum surface (status/criticality) and JSON `meta` payloads driven by a centralized type-to-field definition map (`App\Support\AssetMetaFields`).
 - Staff layout shell components (`AppHeader`, `AppSidebar`, and `FlashMessages`) are now Inertia-agnostic/presentational and receive page props from `AppLayout`, preventing `usePage()` calls from leaking into shared components that can render outside Inertia context.
-- Tickets index row click now opens an in-layout ticket workspace overlay mounted inside the main content region (instead of a viewport sheet), so it fully covers the content area to the right of the sidebar in both collapsed and expanded states while preserving row-click workflow behavior.
+- Tickets index row click now opens a true viewport-level right-side sheet (Radix drawer) that slides over the app with focus trap, body scroll lock, and themed overlay layering.
 - Ticket detail UI is centralized in `Pages/Tickets/Partials/TicketDetailWorkspace.jsx` and reused by both `Tickets/Show` and the tickets index drawer to avoid divergent implementations.
 - Branding settings now include `surface_border_color` and `dark_mode_enabled`, persisted in `app_settings` and propagated as CSS variables/classes (`--surface-border`, `--border`, `--input`, and global `.dark`) via `ThemeBridge` for real-time global theme updates across staff and client portals.
 - Theme propagation is now token-first: root-level CSS variables define all shared surfaces/foregrounds (`background`, `card`, `popover`, `border`, semantic badge tones, etc.), and shadcn/Radix portal components consume those tokens (`bg-popover`, `text-popover-foreground`, `bg-card`) so live dark/light switching and branding updates cascade consistently across nested UI surfaces.
@@ -353,6 +353,7 @@
   - Ticket list rows are now consistently clickable and keyboard-accessible.
   - Row action menus prevent accidental row-trigger navigation.
   - Added quick ticket detail drawer from list rows with in-context status/assignment updates.
+  - Activity log inside ticket detail now opens as a second nested right-side sub-drawer on top of the main ticket drawer to preserve layered workflows without leaving context.
   - Ticket detail page now emphasizes primary metadata and conversation first, with lower-priority details moved into accordion-based sections.
   - Internal notes are visually differentiated for readability.
 - Introduced super-admin branding settings module with persistence:

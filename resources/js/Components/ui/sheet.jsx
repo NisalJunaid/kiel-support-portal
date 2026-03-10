@@ -7,9 +7,9 @@ const Sheet = Dialog.Root;
 const SheetTrigger = Dialog.Trigger;
 const SheetClose = Dialog.Close;
 
-const SheetContent = React.forwardRef(({ className, children, side = 'right', ...props }, ref) => (
+const SheetContent = React.forwardRef(({ className, children, side = 'right', overlayClassName, ...props }, ref) => (
   <Dialog.Portal>
-    <Dialog.Overlay className="fixed inset-0 z-[110] bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+    <Dialog.Overlay className={cn('fixed inset-0 z-[110] bg-black/40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0', overlayClassName)} />
     <Dialog.Content
       ref={ref}
       className={cn(
