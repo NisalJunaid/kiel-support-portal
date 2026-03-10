@@ -204,7 +204,9 @@ class TicketController extends Controller
         $ticketNotificationService->notifyTicketCreated($ticket, $request->user());
 
         if ($request->boolean('from_drawer')) {
-            return back()->with('success', 'Ticket created successfully.');
+            return back()
+                ->with('success', 'Ticket created successfully.')
+                ->with('created_ticket_id', $ticket->id);
         }
 
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket created successfully.');
