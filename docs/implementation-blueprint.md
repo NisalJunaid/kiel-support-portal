@@ -405,7 +405,9 @@
   - Root theme bridge updates `document.title` from persisted branding app name for app-wide naming consistency.
 - Settings UX reliability:
   - Branding save action now sends explicit numeric boolean payloads and uses a full-page prop refresh (`preserveState: false`) to keep form state aligned with persisted values.
+  - Branding save submission now uses a `POST` multipart request with Laravel method spoofing (`_method=patch`) instead of a real multipart `PATCH`, ensuring PHP/Laravel reliably parses all fields/files (`app_name`, colors, dark mode, `logo`, `remove_logo`) before validation + persistence.
   - Added a destructive alert block when branding validation fails, making failed saves visible.
 - Added `tests/Feature/BrandingSettingsFlowTest.php` to cover super-admin branding persistence and boolean payload coercion behavior.
 
 - Added regression test coverage for legacy border-color payload alias handling in branding save flow (`test_super_admin_can_save_branding_when_border_color_alias_is_submitted`).
+- Added regression test coverage for method-spoofed branding saves with logo upload (`test_super_admin_can_update_branding_via_post_method_spoof_and_upload_logo`).

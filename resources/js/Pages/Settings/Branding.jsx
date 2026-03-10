@@ -30,11 +30,12 @@ export default function Branding({ branding }) {
   const saveBranding = () => {
     form.transform((data) => ({
       ...data,
+      _method: 'patch',
       dark_mode_enabled: data.dark_mode_enabled ? 1 : 0,
       remove_logo: data.remove_logo ? 1 : 0,
     }));
 
-    form.patch('/settings/branding', {
+    form.post('/settings/branding', {
       forceFormData: true,
       preserveState: false,
     });

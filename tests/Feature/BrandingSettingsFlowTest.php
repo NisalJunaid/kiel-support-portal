@@ -7,7 +7,9 @@ use App\Models\User;
 use App\Support\BrandingSettings;
 use App\Support\Roles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -115,6 +117,47 @@ class BrandingSettingsFlowTest extends TestCase
             ->assertSee('"primary_color":"#abcdef"')
             ->assertSee('"card_border_color":"#fedcba"')
             ->assertSee('"dark_mode_enabled":true');
+    }
+
+    public function test_super_admin_can_update_branding_via_post_method_spoof_and_upload_logo(): void
+    {
+        Role::create(['name' => Roles::SUPER_ADMIN]);
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $user->assignRole(Roles::SUPER_ADMIN);
+
+        $logo = UploadedFile::fake()->image('branding-logo.png');
+
+        $this->actingAs($user)->post('/settings/branding', [
+            '_method' => 'patch',
+            'app_name' => 'Method Spoofed Brand',
+            'primary_color' => '#0a0b0c',
+            'secondary_color' => '#1a1b1c',
+            'accent_color' => '#2a2b2c',
+            'card_border_color' => '#3a3b3c',
+            'dark_mode_enabled' => '1',
+            'remove_logo' => '0',
+            'logo' => $logo,
+        ])->assertRedirect();
+
+        $record = AppSetting::query()->where('key', BrandingSettings::KEY)->first();
+
+        $this->assertNotNull($record);
+        $this->assertSame('Method Spoofed Brand', $record->value['app_name']);
+        $this->assertTrue($record->value['dark_mode_enabled']);
+        $this->assertNotNull($record->value['logo_path']);
+        Storage::disk('public')->assertExists($record->value['logo_path']);
+
+        $hydrated = BrandingSettings::get();
+
+        $this->assertSame('Method Spoofed Brand', $hydrated['app_name']);
+        $this->assertSame('#0a0b0c', $hydrated['primary_color']);
+        $this->assertSame('#1a1b1c', $hydrated['secondary_color']);
+        $this->assertSame('#2a2b2c', $hydrated['accent_color']);
+        $this->assertSame('#3a3b3c', $hydrated['card_border_color']);
+        $this->assertTrue($hydrated['dark_mode_enabled']);
+        $this->assertNotNull($hydrated['logo_url']);
     }
 
 }
