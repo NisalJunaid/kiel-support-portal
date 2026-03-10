@@ -16,7 +16,7 @@ class BrandingSettings
             'primary_color' => '#0f766e',
             'secondary_color' => '#f1f5f9',
             'accent_color' => '#dbeafe',
-            'surface_border_color' => '#94a3b8',
+            'border_color' => '#94a3b8',
             'dark_mode_enabled' => false,
         ];
     }
@@ -24,16 +24,22 @@ class BrandingSettings
     public static function get(): array
     {
         $stored = AppSetting::query()->where('key', self::KEY)->value('value') ?? [];
+
+        if (isset($stored['surface_border_color']) && ! isset($stored['border_color'])) {
+            $stored['border_color'] = $stored['surface_border_color'];
+        }
+
         $settings = array_merge(self::defaults(), $stored);
 
         return [
             ...$settings,
+            'surface_border_color' => $settings['border_color'],
             'logo_url' => $settings['logo_path'] ? asset('storage/'.$settings['logo_path']) : null,
             'theme_hsl' => [
                 'primary' => self::hexToHsl($settings['primary_color']),
                 'secondary' => self::hexToHsl($settings['secondary_color']),
                 'accent' => self::hexToHsl($settings['accent_color']),
-                'surface_border' => self::hexToHsl($settings['surface_border_color']),
+                'border' => self::hexToHsl($settings['border_color']),
             ],
         ];
     }

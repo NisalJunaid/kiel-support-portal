@@ -42,24 +42,11 @@ function ThemeBridge({ branding, children }) {
   }, [currentBranding?.dark_mode_enabled, localDarkModeOverride]);
 
   useEffect(() => {
-    if (!currentBranding?.theme_hsl) return;
-
     const root = document.documentElement;
-    applyBrandingTheme(root, {
-      primary: currentBranding.theme_hsl.primary,
-      secondary: currentBranding.theme_hsl.secondary,
-      accent: currentBranding.theme_hsl.accent,
-      surfaceBorder: currentBranding.theme_hsl.surface_border,
-    });
 
-    if (typeof localDarkModeOverride !== 'boolean') {
-      root.classList.toggle('dark', Boolean(currentBranding.dark_mode_enabled));
-    }
-  }, [currentBranding, localDarkModeOverride]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkModeEnabled);
-  }, [darkModeEnabled]);
+    root.classList.toggle('dark', darkModeEnabled);
+    applyBrandingTheme(root, currentBranding, darkModeEnabled);
+  }, [currentBranding, darkModeEnabled]);
 
   return children;
 }
