@@ -34,7 +34,7 @@ export function AppSidebar({ collapsed = false, onNavigate, url, auth, authoriza
           const active = url.startsWith(item.href);
 
           return (
-            <Link key={item.href} href={item.href} onClick={onNavigate} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors', active ? 'bg-primary text-white' : 'hover:bg-accent', collapsed && 'justify-center px-2')} title={collapsed ? item.label : undefined}>
+            <Link key={item.href} href={item.href} onClick={onNavigate} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors', active ? 'bg-primary text-primary-foreground' : 'hover:bg-accent', collapsed && 'justify-center px-2')} title={collapsed ? item.label : undefined}>
               <Icon className="h-4 w-4" />
               {!collapsed && item.label}
             </Link>

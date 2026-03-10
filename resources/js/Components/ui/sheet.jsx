@@ -13,7 +13,7 @@ const SheetContent = React.forwardRef(({ className, children, side = 'right', ..
     <Dialog.Content
       ref={ref}
       className={cn(
-        'fixed z-[120] bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out',
+        'fixed z-[120] border-border bg-card p-6 text-card-foreground shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out',
         side === 'right' && 'inset-y-0 right-0 h-full w-full border-l sm:max-w-xl data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right',
         side === 'left' && 'inset-y-0 left-0 h-full w-full border-r sm:max-w-xl data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left',
         className,
