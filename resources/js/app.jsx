@@ -1,6 +1,5 @@
 import '../css/app.css';
-import { createInertiaApp } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
+import { createInertiaApp, router } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { useEffect, useMemo, useState } from 'react';
@@ -15,10 +14,13 @@ function getStoredDarkModePreference() {
   return null;
 }
 
-function ThemeBridge({ children }) {
-  const { props } = usePage();
-  const branding = props?.branding;
+function ThemeBridge({ branding, children }) {
+  const [currentBranding, setCurrentBranding] = useState(branding);
   const [localDarkModeOverride, setLocalDarkModeOverride] = useState(() => getStoredDarkModePreference());
+
+  useEffect(() => {
+    setCurrentBranding(branding);
+  }, [branding]);
 
   useEffect(() => {
     const syncThemePreference = () => setLocalDarkModeOverride(getStoredDarkModePreference());
@@ -30,27 +32,40 @@ function ThemeBridge({ children }) {
     };
   }, []);
 
+  useEffect(() => {
+    const removeSuccessListener = router.on('success', (event) => {
+      const nextBranding = event.detail.page?.props?.branding;
+      if (nextBranding) {
+        setCurrentBranding(nextBranding);
+      }
+    });
+
+    return () => {
+      removeSuccessListener();
+    };
+  }, []);
+
   const darkModeEnabled = useMemo(() => {
     if (typeof localDarkModeOverride === 'boolean') return localDarkModeOverride;
-    return Boolean(branding?.dark_mode_enabled);
-  }, [branding?.dark_mode_enabled, localDarkModeOverride]);
+    return Boolean(currentBranding?.dark_mode_enabled);
+  }, [currentBranding?.dark_mode_enabled, localDarkModeOverride]);
 
   useEffect(() => {
-    if (!branding?.theme_hsl) return;
+    if (!currentBranding?.theme_hsl) return;
 
     const root = document.documentElement;
-    root.style.setProperty('--primary', branding.theme_hsl.primary);
-    root.style.setProperty('--secondary', branding.theme_hsl.secondary);
-    root.style.setProperty('--accent', branding.theme_hsl.accent);
-    root.style.setProperty('--surface-border', branding.theme_hsl.surface_border);
-    root.style.setProperty('--border', branding.theme_hsl.surface_border);
-    root.style.setProperty('--input', branding.theme_hsl.surface_border);
-    root.style.setProperty('--ring', branding.theme_hsl.primary);
+    root.style.setProperty('--primary', currentBranding.theme_hsl.primary);
+    root.style.setProperty('--secondary', currentBranding.theme_hsl.secondary);
+    root.style.setProperty('--accent', currentBranding.theme_hsl.accent);
+    root.style.setProperty('--surface-border', currentBranding.theme_hsl.surface_border);
+    root.style.setProperty('--border', currentBranding.theme_hsl.surface_border);
+    root.style.setProperty('--input', currentBranding.theme_hsl.surface_border);
+    root.style.setProperty('--ring', currentBranding.theme_hsl.primary);
 
     if (typeof localDarkModeOverride !== 'boolean') {
-      root.classList.toggle('dark', Boolean(branding.dark_mode_enabled));
+      root.classList.toggle('dark', Boolean(currentBranding.dark_mode_enabled));
     }
-  }, [branding, localDarkModeOverride]);
+  }, [currentBranding, localDarkModeOverride]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkModeEnabled);
@@ -62,8 +77,10 @@ function ThemeBridge({ children }) {
 createInertiaApp({
   resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
   setup({ el, App, props }) {
+    const initialBranding = props.initialPage?.props?.branding;
+
     createRoot(el).render(
-      <ThemeBridge>
+      <ThemeBridge branding={initialBranding}>
         <App {...props} />
       </ThemeBridge>,
     );
