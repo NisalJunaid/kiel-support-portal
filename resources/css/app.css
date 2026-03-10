@@ -71,3 +71,119 @@
     @apply antialiased;
   }
 }
+
+@layer components {
+  .auth-tech-bg {
+    background:
+      radial-gradient(circle at 16% 18%, hsl(var(--primary) / 0.16), transparent 38%),
+      radial-gradient(circle at 84% 22%, hsl(var(--accent) / 0.2), transparent 40%),
+      linear-gradient(170deg, hsl(var(--background)) 0%, hsl(var(--background)) 55%, hsl(var(--card) / 0.68) 100%);
+  }
+
+  .auth-tech-bg__glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(42px);
+    opacity: 0.55;
+  }
+
+  .auth-tech-bg__glow--primary {
+    height: 22rem;
+    width: 22rem;
+    top: -7rem;
+    right: -4rem;
+    background: hsl(var(--primary) / 0.3);
+    animation: authFloat 22s ease-in-out infinite;
+  }
+
+  .auth-tech-bg__glow--secondary {
+    height: 18rem;
+    width: 18rem;
+    bottom: 6%;
+    left: -4rem;
+    background: hsl(var(--accent) / 0.28);
+    animation: authFloat 26s ease-in-out infinite reverse;
+  }
+
+  .auth-tech-bg__grid {
+    position: absolute;
+    inset: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0.42;
+  }
+
+  .auth-tech-bg__grid-line {
+    stroke: hsl(var(--foreground) / 0.08);
+    stroke-width: 1;
+  }
+
+  .auth-tech-bg__line-stop--soft {
+    stop-color: hsl(var(--primary) / 0.14);
+  }
+
+  .auth-tech-bg__line-stop--bright {
+    stop-color: hsl(var(--primary) / 0.45);
+  }
+
+  .auth-tech-bg__network {
+    animation: authDrift 30s linear infinite;
+  }
+
+  .auth-tech-bg__network--two {
+    animation-duration: 38s;
+    animation-direction: reverse;
+  }
+
+  .auth-tech-bg__node {
+    fill: hsl(var(--primary) / 0.58);
+  }
+
+  .auth-tech-bg__scan {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, hsl(var(--primary) / 0.06) 46%, transparent 100%);
+    opacity: 0.34;
+    transform: translateY(-100%);
+    animation: authScan 16s linear infinite;
+  }
+}
+
+@keyframes authFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, 18px, 0);
+  }
+}
+
+@keyframes authDrift {
+  0% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-14px);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes authScan {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-tech-bg__glow,
+  .auth-tech-bg__network,
+  .auth-tech-bg__scan {
+    animation: none !important;
+  }
+}
