@@ -75,7 +75,7 @@ export default function Branding({ branding }) {
   const preview = {
     ...branding,
     ...form.data,
-    logo_url: form.data.logo ? URL.createObjectURL(form.data.logo) : branding.logo_url,
+    logo_url: form.data.remove_logo ? null : (form.data.logo ? URL.createObjectURL(form.data.logo) : branding.logo_url),
   };
 
   return (
@@ -106,9 +106,15 @@ export default function Branding({ branding }) {
             <div>
               <Label>Logo</Label>
               <Input type="file" accept="image/*" onChange={(e) => form.setData('logo', e.target.files?.[0] || null)} />
+              {branding.logo_url && !form.data.remove_logo && (
+                <div className="mt-3 rounded-md border p-3">
+                  <p className="mb-2 text-xs text-muted-foreground">Current saved logo</p>
+                  <img src={branding.logo_url} alt="Current logo" className="h-12 w-12 rounded object-contain" />
+                </div>
+              )}
               {branding.logo_url && <Button type="button" variant="ghost" size="sm" onClick={() => form.setData('remove_logo', !form.data.remove_logo)}>{form.data.remove_logo ? 'Keep logo' : 'Remove existing logo'}</Button>}
             </div>
-            <Button onClick={() => form.patch('/settings/branding')} disabled={form.processing}>Save branding</Button>
+            <Button onClick={() => form.patch('/settings/branding', { forceFormData: true })} disabled={form.processing}>Save branding</Button>
           </CardContent>
         </Card>
         <ThemePreviewCard branding={preview} />

@@ -1,14 +1,37 @@
 import { Link, router } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 import { Bell, PanelLeft, PanelLeftClose } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
+import { Switch } from '@/Components/ui/switch';
+
+const DARK_MODE_STORAGE_KEY = 'kiel.theme.dark-mode';
 
 export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSidebar, auth, notifications, authorization, branding }) {
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
   const initials = auth.user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'SU';
+  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(() => document.documentElement.classList.contains('dark'));
+
+  useEffect(() => {
+    const sync = () => setIsDarkModeEnabled(document.documentElement.classList.contains('dark'));
+    window.addEventListener('kiel:theme-preference-changed', sync);
+
+    return () => window.removeEventListener('kiel:theme-preference-changed', sync);
+  }, []);
+
+  const onToggleDarkMode = (checked) => {
+    setIsDarkModeEnabled(checked);
+    localStorage.setItem(DARK_MODE_STORAGE_KEY, checked ? '1' : '0');
+    document.documentElement.classList.toggle('dark', checked);
+    window.dispatchEvent(new Event('kiel:theme-preference-changed'));
+
+    if (authorization?.canViewSettings) {
+      router.patch('/settings/branding/dark-mode', { dark_mode_enabled: checked }, { preserveScroll: true, preserveState: true, replace: true });
+    }
+  };
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
@@ -23,6 +46,11 @@ export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSideb
         </div>
       </div>
       <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 rounded-md border px-2 py-1">
+          <span className="text-xs text-muted-foreground">Dark mode</span>
+          <Switch checked={isDarkModeEnabled} onCheckedChange={onToggleDarkMode} />
+        </div>
+
         {authorization?.canViewNotifications && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

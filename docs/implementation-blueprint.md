@@ -15,6 +15,7 @@
 - Tickets index row click now opens a layout-aware right-side workspace drawer that anchors to the staff content region (using a sidebar-width CSS variable) so the workspace stretches up to the sidebar boundary in both collapsed and expanded sidebar states.
 - Ticket detail UI is centralized in `Pages/Tickets/Partials/TicketDetailWorkspace.jsx` and reused by both `Tickets/Show` and the tickets index drawer to avoid divergent implementations.
 - Branding settings now include `surface_border_color` and `dark_mode_enabled`, persisted in `app_settings` and propagated as CSS variables/classes (`--surface-border`, `--border`, `--input`, and global `.dark`) via `ThemeBridge` for real-time global theme updates across staff and client portals.
+- Global theme hydration now runs from Inertia page props (not only initial boot payload), allowing branding updates to apply across all navigation targets; dark mode can be toggled from the staff header and persisted globally for super-admins while preserving per-browser local preference overrides.
 - Client portal ticket detail now supports policy-gated public replies through the shared `TicketMessageController` endpoint under `/portal/tickets/{ticket}/messages`, while preserving internal-note restrictions through `StoreTicketMessageRequest` and `TicketPolicy`.
 
 ## Implemented Modules
@@ -361,6 +362,7 @@
   - Sidebar/header branding now consume configurable app name/logo.
 - Route updates:
   - Added `GET /settings/branding` and `PATCH /settings/branding` (super-admin only).
+  - Added `PATCH /settings/branding/dark-mode` for topbar dark-mode persistence (super-admin only).
 
 ## Pending Follow-up
 - Extend drawer-based quick-edit workflows to additional entities (clients/assets/contacts) in the same reusable `entity-drawer` pattern.

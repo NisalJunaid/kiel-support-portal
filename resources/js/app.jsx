@@ -1,10 +1,40 @@
 import '../css/app.css';
 import { createInertiaApp } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-function ThemeBridge({ branding, children }) {
+const DARK_MODE_STORAGE_KEY = 'kiel.theme.dark-mode';
+
+function getStoredDarkModePreference() {
+  if (typeof window === 'undefined') return null;
+  const value = window.localStorage.getItem(DARK_MODE_STORAGE_KEY);
+  if (value === '1') return true;
+  if (value === '0') return false;
+  return null;
+}
+
+function ThemeBridge({ children }) {
+  const { props } = usePage();
+  const branding = props?.branding;
+  const [localDarkModeOverride, setLocalDarkModeOverride] = useState(() => getStoredDarkModePreference());
+
+  useEffect(() => {
+    const syncThemePreference = () => setLocalDarkModeOverride(getStoredDarkModePreference());
+
+    window.addEventListener('kiel:theme-preference-changed', syncThemePreference);
+
+    return () => {
+      window.removeEventListener('kiel:theme-preference-changed', syncThemePreference);
+    };
+  }, []);
+
+  const darkModeEnabled = useMemo(() => {
+    if (typeof localDarkModeOverride === 'boolean') return localDarkModeOverride;
+    return Boolean(branding?.dark_mode_enabled);
+  }, [branding?.dark_mode_enabled, localDarkModeOverride]);
+
   useEffect(() => {
     if (!branding?.theme_hsl) return;
 
@@ -17,8 +47,14 @@ function ThemeBridge({ branding, children }) {
     root.style.setProperty('--input', branding.theme_hsl.surface_border);
     root.style.setProperty('--ring', branding.theme_hsl.primary);
 
-    root.classList.toggle('dark', Boolean(branding.dark_mode_enabled));
-  }, [branding]);
+    if (typeof localDarkModeOverride !== 'boolean') {
+      root.classList.toggle('dark', Boolean(branding.dark_mode_enabled));
+    }
+  }, [branding, localDarkModeOverride]);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', darkModeEnabled);
+  }, [darkModeEnabled]);
 
   return children;
 }
@@ -26,10 +62,8 @@ function ThemeBridge({ branding, children }) {
 createInertiaApp({
   resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
   setup({ el, App, props }) {
-    const branding = props.initialPage?.props?.branding;
-
     createRoot(el).render(
-      <ThemeBridge branding={branding}>
+      <ThemeBridge>
         <App {...props} />
       </ThemeBridge>,
     );
