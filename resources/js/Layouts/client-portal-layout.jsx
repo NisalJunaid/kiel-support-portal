@@ -3,6 +3,7 @@ import { LayoutDashboard, Ticket, Boxes, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FlashMessages } from '@/Components/shared/flash-messages';
 import { Button } from '@/Components/ui/button';
+import { resolveBrandLogoUrl } from '@/lib/branding';
 
 const nav = [
   { label: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
@@ -14,12 +15,14 @@ const nav = [
 export default function ClientPortalLayout({ children, title, description }) {
   const { url, props } = usePage();
   const branding = props.branding;
+  const logoUrl = resolveBrandLogoUrl(branding, Boolean(branding?.dark_mode_enabled));
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div>
+            {logoUrl ? <img src={logoUrl} alt={`${branding?.app_name || 'Support portal'} logo`} className="mb-1 h-10 w-40 object-contain" /> : null}
             <p className="text-xs uppercase tracking-widest text-muted-foreground">{branding?.app_name || 'Kiel Support Portal'}</p>
             <p className="text-lg font-semibold">Client Portal</p>
           </div>

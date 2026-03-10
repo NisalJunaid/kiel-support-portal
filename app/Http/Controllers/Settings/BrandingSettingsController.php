@@ -35,19 +35,36 @@ class BrandingSettingsController extends Controller
             'card_border_color' => $validated['card_border_color'] ?? $current['card_border_color'],
             'dark_mode_enabled' => $request->boolean('dark_mode_enabled', $current['dark_mode_enabled']),
             'logo_path' => $current['logo_path'],
+            'light_logo_path' => $current['light_logo_path'] ?? $current['logo_path'],
+            'dark_logo_path' => $current['dark_logo_path'],
         ];
 
-        if ($request->boolean('remove_logo') && $current['logo_path']) {
-            Storage::disk('public')->delete($current['logo_path']);
-            $payload['logo_path'] = null;
+        if ($request->boolean('remove_light_logo') && $payload['light_logo_path']) {
+            Storage::disk('public')->delete($payload['light_logo_path']);
+            $payload['light_logo_path'] = null;
         }
 
-        if ($request->hasFile('logo')) {
-            if ($current['logo_path']) {
-                Storage::disk('public')->delete($current['logo_path']);
-            }
-            $payload['logo_path'] = $request->file('logo')->store('branding', 'public');
+        if ($request->boolean('remove_dark_logo') && $payload['dark_logo_path']) {
+            Storage::disk('public')->delete($payload['dark_logo_path']);
+            $payload['dark_logo_path'] = null;
         }
+
+        if ($request->hasFile('light_logo')) {
+            if ($payload['light_logo_path']) {
+                Storage::disk('public')->delete($payload['light_logo_path']);
+            }
+            $payload['light_logo_path'] = $request->file('light_logo')->store('branding', 'public');
+        }
+
+        if ($request->hasFile('dark_logo')) {
+            if ($payload['dark_logo_path']) {
+                Storage::disk('public')->delete($payload['dark_logo_path']);
+            }
+            $payload['dark_logo_path'] = $request->file('dark_logo')->store('branding', 'public');
+        }
+
+        // Backward compatibility for consumers still reading a single logo_path.
+        $payload['logo_path'] = $payload['light_logo_path'];
 
         BrandingSettings::update($payload);
 
@@ -65,6 +82,8 @@ class BrandingSettingsController extends Controller
             'accent_color' => $current['accent_color'],
             'card_border_color' => $current['card_border_color'],
             'logo_path' => $current['logo_path'],
+            'light_logo_path' => $current['light_logo_path'] ?? $current['logo_path'],
+            'dark_logo_path' => $current['dark_logo_path'],
             'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
         ]);
 
