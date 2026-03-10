@@ -376,3 +376,12 @@
 - Extend drawer-based quick-edit workflows to additional entities (clients/assets/contacts) in the same reusable `entity-drawer` pattern.
 - Add dedicated automated feature tests for branding settings authorization + upload lifecycle.
 - Add end-to-end UI checks for select behavior inside nested overlays.
+
+## Performance & Stability Hardening (Tickets + Shared Inertia State)
+- Ticket index payload is now lazily evaluated via Inertia closure props (`tickets`, `drawerTicket`, `staff`, `clients`, `formData`) so partial reloads no longer execute unnecessary list/form queries when only drawer state is refreshed.
+- Added `TicketController@activity` (`GET /tickets/{ticket}/activity`) to load activity timeline data on demand.
+- Ticket workspace payload no longer preloads activity feed by default; conversation + attachments still load for active ticket drawer/full show while activity is fetched only when the nested activity drawer opens.
+- Added slow-request instrumentation for ticket index and ticket activity endpoints (warning logs only when request duration exceeds thresholds) to help detect regressions without noisy per-request logging.
+- Shared Inertia props in `HandleInertiaRequests` now use lazy closures to avoid eager policy/role/settings/notification work when partial responses do not need them.
+- Branding and domain references are now cached in middleware-level shared props (`branding-settings:shared`, `domain-references:shared`) to remove repeated settings/enum-serialization overhead.
+- Shared notification payload is cached briefly per user (`notifications:shared:{id}`) to reduce repeated `unread_count` + recent query pressure across frequent Inertia navigations; cache is explicitly invalidated on mark-read actions.

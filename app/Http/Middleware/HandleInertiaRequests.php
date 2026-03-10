@@ -6,6 +6,7 @@ use App\Support\BrandingSettings;
 use App\Support\DomainReferenceCatalog;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Support\Facades\Cache;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -21,7 +22,7 @@ class HandleInertiaRequests extends Middleware
         $user = $request->user();
 
         return array_merge(parent::share($request), [
-            'auth' => [
+            'auth' => fn () => [
                 'user' => $user
                     ? [
                         'id' => $user->id,
@@ -32,7 +33,7 @@ class HandleInertiaRequests extends Middleware
                     ]
                     : null,
             ],
-            'authorization' => [
+            'authorization' => fn () => [
                 'canViewAdminReadiness' => $user ? $user->can('viewAdminReadiness', $user) : false,
                 'canViewSystemReference' => $user ? $user->can('viewSystemReference', $user) : false,
                 'canViewClients' => $user ? $user->can('viewAny', \App\Models\ClientCompany::class) : false,
@@ -51,9 +52,31 @@ class HandleInertiaRequests extends Middleware
                 'canViewSettings' => $user ? $user->hasRole('super-admin') : false,
                 'isStaffWorkspace' => $user ? (! $user->isClientUser()) : false,
             ],
-            'branding' => BrandingSettings::get(),
-            'domainReferences' => DomainReferenceCatalog::all(),
-            'notifications' => $user ? [
+            'branding' => fn () => Cache::remember('branding-settings:shared', now()->addMinutes(5), fn () => BrandingSettings::get()),
+            'domainReferences' => fn () => Cache::rememberForever('domain-references:shared', fn () => DomainReferenceCatalog::all()),
+            'notifications' => fn () => $this->sharedNotifications($request),
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+            ],
+        ]);
+    }
+
+    private function sharedNotifications(Request $request): array
+    {
+        $user = $request->user();
+
+        if (! $user) {
+            return [
+                'unread_count' => 0,
+                'recent' => [],
+            ];
+        }
+
+        return Cache::remember(
+            sprintf('notifications:shared:%d', $user->id),
+            now()->addSeconds(15),
+            fn () => [
                 'unread_count' => $user->unreadNotifications()->count(),
                 'recent' => $user->notifications()
                     ->latest()
@@ -68,14 +91,7 @@ class HandleInertiaRequests extends Middleware
                         'created_at' => optional($notification->created_at)?->toDateTimeString(),
                     ])
                     ->values(),
-            ] : [
-                'unread_count' => 0,
-                'recent' => [],
             ],
-            'flash' => [
-                'success' => fn () => $request->session()->get('success'),
-                'error' => fn () => $request->session()->get('error'),
-            ],
-        ]);
+        );
     }
 }

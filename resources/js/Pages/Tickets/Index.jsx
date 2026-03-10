@@ -56,7 +56,7 @@ export default function TicketsIndex({ tickets, filters, can, domainReferences, 
 
       <Sheet open={!!selectedTicketId && !!drawerTicket?.ticket} onOpenChange={(open) => !open && closeTicketDrawer()}>
         <SheetContent side="right" className="z-[120] w-full border-l bg-card p-0 text-card-foreground sm:max-w-[72rem]">
-          <div className="flex h-full min-h-0 flex-col"><SheetHeader className="border-b px-6 py-4"><SheetTitle>{drawerTicket?.ticket?.ticket_number}</SheetTitle><SheetDescription>{drawerTicket?.ticket?.title}</SheetDescription></SheetHeader><div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{drawerTicket?.ticket ? <TicketDetailWorkspace embedded ticket={drawerTicket.ticket} messages={drawerTicket.messages} attachments={drawerTicket.attachments} activity={drawerTicket.activity} can={drawerTicket.can} domainReferences={domainReferences} slaIndicators={drawerTicket.slaIndicators} /> : null}</div></div>
+          <div className="flex h-full min-h-0 flex-col"><SheetHeader className="border-b px-6 py-4"><SheetTitle>{drawerTicket?.ticket?.ticket_number}</SheetTitle><SheetDescription>{drawerTicket?.ticket?.title}</SheetDescription></SheetHeader><div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{drawerTicket?.ticket ? <TicketDetailWorkspace embedded ticket={drawerTicket.ticket} messages={drawerTicket.messages} attachments={drawerTicket.attachments} can={drawerTicket.can} domainReferences={domainReferences} slaIndicators={drawerTicket.slaIndicators} /> : null}</div></div>
         </SheetContent>
       </Sheet>
     </AppLayout>

@@ -1,5 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
+import axios from 'axios';
 import { ActivityTimeline } from '@/Components/shared/activity-timeline';
 import AttachmentList from '@/Components/shared/attachment-list';
 import { CollapsibleDetailSection } from '@/Components/shared/collapsible-detail-section';
@@ -20,15 +21,36 @@ const typeStyles = {
   system_event: { label: 'System', variant: 'outline', container: 'bg-secondary/35 border-border' },
 };
 
-export function TicketDetailWorkspace({ ticket, messages, attachments, activity, can, domainReferences, slaIndicators, embedded = false }) {
+export function TicketDetailWorkspace({ ticket, messages, attachments, can, domainReferences, slaIndicators, embedded = false }) {
   const [composerType, setComposerType] = useState(can.addInternalNote ? 'internal_note' : 'public_reply');
   const [activityDrawerOpen, setActivityDrawerOpen] = useState(false);
+  const [activity, setActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityLoaded, setActivityLoaded] = useState(false);
   const form = useForm({ message_type: composerType, body: '', attachments: [] });
   const latestMessage = useMemo(() => messages[0], [messages]);
   const ticketStatusOptions = useMemo(() => getDomainOptions(domainReferences, 'ticketStatus'), [domainReferences]);
 
   const submitMessage = () => {
     form.transform((data) => ({ ...data, message_type: composerType })).post(`/tickets/${ticket.id}/messages`, { preserveScroll: true, onSuccess: () => form.reset('body', 'attachments') });
+  };
+
+  const openActivityDrawer = async () => {
+    setActivityDrawerOpen(true);
+
+    if (activityLoaded || activityLoading) {
+      return;
+    }
+
+    setActivityLoading(true);
+
+    try {
+      const response = await axios.get(`/tickets/${ticket.id}/activity`);
+      setActivity(response.data?.activity || []);
+      setActivityLoaded(true);
+    } finally {
+      setActivityLoading(false);
+    }
   };
 
   return (
@@ -74,7 +96,7 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, activity,
             <CardTitle>Activity log</CardTitle>
             <p className="text-sm text-muted-foreground">Open the full audit timeline in a nested drawer.</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setActivityDrawerOpen(true)}>Open activity log</Button>
+          <Button variant="outline" size="sm" onClick={openActivityDrawer}>Open activity log</Button>
         </CardHeader>
       </Card>
 
@@ -89,7 +111,7 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, activity,
             <SheetDescription>Ticket workflow and reply events.</SheetDescription>
           </SheetHeader>
           <div className="mt-6 h-[calc(100%-2rem)] overflow-y-auto pr-1">
-            <ActivityTimeline items={activity} title="Activity log" description="Ticket workflow and reply events." emptyDescription="Ticket changes will appear here." />
+            {activityLoading ? <p className="text-sm text-muted-foreground">Loading activity…</p> : <ActivityTimeline items={activity} title="Activity log" description="Ticket workflow and reply events." emptyDescription="Ticket changes will appear here." />}
           </div>
         </SheetContent>
       </Sheet>

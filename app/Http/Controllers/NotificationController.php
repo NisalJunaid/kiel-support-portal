@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,6 +40,7 @@ class NotificationController extends Controller
         abort_unless($notification->notifiable_id === $request->user()->id && $notification->notifiable_type === $request->user()::class, 403);
 
         $notification->markAsRead();
+        Cache::forget(sprintf('notifications:shared:%d', $request->user()->id));
 
         return back()->with('success', 'Notification marked as read.');
     }
@@ -46,6 +48,7 @@ class NotificationController extends Controller
     public function markAllAsRead(Request $request): RedirectResponse
     {
         $request->user()->unreadNotifications->markAsRead();
+        Cache::forget(sprintf('notifications:shared:%d', $request->user()->id));
 
         return back()->with('success', 'All notifications marked as read.');
     }
