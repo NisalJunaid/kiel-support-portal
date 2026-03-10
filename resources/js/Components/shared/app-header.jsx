@@ -6,30 +6,22 @@ import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Switch } from '@/Components/ui/switch';
-import { DARK_MODE_STORAGE_KEY } from '@/lib/theme';
 
 export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSidebar, auth, notifications, authorization, branding }) {
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
   const initials = auth.user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'SU';
-  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(() => document.documentElement.classList.contains('dark'));
+  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(Boolean(branding?.dark_mode_enabled));
 
   useEffect(() => {
-    const sync = () => setIsDarkModeEnabled(document.documentElement.classList.contains('dark'));
-    window.addEventListener('kiel:theme-preference-changed', sync);
-
-    return () => window.removeEventListener('kiel:theme-preference-changed', sync);
-  }, []);
+    setIsDarkModeEnabled(Boolean(branding?.dark_mode_enabled));
+  }, [branding?.dark_mode_enabled]);
 
   const onToggleDarkMode = (checked) => {
-    setIsDarkModeEnabled(checked);
-    localStorage.setItem(DARK_MODE_STORAGE_KEY, checked ? '1' : '0');
-    document.documentElement.classList.toggle('dark', checked);
-    window.dispatchEvent(new Event('kiel:theme-preference-changed'));
+    if (!authorization?.canViewSettings) return;
 
-    if (authorization?.canViewSettings) {
-      router.patch('/settings/branding/dark-mode', { dark_mode_enabled: checked }, { preserveScroll: true, preserveState: true, replace: true });
-    }
+    setIsDarkModeEnabled(checked);
+    router.patch('/settings/branding/dark-mode', { dark_mode_enabled: checked }, { preserveScroll: true, preserveState: true, replace: true });
   };
 
   return (
@@ -47,7 +39,7 @@ export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSideb
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 rounded-md border px-2 py-1">
           <span className="text-xs text-muted-foreground">Dark mode</span>
-          <Switch checked={isDarkModeEnabled} onCheckedChange={onToggleDarkMode} />
+          <Switch checked={isDarkModeEnabled} onCheckedChange={onToggleDarkMode} disabled={!authorization?.canViewSettings} />
         </div>
 
         {authorization?.canViewNotifications && (

@@ -387,3 +387,20 @@
 - Shared notification payload is cached briefly per user (`notifications:shared:{id}`) to reduce repeated `unread_count` + recent query pressure across frequent Inertia navigations; cache is explicitly invalidated on mark-read actions.
 
 - Branding save/update flow now writes `card_border_color` as the canonical persisted field while still exposing compatibility aliases (`border_color`, `surface_border_color`) in shared Inertia props so existing UI tokens remain stable during the migration window.
+
+## Branding/Settings Reliability Hardening (Latest)
+- Root-cause hardening for branding persistence + hydration:
+  - Branding form submissions now normalize boolean fields (`dark_mode_enabled`, `remove_logo`) in `UpdateBrandingSettingsRequest::prepareForValidation`, preventing multipart/form-data boolean coercion edge cases from causing silent validation failure.
+  - Dark-mode patch submissions now normalize `dark_mode_enabled` in `UpdateBrandingDarkModeRequest::prepareForValidation` for consistent backend acceptance.
+  - Branding controller update flow now reads from validated payload and merges with current values to avoid accidental field drops when optional values are omitted.
+- Global theme source-of-truth fix:
+  - Removed localStorage dark-mode override precedence from the root `ThemeBridge`; global UI now always follows persisted branding shared props (`props.branding.dark_mode_enabled`) across refresh and navigation.
+  - Header dark-mode switch now persists through `/settings/branding/dark-mode` only (super-admin) and is disabled for users without settings permission, preventing non-persisted local-only drift.
+- Global branding surface consistency:
+  - Client portal header now reads shared branding app name.
+  - Staff sidebar label copy no longer hardcodes vendor name, while still rendering persisted `branding.app_name`.
+  - Root theme bridge updates `document.title` from persisted branding app name for app-wide naming consistency.
+- Settings UX reliability:
+  - Branding save action now sends explicit numeric boolean payloads and uses a full-page prop refresh (`preserveState: false`) to keep form state aligned with persisted values.
+  - Added a destructive alert block when branding validation fails, making failed saves visible.
+- Added `tests/Feature/BrandingSettingsFlowTest.php` to cover super-admin branding persistence and boolean payload coercion behavior.

@@ -1,13 +1,3 @@
-export const DARK_MODE_STORAGE_KEY = 'kiel.theme.dark-mode';
-
-export function getStoredDarkModePreference() {
-  if (typeof window === 'undefined') return null;
-  const value = window.localStorage.getItem(DARK_MODE_STORAGE_KEY);
-  if (value === '1') return true;
-  if (value === '0') return false;
-  return null;
-}
-
 function clamp(value, min, max) {
   return Math.min(max, Math.max(min, value));
 }

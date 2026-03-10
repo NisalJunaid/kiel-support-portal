@@ -13,13 +13,14 @@ const nav = [
 
 export default function ClientPortalLayout({ children, title, description }) {
   const { url, props } = usePage();
+  const branding = props.branding;
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-card">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Kiel</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">{branding?.app_name || 'Kiel Support Portal'}</p>
             <p className="text-lg font-semibold">Client Portal</p>
           </div>
           <Button asChild variant="outline">

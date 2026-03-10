@@ -26,7 +26,7 @@ export function AppSidebar({ collapsed = false, onNavigate, url, auth, authoriza
     <aside className={cn('h-full border-r bg-card p-3 transition-all', collapsed ? 'w-[78px]' : 'w-64')}>
       <div className={cn('mb-6 flex items-center gap-2 rounded-md border bg-muted/40 p-2', collapsed && 'justify-center')}>
         {branding?.logo_url ? <img src={branding.logo_url} alt="Brand logo" className="h-8 w-8 rounded object-cover" /> : <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">K</div>}
-        {!collapsed && <div><p className="text-[11px] uppercase tracking-widest text-muted-foreground">Kiel</p><p className="text-sm font-semibold leading-tight">{branding?.app_name || 'Support Portal'}</p></div>}
+        {!collapsed && <div><p className="text-[11px] uppercase tracking-widest text-muted-foreground">Workspace</p><p className="text-sm font-semibold leading-tight">{branding?.app_name || 'Support Portal'}</p></div>}
       </div>
       <nav className="space-y-1">
         {nav.filter((item) => !item.requires || authorization?.[item.requires]).map((item) => {

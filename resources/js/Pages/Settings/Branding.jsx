@@ -7,6 +7,7 @@ import { Label } from '@/Components/ui/label';
 import { Button } from '@/Components/ui/button';
 import { ThemePreviewCard } from '@/Components/settings/theme-preview-card';
 import { Switch } from '@/Components/ui/switch';
+import { Alert, AlertDescription } from '@/Components/ui/alert';
 
 export default function Branding({ branding }) {
   const form = useForm({
@@ -26,12 +27,30 @@ export default function Branding({ branding }) {
     logo_url: form.data.remove_logo ? null : (form.data.logo ? URL.createObjectURL(form.data.logo) : branding.logo_url),
   }), [branding, form.data]);
 
+  const saveBranding = () => {
+    form
+      .transform((data) => ({
+        ...data,
+        dark_mode_enabled: data.dark_mode_enabled ? 1 : 0,
+        remove_logo: data.remove_logo ? 1 : 0,
+      }))
+      .patch('/settings/branding', {
+        forceFormData: true,
+        preserveState: false,
+      });
+  };
+
   return (
     <AppLayout title="Branding settings" description="Manage logo and global theme for the staff workspace." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Settings' }, { label: 'Branding' }]}>
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader><CardTitle>Theme & logo</CardTitle></CardHeader>
           <CardContent className="space-y-4">
+            {Object.keys(form.errors).length > 0 && (
+              <Alert variant="destructive">
+                <AlertDescription>Unable to save branding settings. Please review the form fields and try again.</AlertDescription>
+              </Alert>
+            )}
             <div>
               <Label>Application name</Label>
               <Input value={form.data.app_name} onChange={(e) => form.setData('app_name', e.target.value)} />
@@ -62,7 +81,7 @@ export default function Branding({ branding }) {
               )}
               {branding.logo_url && <Button type="button" variant="ghost" size="sm" onClick={() => form.setData('remove_logo', !form.data.remove_logo)}>{form.data.remove_logo ? 'Keep logo' : 'Remove existing logo'}</Button>}
             </div>
-            <Button onClick={() => form.patch('/settings/branding', { forceFormData: true })} disabled={form.processing}>Save branding</Button>
+            <Button onClick={saveBranding} disabled={form.processing}>Save branding</Button>
           </CardContent>
         </Card>
         <ThemePreviewCard branding={preview} />
