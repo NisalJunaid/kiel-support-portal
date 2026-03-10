@@ -3,10 +3,12 @@
 namespace App\Support;
 
 use App\Models\AppSetting;
+use Illuminate\Support\Facades\Cache;
 
 class BrandingSettings
 {
     public const KEY = 'branding';
+    public const CACHE_KEY = 'branding-settings:shared';
 
     public static function defaults(): array
     {
@@ -16,7 +18,7 @@ class BrandingSettings
             'primary_color' => '#0f766e',
             'secondary_color' => '#f1f5f9',
             'accent_color' => '#dbeafe',
-            'border_color' => '#94a3b8',
+            'card_border_color' => '#94a3b8',
             'dark_mode_enabled' => false,
         ];
     }
@@ -25,28 +27,45 @@ class BrandingSettings
     {
         $stored = AppSetting::query()->where('key', self::KEY)->value('value') ?? [];
 
-        if (isset($stored['surface_border_color']) && ! isset($stored['border_color'])) {
-            $stored['border_color'] = $stored['surface_border_color'];
+        if (isset($stored['surface_border_color']) && ! isset($stored['card_border_color'])) {
+            $stored['card_border_color'] = $stored['surface_border_color'];
+        }
+
+        if (isset($stored['border_color']) && ! isset($stored['card_border_color'])) {
+            $stored['card_border_color'] = $stored['border_color'];
         }
 
         $settings = array_merge(self::defaults(), $stored);
 
         return [
             ...$settings,
-            'surface_border_color' => $settings['border_color'],
+            'border_color' => $settings['card_border_color'],
+            'surface_border_color' => $settings['card_border_color'],
             'logo_url' => $settings['logo_path'] ? asset('storage/'.$settings['logo_path']) : null,
             'theme_hsl' => [
                 'primary' => self::hexToHsl($settings['primary_color']),
                 'secondary' => self::hexToHsl($settings['secondary_color']),
                 'accent' => self::hexToHsl($settings['accent_color']),
-                'border' => self::hexToHsl($settings['border_color']),
+                'border' => self::hexToHsl($settings['card_border_color']),
             ],
         ];
     }
 
+    public static function cached(): array
+    {
+        return Cache::remember(self::CACHE_KEY, now()->addMinutes(5), fn () => self::get());
+    }
+
     public static function update(array $payload): void
     {
+        if (isset($payload['border_color']) && ! isset($payload['card_border_color'])) {
+            $payload['card_border_color'] = $payload['border_color'];
+        }
+
+        unset($payload['border_color'], $payload['surface_border_color']);
+
         AppSetting::query()->updateOrCreate(['key' => self::KEY], ['value' => $payload]);
+        Cache::forget(self::CACHE_KEY);
     }
 
     private static function hexToHsl(string $hex): string

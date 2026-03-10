@@ -14,7 +14,7 @@ export default function Branding({ branding }) {
     primary_color: branding.primary_color,
     secondary_color: branding.secondary_color,
     accent_color: branding.accent_color,
-    border_color: branding.border_color,
+    card_border_color: branding.card_border_color || branding.border_color,
     dark_mode_enabled: Boolean(branding.dark_mode_enabled),
     logo: null,
     remove_logo: false,
@@ -37,7 +37,7 @@ export default function Branding({ branding }) {
               <Input value={form.data.app_name} onChange={(e) => form.setData('app_name', e.target.value)} />
             </div>
             <div className="grid gap-3 sm:grid-cols-4">
-              {[['primary_color', 'Primary'], ['secondary_color', 'Secondary'], ['accent_color', 'Accent'], ['border_color', 'Card border']].map(([key, label]) => (
+              {[['primary_color', 'Primary'], ['secondary_color', 'Secondary'], ['accent_color', 'Accent'], ['card_border_color', 'Card border']].map(([key, label]) => (
                 <div key={key}>
                   <Label>{label} color</Label>
                   <Input type="color" value={form.data[key]} onChange={(e) => form.setData(key, e.target.value)} className="h-10 p-1" />

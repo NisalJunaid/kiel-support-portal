@@ -52,7 +52,7 @@ class HandleInertiaRequests extends Middleware
                 'canViewSettings' => $user ? $user->hasRole('super-admin') : false,
                 'isStaffWorkspace' => $user ? (! $user->isClientUser()) : false,
             ],
-            'branding' => fn () => Cache::remember('branding-settings:shared', now()->addMinutes(5), fn () => BrandingSettings::get()),
+            'branding' => fn () => BrandingSettings::cached(),
             'domainReferences' => fn () => Cache::rememberForever('domain-references:shared', fn () => DomainReferenceCatalog::all()),
             'notifications' => fn () => $this->sharedNotifications($request),
             'flash' => [
