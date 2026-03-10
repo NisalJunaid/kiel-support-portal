@@ -22,6 +22,7 @@ use App\Http\Controllers\TicketAttachmentController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketMessageController;
 use App\Http\Controllers\TicketWorkflowController;
+use App\Http\Controllers\ThemeModePreferenceController;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Route;
 
@@ -50,6 +51,9 @@ Route::middleware('auth')->group(function () {
 
         return redirect()->route('dashboard');
     })->name('home');
+
+    Route::patch('/settings/theme-mode', ThemeModePreferenceController::class)
+        ->name('settings.theme-mode.update');
 
     Route::middleware('role:super-admin|admin|staff|support-agent|asset-manager')->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -101,10 +105,6 @@ Route::middleware('auth')->group(function () {
         Route::patch('/settings/branding', [BrandingSettingsController::class, 'update'])
             ->middleware('role:super-admin')
             ->name('settings.branding.update');
-        Route::patch('/settings/branding/dark-mode', [BrandingSettingsController::class, 'updateDarkMode'])
-            ->middleware('role:super-admin')
-            ->name('settings.branding.dark-mode');
-
     });
 
     Route::middleware('role:client-user')->prefix('portal')->name('portal.')->group(function () {

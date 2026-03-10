@@ -6,37 +6,35 @@ import { useEffect, useState } from 'react';
 import { applyBrandingTheme } from '@/lib/theme';
 import { ThemeContext } from '@/lib/theme-context';
 
-const THEME_MODE_STORAGE_KEY = 'ksp-theme-mode';
-
-function readStoredThemeMode() {
-  if (typeof window === 'undefined') return null;
-
-  const mode = window.localStorage.getItem(THEME_MODE_STORAGE_KEY);
-
-  return mode === 'dark' || mode === 'light' ? mode : null;
+function resolveThemeMode(user) {
+  return user?.theme_mode === 'dark' ? 'dark' : 'light';
 }
 
-function ThemeBridge({ branding, children }) {
+function ThemeBridge({ branding, authUser, children }) {
   const [currentBranding, setCurrentBranding] = useState(branding);
-  const [themeMode, setThemeMode] = useState(() => readStoredThemeMode() || (Boolean(branding?.dark_mode_enabled) ? 'dark' : 'light'));
+  const [currentUser, setCurrentUser] = useState(authUser);
+  const [themeMode, setThemeMode] = useState(resolveThemeMode(authUser));
 
   useEffect(() => {
     setCurrentBranding(branding);
-    if (!readStoredThemeMode()) {
-      setThemeMode(Boolean(branding?.dark_mode_enabled) ? 'dark' : 'light');
-    }
   }, [branding]);
+
+  useEffect(() => {
+    setCurrentUser(authUser);
+    setThemeMode(resolveThemeMode(authUser));
+  }, [authUser]);
 
   useEffect(() => {
     const removeSuccessListener = router.on('success', (event) => {
       const nextBranding = event.detail.page?.props?.branding;
+      const nextUser = event.detail.page?.props?.auth?.user;
+
       if (nextBranding) {
         setCurrentBranding(nextBranding);
-
-        if (!readStoredThemeMode()) {
-          setThemeMode(Boolean(nextBranding?.dark_mode_enabled) ? 'dark' : 'light');
-        }
       }
+
+      setCurrentUser(nextUser || null);
+      setThemeMode(resolveThemeMode(nextUser));
     });
 
     return () => {
@@ -46,19 +44,21 @@ function ThemeBridge({ branding, children }) {
 
   const darkModeEnabled = themeMode === 'dark';
 
-  const setDarkModeEnabled = (enabled, options = {}) => {
-    const { persistPreference = true } = options;
+  const setDarkModeEnabled = (enabled) => {
     const nextMode = enabled ? 'dark' : 'light';
 
     setThemeMode(nextMode);
 
-    if (typeof window === 'undefined') return;
+    if (!currentUser) return;
 
-    if (persistPreference) {
-      window.localStorage.setItem(THEME_MODE_STORAGE_KEY, nextMode);
-    } else {
-      window.localStorage.removeItem(THEME_MODE_STORAGE_KEY);
-    }
+    router.patch('/settings/theme-mode', { theme_mode: nextMode }, {
+      preserveScroll: true,
+      preserveState: true,
+      replace: true,
+      onError: () => {
+        setThemeMode(resolveThemeMode(currentUser));
+      },
+    });
   };
 
   useEffect(() => {
@@ -83,9 +83,10 @@ createInertiaApp({
   resolve: (name) => resolvePageComponent(`./Pages/${name}.jsx`, import.meta.glob('./Pages/**/*.jsx')),
   setup({ el, App, props }) {
     const initialBranding = props.initialPage?.props?.branding;
+    const initialAuthUser = props.initialPage?.props?.auth?.user;
 
     createRoot(el).render(
-      <ThemeBridge branding={initialBranding}>
+      <ThemeBridge branding={initialBranding} authUser={initialAuthUser}>
         <App {...props} />
       </ThemeBridge>,
     );

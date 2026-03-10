@@ -14,7 +14,6 @@ class UpdateBrandingSettingsRequest extends FormRequest
 
         $this->merge([
             'card_border_color' => $cardBorderColor,
-            'dark_mode_enabled' => filter_var($this->input('dark_mode_enabled'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
             'remove_light_logo' => filter_var($this->input('remove_light_logo'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
             'remove_dark_logo' => filter_var($this->input('remove_dark_logo'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE),
         ]);
@@ -33,7 +32,6 @@ class UpdateBrandingSettingsRequest extends FormRequest
             'secondary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'accent_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'card_border_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
-            'dark_mode_enabled' => ['nullable', 'boolean'],
             'light_logo' => ['nullable', 'image', 'max:2048'],
             'dark_logo' => ['nullable', 'image', 'max:2048'],
             'remove_light_logo' => ['nullable', 'boolean'],
