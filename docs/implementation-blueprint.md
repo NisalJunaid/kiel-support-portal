@@ -19,6 +19,7 @@
 - Global theme hydration now runs from Inertia page props (not only initial boot payload), allowing branding updates to apply across all navigation targets; dark mode can be toggled from the staff header and persisted globally for super-admins while preserving per-browser local preference overrides.
 - Inertia bootstrap theme hydration is now Inertia-context-safe: `ThemeBridge` no longer calls `usePage()` from `app.jsx` (outside the Inertia provider) and instead consumes initial branding from boot props while subscribing to Inertia `router.on('success')` updates for cross-page branding synchronization.
 - Branding settings preview now renders inside an isolated CSS-token scope that uses the exact same token builder as the app root, preventing preview-only theme logic drift.
+- Branding settings save submission now uses the Inertia `useForm` pattern correctly by applying `form.transform(...)` before invoking `form.patch(...)` as separate calls, preventing runtime `undefined.patch` crashes while preserving multipart logo uploads and validation error hydration.
 - Client portal ticket detail now supports policy-gated public replies through the shared `TicketMessageController` endpoint under `/portal/tickets/{ticket}/messages`, while preserving internal-note restrictions through `StoreTicketMessageRequest` and `TicketPolicy`.
 
 ## Implemented Modules
