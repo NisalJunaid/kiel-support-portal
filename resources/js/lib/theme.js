@@ -87,7 +87,7 @@ export function buildThemeTokens(branding, darkModeEnabled = false) {
   const primary = normalizeHex(branding?.primary_color, '#0f766e');
   const secondary = normalizeHex(branding?.secondary_color, '#f1f5f9');
   const accent = normalizeHex(branding?.accent_color, '#dbeafe');
-  const border = normalizeHex(branding?.border_color || branding?.surface_border_color, '#94a3b8');
+  const border = normalizeHex(branding?.card_border_color || branding?.border_color || branding?.surface_border_color, '#94a3b8');
 
   const background = darkModeEnabled ? mixHex('#020617', secondary, 0.14) : mixHex('#ffffff', secondary, 0.62);
   const card = darkModeEnabled ? mixHex('#0b1220', secondary, 0.16) : mixHex('#ffffff', secondary, 0.34);

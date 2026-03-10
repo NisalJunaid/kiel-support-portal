@@ -31,7 +31,7 @@ class BrandingSettingsController extends Controller
             'primary_color' => $request->string('primary_color')->toString(),
             'secondary_color' => $request->string('secondary_color')->toString(),
             'accent_color' => $request->string('accent_color')->toString(),
-            'border_color' => $request->string('border_color')->toString(),
+            'card_border_color' => $request->string('card_border_color')->toString(),
             'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
             'logo_path' => $current['logo_path'],
         ];
@@ -62,7 +62,7 @@ class BrandingSettingsController extends Controller
             'primary_color' => $current['primary_color'],
             'secondary_color' => $current['secondary_color'],
             'accent_color' => $current['accent_color'],
-            'border_color' => $current['border_color'],
+            'card_border_color' => $current['card_border_color'],
             'logo_path' => $current['logo_path'],
             'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
         ]);
