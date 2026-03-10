@@ -15,6 +15,8 @@ class BrandingSettings
         return [
             'app_name' => 'Kiel Support Portal',
             'logo_path' => null,
+            'light_logo_path' => null,
+            'dark_logo_path' => null,
             'primary_color' => '#0f766e',
             'secondary_color' => '#f1f5f9',
             'accent_color' => '#dbeafe',
@@ -41,14 +43,27 @@ class BrandingSettings
             $stored['card_border_color'] = $stored['border_color'];
         }
 
+        if (! isset($stored['light_logo_path']) && isset($stored['logo_path'])) {
+            $stored['light_logo_path'] = $stored['logo_path'];
+        }
+
         $settings = array_merge(self::defaults(), $stored);
         $settings['dark_mode_enabled'] = (bool) ($settings['dark_mode_enabled'] ?? false);
+
+        $lightLogoUrl = $settings['light_logo_path']
+            ? asset('storage/'.$settings['light_logo_path'])
+            : ($settings['logo_path'] ? asset('storage/'.$settings['logo_path']) : null);
+        $darkLogoUrl = $settings['dark_logo_path']
+            ? asset('storage/'.$settings['dark_logo_path'])
+            : $lightLogoUrl;
 
         return [
             ...$settings,
             'border_color' => $settings['card_border_color'],
             'surface_border_color' => $settings['card_border_color'],
-            'logo_url' => $settings['logo_path'] ? asset('storage/'.$settings['logo_path']) : null,
+            'logo_url' => $lightLogoUrl,
+            'light_logo_url' => $lightLogoUrl,
+            'dark_logo_url' => $darkLogoUrl,
             'theme_hsl' => [
                 'primary' => self::hexToHsl($settings['primary_color']),
                 'secondary' => self::hexToHsl($settings['secondary_color']),

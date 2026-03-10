@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { applyThemeTokens, buildThemeTokens } from '@/lib/theme';
+import { resolveBrandLogoUrl } from '@/lib/branding';
 
 function ThemeTokenScope({ branding, children }) {
   const scopeRef = useRef(null);
@@ -21,6 +22,8 @@ function ThemeTokenScope({ branding, children }) {
 }
 
 export function ThemePreviewCard({ branding }) {
+  const logoUrl = resolveBrandLogoUrl(branding, Boolean(branding?.dark_mode_enabled));
+
   return (
     <Card>
       <CardHeader><CardTitle>Brand preview</CardTitle></CardHeader>
@@ -29,7 +32,7 @@ export function ThemePreviewCard({ branding }) {
           <div className="space-y-4 rounded-lg border bg-background p-4 text-foreground">
             <div className="flex items-center justify-between rounded-md border bg-card px-3 py-2">
               <div className="flex items-center gap-2">
-                {branding.logo_url ? <img src={branding.logo_url} alt="Brand logo" className="h-8 w-8 rounded object-cover" /> : <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">K</div>}
+                {logoUrl ? <img src={logoUrl} alt="Brand logo" className="h-8 w-24 object-contain" /> : <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">K</div>}
                 <p className="text-sm font-semibold">{branding.app_name}</p>
               </div>
               <Badge>Primary</Badge>

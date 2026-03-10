@@ -17,22 +17,36 @@ export default function Branding({ branding }) {
     accent_color: branding.accent_color,
     card_border_color: branding.card_border_color || branding.border_color,
     dark_mode_enabled: Boolean(branding.dark_mode_enabled),
-    logo: null,
-    remove_logo: false,
+    light_logo: null,
+    dark_logo: null,
+    remove_light_logo: false,
+    remove_dark_logo: false,
   });
 
-  const preview = useMemo(() => ({
-    ...branding,
-    ...form.data,
-    logo_url: form.data.remove_logo ? null : (form.data.logo ? URL.createObjectURL(form.data.logo) : branding.logo_url),
-  }), [branding, form.data]);
+  const preview = useMemo(() => {
+    const lightLogoUrl = form.data.remove_light_logo
+      ? null
+      : (form.data.light_logo ? URL.createObjectURL(form.data.light_logo) : branding.light_logo_url || branding.logo_url);
+    const darkLogoUrl = form.data.remove_dark_logo
+      ? null
+      : (form.data.dark_logo ? URL.createObjectURL(form.data.dark_logo) : branding.dark_logo_url || lightLogoUrl);
+
+    return {
+      ...branding,
+      ...form.data,
+      light_logo_url: lightLogoUrl,
+      dark_logo_url: darkLogoUrl,
+      logo_url: lightLogoUrl,
+    };
+  }, [branding, form.data]);
 
   const saveBranding = () => {
     form.transform((data) => ({
       ...data,
       _method: 'patch',
       dark_mode_enabled: data.dark_mode_enabled ? 1 : 0,
-      remove_logo: data.remove_logo ? 1 : 0,
+      remove_light_logo: data.remove_light_logo ? 1 : 0,
+      remove_dark_logo: data.remove_dark_logo ? 1 : 0,
     }));
 
     form.post('/settings/branding', {
@@ -40,6 +54,13 @@ export default function Branding({ branding }) {
       preserveState: false,
     });
   };
+
+  const renderLogoPreview = (url, alt) => (
+    <div className="mt-3 rounded-md border p-3">
+      <p className="mb-2 text-xs text-muted-foreground">Current saved logo</p>
+      <img src={url} alt={alt} className="h-16 w-full max-w-xs object-contain" />
+    </div>
+  );
 
   return (
     <AppLayout title="Branding settings" description="Manage logo and global theme for the staff workspace." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Settings' }, { label: 'Branding' }]}>
@@ -71,16 +92,20 @@ export default function Branding({ branding }) {
               </div>
               <Switch checked={form.data.dark_mode_enabled} onCheckedChange={(checked) => form.setData('dark_mode_enabled', checked)} />
             </div>
-            <div>
-              <Label>Logo</Label>
-              <Input type="file" accept="image/*" onChange={(e) => form.setData('logo', e.target.files?.[0] || null)} />
-              {branding.logo_url && !form.data.remove_logo && (
-                <div className="mt-3 rounded-md border p-3">
-                  <p className="mb-2 text-xs text-muted-foreground">Current saved logo</p>
-                  <img src={branding.logo_url} alt="Current logo" className="h-12 w-12 rounded object-contain" />
-                </div>
-              )}
-              {branding.logo_url && <Button type="button" variant="ghost" size="sm" onClick={() => form.setData('remove_logo', !form.data.remove_logo)}>{form.data.remove_logo ? 'Keep logo' : 'Remove existing logo'}</Button>}
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label>Light mode logo</Label>
+                <Input type="file" accept="image/*" onChange={(e) => form.setData('light_logo', e.target.files?.[0] || null)} />
+                {(branding.light_logo_url || branding.logo_url) && !form.data.remove_light_logo && renderLogoPreview(branding.light_logo_url || branding.logo_url, 'Current light logo')}
+                {(branding.light_logo_url || branding.logo_url) && <Button type="button" variant="ghost" size="sm" onClick={() => form.setData('remove_light_logo', !form.data.remove_light_logo)}>{form.data.remove_light_logo ? 'Keep light logo' : 'Remove existing light logo'}</Button>}
+              </div>
+              <div>
+                <Label>Dark mode logo</Label>
+                <Input type="file" accept="image/*" onChange={(e) => form.setData('dark_logo', e.target.files?.[0] || null)} />
+                {branding.dark_logo_url && !form.data.remove_dark_logo && renderLogoPreview(branding.dark_logo_url, 'Current dark logo')}
+                {branding.dark_logo_url && <Button type="button" variant="ghost" size="sm" onClick={() => form.setData('remove_dark_logo', !form.data.remove_dark_logo)}>{form.data.remove_dark_logo ? 'Keep dark logo' : 'Remove existing dark logo'}</Button>}
+              </div>
             </div>
             <Button onClick={saveBranding} disabled={form.processing}>Save branding</Button>
           </CardContent>

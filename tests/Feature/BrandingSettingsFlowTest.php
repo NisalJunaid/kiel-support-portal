@@ -31,7 +31,8 @@ class BrandingSettingsFlowTest extends TestCase
             'accent_color' => '#334455',
             'card_border_color' => '#445566',
             'dark_mode_enabled' => 'true',
-            'remove_logo' => 'false',
+            'remove_light_logo' => 'false',
+            'remove_dark_logo' => 'false',
         ])->assertRedirect();
 
         $record = AppSetting::query()->where('key', BrandingSettings::KEY)->first();
@@ -101,7 +102,8 @@ class BrandingSettingsFlowTest extends TestCase
             'accent_color' => '#654321',
             'card_border_color' => '#fedcba',
             'dark_mode_enabled' => 'true',
-            'remove_logo' => 'false',
+            'remove_light_logo' => 'false',
+            'remove_dark_logo' => 'false',
         ])->assertRedirect();
 
         $this->assertFalse(Cache::has(BrandingSettings::CACHE_KEY));
@@ -137,8 +139,9 @@ class BrandingSettingsFlowTest extends TestCase
             'accent_color' => '#2a2b2c',
             'card_border_color' => '#3a3b3c',
             'dark_mode_enabled' => '1',
-            'remove_logo' => '0',
-            'logo' => $logo,
+            'remove_light_logo' => '0',
+            'remove_dark_logo' => '0',
+            'light_logo' => $logo,
         ])->assertRedirect();
 
         $record = AppSetting::query()->where('key', BrandingSettings::KEY)->first();
@@ -147,7 +150,8 @@ class BrandingSettingsFlowTest extends TestCase
         $this->assertSame('Method Spoofed Brand', $record->value['app_name']);
         $this->assertTrue($record->value['dark_mode_enabled']);
         $this->assertNotNull($record->value['logo_path']);
-        Storage::disk('public')->assertExists($record->value['logo_path']);
+        $this->assertNotNull($record->value['light_logo_path']);
+        Storage::disk('public')->assertExists($record->value['light_logo_path']);
 
         $hydrated = BrandingSettings::get();
 
@@ -157,7 +161,44 @@ class BrandingSettingsFlowTest extends TestCase
         $this->assertSame('#2a2b2c', $hydrated['accent_color']);
         $this->assertSame('#3a3b3c', $hydrated['card_border_color']);
         $this->assertTrue($hydrated['dark_mode_enabled']);
+        $this->assertNotNull($hydrated['light_logo_url']);
         $this->assertNotNull($hydrated['logo_url']);
+    }
+
+    public function test_super_admin_can_save_distinct_light_and_dark_logos(): void
+    {
+        Role::create(['name' => Roles::SUPER_ADMIN]);
+        Storage::fake('public');
+
+        $user = User::factory()->create();
+        $user->assignRole(Roles::SUPER_ADMIN);
+
+        $lightLogo = UploadedFile::fake()->image('light-logo.png');
+        $darkLogo = UploadedFile::fake()->image('dark-logo.png');
+
+        $this->actingAs($user)->patch('/settings/branding', [
+            'app_name' => 'Split Brand',
+            'primary_color' => '#121212',
+            'secondary_color' => '#343434',
+            'accent_color' => '#565656',
+            'card_border_color' => '#787878',
+            'dark_mode_enabled' => '1',
+            'light_logo' => $lightLogo,
+            'dark_logo' => $darkLogo,
+        ])->assertRedirect();
+
+        $record = AppSetting::query()->where('key', BrandingSettings::KEY)->first();
+
+        $this->assertNotNull($record);
+        $this->assertNotNull($record->value['light_logo_path']);
+        $this->assertNotNull($record->value['dark_logo_path']);
+        Storage::disk('public')->assertExists($record->value['light_logo_path']);
+        Storage::disk('public')->assertExists($record->value['dark_logo_path']);
+
+        $hydrated = BrandingSettings::get();
+
+        $this->assertNotNull($hydrated['light_logo_url']);
+        $this->assertNotNull($hydrated['dark_logo_url']);
     }
 
 }
