@@ -24,18 +24,22 @@ export function AppSidebar({ collapsed = false, onNavigate, url, auth, authoriza
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
   const logoUrl = resolveBrandLogoUrl(branding, Boolean(branding?.dark_mode_enabled));
+  const appName = branding?.app_name || 'Support portal';
+  const appInitial = appName.charAt(0).toUpperCase();
 
   return (
     <aside className={cn('h-full border-r bg-card p-3 transition-all', collapsed ? 'w-[78px]' : 'w-64')}>
-      <div className={cn('mb-6 rounded-md border bg-muted/40 p-2', collapsed ? 'flex justify-center' : 'px-3 py-3')}>
-        {logoUrl ? (
-          <img
-            src={logoUrl}
-            alt={`${branding?.app_name || 'Support portal'} logo`}
-            className={cn('object-contain', collapsed ? 'h-8 w-8' : 'h-12 w-full max-w-full')}
-          />
+      <div className={cn('mb-4 flex items-center justify-center', collapsed ? 'py-2' : 'px-2 py-4')}>
+        {collapsed ? (
+          logoUrl ? (
+            <img src={logoUrl} alt={`${appName} logo`} className="h-8 w-8 object-contain" />
+          ) : (
+            <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">{appInitial}</div>
+          )
+        ) : logoUrl ? (
+          <img src={logoUrl} alt={`${appName} logo`} className="max-h-16 w-full object-contain" />
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-primary text-xs font-bold text-primary-foreground">K</div>
+          <div className="flex h-10 w-10 items-center justify-center rounded bg-primary text-sm font-bold text-primary-foreground">{appInitial}</div>
         )}
       </div>
       <nav className="space-y-1">
