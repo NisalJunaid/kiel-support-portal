@@ -30,6 +30,7 @@ class HandleInertiaRequests extends Middleware
                         'email' => $user->email,
                         'roles' => $user->getRoleNames()->values(),
                         'is_client_user' => $user->isClientUser(),
+                        'theme_mode' => $user->theme_mode,
                     ]
                     : null,
             ],

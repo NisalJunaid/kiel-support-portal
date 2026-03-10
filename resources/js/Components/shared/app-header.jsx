@@ -14,10 +14,7 @@ export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSideb
   const { darkModeEnabled, setDarkModeEnabled } = useTheme();
 
   const onToggleDarkMode = (checked) => {
-    if (!authorization?.canViewSettings) return;
-
-    setDarkModeEnabled(checked, { persistPreference: false });
-    router.patch('/settings/branding/dark-mode', { dark_mode_enabled: checked }, { preserveScroll: true, preserveState: true, replace: true });
+    setDarkModeEnabled(checked);
   };
 
   return (
@@ -35,7 +32,7 @@ export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSideb
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 rounded-md border px-2 py-1">
           <span className="text-xs text-muted-foreground">Dark mode</span>
-          <Switch checked={darkModeEnabled} onCheckedChange={onToggleDarkMode} disabled={!authorization?.canViewSettings} />
+          <Switch checked={darkModeEnabled} onCheckedChange={onToggleDarkMode} />
         </div>
 
         {authorization?.canViewNotifications && (

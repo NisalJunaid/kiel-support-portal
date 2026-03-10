@@ -6,7 +6,6 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Button } from '@/Components/ui/button';
 import { ThemePreviewCard } from '@/Components/settings/theme-preview-card';
-import { Switch } from '@/Components/ui/switch';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 
 export default function Branding({ branding }) {
@@ -16,7 +15,6 @@ export default function Branding({ branding }) {
     secondary_color: branding.secondary_color,
     accent_color: branding.accent_color,
     card_border_color: branding.card_border_color || branding.border_color,
-    dark_mode_enabled: Boolean(branding.dark_mode_enabled),
     light_logo: null,
     dark_logo: null,
     remove_light_logo: false,
@@ -44,7 +42,6 @@ export default function Branding({ branding }) {
     form.transform((data) => ({
       ...data,
       _method: 'patch',
-      dark_mode_enabled: data.dark_mode_enabled ? 1 : 0,
       remove_light_logo: data.remove_light_logo ? 1 : 0,
       remove_dark_logo: data.remove_dark_logo ? 1 : 0,
     }));
@@ -63,10 +60,10 @@ export default function Branding({ branding }) {
   );
 
   return (
-    <AppLayout title="Branding settings" description="Manage logo and global theme for the staff workspace." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Settings' }, { label: 'Branding' }]}>
+    <AppLayout title="Branding settings" description="Manage global app branding colors and logos." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Settings' }, { label: 'Branding' }]}>
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Theme & logo</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Branding</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {Object.keys(form.errors).length > 0 && (
               <Alert variant="destructive">
@@ -84,13 +81,6 @@ export default function Branding({ branding }) {
                   <Input type="color" value={form.data[key]} onChange={(e) => form.setData(key, e.target.value)} className="h-10 p-1" />
                 </div>
               ))}
-            </div>
-            <div className="flex items-center justify-between rounded-md border p-3">
-              <div>
-                <p className="text-sm font-medium">Global dark mode</p>
-                <p className="text-xs text-muted-foreground">Applies to staff and client portals in real time.</p>
-              </div>
-              <Switch checked={form.data.dark_mode_enabled} onCheckedChange={(checked) => form.setData('dark_mode_enabled', checked)} />
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

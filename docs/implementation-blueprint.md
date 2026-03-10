@@ -417,3 +417,12 @@
 
 - Added regression test coverage for legacy border-color payload alias handling in branding save flow (`test_super_admin_can_save_branding_when_border_color_alias_is_submitted`).
 - Added regression test coverage for method-spoofed branding saves with logo upload (`test_super_admin_can_update_branding_via_post_method_spoof_and_upload_logo`).
+
+## Per-User Theme Mode Refactor (Latest)
+- Root cause in previous architecture: dark/light mode lived in global branding (`branding.dark_mode_enabled`), so a single super-admin toggle changed theme mode for all users across both staff and client portal surfaces.
+- Theme mode is now user-scoped via `users.theme_mode` (`light`/`dark`) and no longer controlled by branding settings.
+- Added authenticated self-service endpoint `PATCH /settings/theme-mode` for persisting only the current user’s theme preference.
+- Inertia shared props now include `auth.user.theme_mode`; frontend theme hydration reads this value as the sole mode source.
+- `ThemeBridge` now applies branding tokens globally (colors/logo remain global) while applying light/dark mode from the authenticated user preference and persisting changes through the new endpoint.
+- Staff and client portal topbar switches now both use the shared theme context and backend persistence path, keeping both experiences synchronized for the signed-in user.
+- Branding settings page remains super-admin-only and now focuses on global branding only (app name, colors, light/dark logos); the global dark-mode control was removed.

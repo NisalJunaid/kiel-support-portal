@@ -25,6 +25,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'theme_mode',
     ];
 
     public function clientUserProfile(): HasOne
@@ -44,6 +45,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'theme_mode',
         'remember_token',
     ];
 
@@ -70,5 +72,6 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'theme_mode' => 'string',
     ];
 }

@@ -2,6 +2,7 @@ import { Link } from '@inertiajs/react';
 import { LayoutDashboard, Building2, Users, Boxes, Ticket, Briefcase, Timer, BarChart3, Settings, Shield, History, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveBrandLogoUrl } from '@/lib/branding';
+import { useTheme } from '@/lib/theme-context';
 
 const nav = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, requires: 'isStaffWorkspace' },
@@ -23,7 +24,8 @@ const nav = [
 export function AppSidebar({ collapsed = false, onNavigate, url, auth, authorization, branding }) {
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
-  const logoUrl = resolveBrandLogoUrl(branding, Boolean(branding?.dark_mode_enabled));
+  const { darkModeEnabled } = useTheme();
+  const logoUrl = resolveBrandLogoUrl(branding, darkModeEnabled);
   const appName = branding?.app_name || 'Support portal';
   const appInitial = appName.charAt(0).toUpperCase();
 

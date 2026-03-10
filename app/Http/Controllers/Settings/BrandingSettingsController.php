@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\UpdateBrandingSettingsRequest;
-use App\Http\Requests\Settings\UpdateBrandingDarkModeRequest;
 use App\Support\BrandingSettings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
@@ -33,7 +32,6 @@ class BrandingSettingsController extends Controller
             'secondary_color' => $validated['secondary_color'] ?? $current['secondary_color'],
             'accent_color' => $validated['accent_color'] ?? $current['accent_color'],
             'card_border_color' => $validated['card_border_color'] ?? $current['card_border_color'],
-            'dark_mode_enabled' => $request->boolean('dark_mode_enabled', $current['dark_mode_enabled']),
             'logo_path' => $current['logo_path'],
             'light_logo_path' => $current['light_logo_path'] ?? $current['logo_path'],
             'dark_logo_path' => $current['dark_logo_path'],
@@ -69,24 +67,5 @@ class BrandingSettingsController extends Controller
         BrandingSettings::update($payload);
 
         return back()->with('success', 'Branding settings updated.');
-    }
-
-    public function updateDarkMode(UpdateBrandingDarkModeRequest $request): RedirectResponse
-    {
-        $current = BrandingSettings::get();
-
-        BrandingSettings::update([
-            'app_name' => $current['app_name'],
-            'primary_color' => $current['primary_color'],
-            'secondary_color' => $current['secondary_color'],
-            'accent_color' => $current['accent_color'],
-            'card_border_color' => $current['card_border_color'],
-            'logo_path' => $current['logo_path'],
-            'light_logo_path' => $current['light_logo_path'] ?? $current['logo_path'],
-            'dark_logo_path' => $current['dark_logo_path'],
-            'dark_mode_enabled' => $request->boolean('dark_mode_enabled'),
-        ]);
-
-        return back();
     }
 }

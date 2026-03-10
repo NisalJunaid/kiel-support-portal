@@ -30,7 +30,6 @@ class BrandingSettingsFlowTest extends TestCase
             'secondary_color' => '#aabbcc',
             'accent_color' => '#334455',
             'card_border_color' => '#445566',
-            'dark_mode_enabled' => 'true',
             'remove_light_logo' => 'false',
             'remove_dark_logo' => 'false',
         ])->assertRedirect();
@@ -40,7 +39,6 @@ class BrandingSettingsFlowTest extends TestCase
         $this->assertNotNull($record);
         $this->assertSame('Kiel Ops', $record->value['app_name']);
         $this->assertSame('#112233', $record->value['primary_color']);
-        $this->assertTrue($record->value['dark_mode_enabled']);
 
         $hydrated = BrandingSettings::get();
 
@@ -61,7 +59,6 @@ class BrandingSettingsFlowTest extends TestCase
             'secondary_color' => '#203040',
             'accent_color' => '#304050',
             'border_color' => '#405060',
-            'dark_mode_enabled' => 'false',
         ])->assertRedirect();
 
         $record = AppSetting::query()->where('key', BrandingSettings::KEY)->first();
@@ -88,7 +85,6 @@ class BrandingSettingsFlowTest extends TestCase
             'secondary_color' => '#222222',
             'accent_color' => '#333333',
             'card_border_color' => '#444444',
-            'dark_mode_enabled' => false,
             'logo_path' => null,
         ]);
 
@@ -101,7 +97,6 @@ class BrandingSettingsFlowTest extends TestCase
             'secondary_color' => '#123456',
             'accent_color' => '#654321',
             'card_border_color' => '#fedcba',
-            'dark_mode_enabled' => 'true',
             'remove_light_logo' => 'false',
             'remove_dark_logo' => 'false',
         ])->assertRedirect();
@@ -118,7 +113,7 @@ class BrandingSettingsFlowTest extends TestCase
             ->assertSee('"app_name":"After"')
             ->assertSee('"primary_color":"#abcdef"')
             ->assertSee('"card_border_color":"#fedcba"')
-            ->assertSee('"dark_mode_enabled":true');
+            ->assertSee('\"card_border_color\":\"#fedcba\"');
     }
 
     public function test_super_admin_can_update_branding_via_post_method_spoof_and_upload_logo(): void
@@ -138,7 +133,6 @@ class BrandingSettingsFlowTest extends TestCase
             'secondary_color' => '#1a1b1c',
             'accent_color' => '#2a2b2c',
             'card_border_color' => '#3a3b3c',
-            'dark_mode_enabled' => '1',
             'remove_light_logo' => '0',
             'remove_dark_logo' => '0',
             'light_logo' => $logo,
@@ -148,7 +142,6 @@ class BrandingSettingsFlowTest extends TestCase
 
         $this->assertNotNull($record);
         $this->assertSame('Method Spoofed Brand', $record->value['app_name']);
-        $this->assertTrue($record->value['dark_mode_enabled']);
         $this->assertNotNull($record->value['logo_path']);
         $this->assertNotNull($record->value['light_logo_path']);
         Storage::disk('public')->assertExists($record->value['light_logo_path']);
@@ -160,7 +153,6 @@ class BrandingSettingsFlowTest extends TestCase
         $this->assertSame('#1a1b1c', $hydrated['secondary_color']);
         $this->assertSame('#2a2b2c', $hydrated['accent_color']);
         $this->assertSame('#3a3b3c', $hydrated['card_border_color']);
-        $this->assertTrue($hydrated['dark_mode_enabled']);
         $this->assertNotNull($hydrated['light_logo_url']);
         $this->assertNotNull($hydrated['logo_url']);
     }
@@ -182,7 +174,6 @@ class BrandingSettingsFlowTest extends TestCase
             'secondary_color' => '#343434',
             'accent_color' => '#565656',
             'card_border_color' => '#787878',
-            'dark_mode_enabled' => '1',
             'light_logo' => $lightLogo,
             'dark_logo' => $darkLogo,
         ])->assertRedirect();
