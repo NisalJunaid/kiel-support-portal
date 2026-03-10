@@ -15,7 +15,7 @@ import { FilterBar } from '@/Components/shared/filter-bar';
 import { RowActionsDropdown } from '@/Components/shared/row-actions-dropdown';
 import { SectionCard } from '@/Components/shared/section-card';
 import { ClickableTableRow } from '@/Components/shared/clickable-table-row';
-import { EntityDrawer } from '@/Components/shared/entity-drawer';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/Components/ui/sheet';
 import { TicketDetailWorkspace } from '@/Pages/Tickets/Partials/TicketDetailWorkspace';
 
 export default function TicketsIndex({ tickets, filters, can, domainReferences, staff, clients, drawerTicket = null }) {
@@ -48,8 +48,7 @@ export default function TicketsIndex({ tickets, filters, can, domainReferences, 
 
   return (
     <AppLayout title="Tickets" description="Track support cases, assignment, and SLA health." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Tickets' }]}>
-      <div className="relative min-h-[32rem]">
-        <SectionCard title="Tickets" description="Case queue with SLA and workflow controls." action={can.create && <Button asChild size="sm"><Link href="/tickets/create">Create ticket</Link></Button>}>
+      <SectionCard title="Tickets" description="Case queue with SLA and workflow controls." action={can.create && <Button asChild size="sm"><Link href="/tickets/create">Create ticket</Link></Button>}>
         <FilterBar onSubmit={(e) => { e.preventDefault(); router.get('/tickets', indexParams, { preserveState: true, replace: true }); }} onReset={() => { setSearch(''); setStatus('all'); setPriority('all'); setAssignedUserId('all'); setClientCompanyId('all'); router.get('/tickets'); }} submitLabel="Filter">
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search ticket #, title, category" className="md:col-span-2" />
           <Select value={status} onValueChange={setStatus}><SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{statusOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
@@ -59,23 +58,32 @@ export default function TicketsIndex({ tickets, filters, can, domainReferences, 
         </FilterBar>
 
         {tickets.data.length === 0 ? <EmptyState title="No tickets found" description="Create your first support ticket or refine filters." /> : <><Table><TableHeader><tr><TableHead>Ticket</TableHead><TableHead>Title</TableHead><TableHead>Client</TableHead><TableHead>Priority</TableHead><TableHead>Status</TableHead><TableHead>Assignee</TableHead><TableHead>Updated</TableHead><TableHead /></tr></TableHeader><TableBody>{tickets.data.map((ticket) => <ClickableTableRow key={ticket.id} onOpen={() => openTicketDrawer(ticket.id)}><TableCell className="font-medium">{ticket.ticket_number}</TableCell><TableCell>{ticket.title}</TableCell><TableCell>{ticket.client?.name || '—'}</TableCell><TableCell><DomainPriorityBadge domainReferences={domainReferences} value={ticket.priority} /></TableCell><TableCell><DomainStatusBadge domainReferences={domainReferences} referenceKey="ticketStatus" value={ticket.status} /></TableCell><TableCell>{ticket.assignee?.name || 'Unassigned'}</TableCell><TableCell>{ticket.updated_at}</TableCell><TableCell className="text-right" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}><RowActionsDropdown><DropdownMenuItem onSelect={() => router.visit(`/tickets/${ticket.id}`)}>Open full detail</DropdownMenuItem>{can.update && <DropdownMenuItem onSelect={() => router.visit(`/tickets/${ticket.id}/edit`)}>Edit</DropdownMenuItem>}</RowActionsDropdown></TableCell></ClickableTableRow>)}</TableBody></Table><ListPagination paginated={tickets} /></>}
-        </SectionCard>
+      </SectionCard>
 
-        <EntityDrawer open={!!selectedTicketId && !!drawerTicket?.ticket} onOpenChange={(open) => !open && closeTicketDrawer()} title={drawerTicket?.ticket?.ticket_number} description={drawerTicket?.ticket?.title}>
-        {drawerTicket?.ticket ? (
-          <TicketDetailWorkspace
-            embedded
-            ticket={drawerTicket.ticket}
-            messages={drawerTicket.messages}
-            attachments={drawerTicket.attachments}
-            activity={drawerTicket.activity}
-            can={drawerTicket.can}
-            domainReferences={domainReferences}
-            slaIndicators={drawerTicket.slaIndicators}
-          />
-        ) : null}
-        </EntityDrawer>
-      </div>
+      <Sheet open={!!selectedTicketId && !!drawerTicket?.ticket} onOpenChange={(open) => !open && closeTicketDrawer()}>
+        <SheetContent side="right" className="z-[120] w-full border-l bg-card p-0 text-card-foreground sm:max-w-[72rem]">
+          <div className="flex h-full min-h-0 flex-col">
+            <SheetHeader className="border-b px-6 py-4">
+              <SheetTitle>{drawerTicket?.ticket?.ticket_number}</SheetTitle>
+              <SheetDescription>{drawerTicket?.ticket?.title}</SheetDescription>
+            </SheetHeader>
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+              {drawerTicket?.ticket ? (
+                <TicketDetailWorkspace
+                  embedded
+                  ticket={drawerTicket.ticket}
+                  messages={drawerTicket.messages}
+                  attachments={drawerTicket.attachments}
+                  activity={drawerTicket.activity}
+                  can={drawerTicket.can}
+                  domainReferences={domainReferences}
+                  slaIndicators={drawerTicket.slaIndicators}
+                />
+              ) : null}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 }
