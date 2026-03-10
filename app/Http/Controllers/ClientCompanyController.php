@@ -65,6 +65,7 @@ class ClientCompanyController extends Controller
                 'account_manager_id' => $accountManagerId,
             ],
             'accountManagers' => $this->accountManagers(),
+            'slaPlans' => SlaPlan::query()->orderBy('name')->get(['id', 'name']),
             'can' => [
                 'create' => $request->user()->can('create', ClientCompany::class),
             ],
@@ -92,6 +93,10 @@ class ClientCompanyController extends Controller
             ->event('created')
             ->withProperties(['client_code' => $client->client_code])
             ->log('Client company created');
+
+        if ($request->boolean('from_drawer')) {
+            return back()->with('success', 'Client company created successfully.');
+        }
 
         return redirect()->route('clients.show', $client)->with('success', 'Client company created successfully.');
     }

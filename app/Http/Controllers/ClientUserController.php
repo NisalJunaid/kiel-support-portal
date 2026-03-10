@@ -58,6 +58,13 @@ class ClientUserController extends Controller
                 'client_company_id' => $clientId,
             ],
             'clients' => $this->clientOptions(),
+            'contacts' => $this->contactOptions(),
+            'defaults' => [
+                'can_view_all_company_tickets' => false,
+                'can_create_tickets' => true,
+                'can_view_assets' => true,
+                'can_manage_contacts' => false,
+            ],
             'can' => [
                 'create' => $request->user()->can('create', ClientUserProfile::class),
                 'update' => $request->user()->can('client-users.update'),
@@ -114,6 +121,10 @@ class ClientUserController extends Controller
             ->event('created')
             ->withProperties(['email' => $profile->user?->email])
             ->log('Client user created');
+
+        if ($request->boolean('from_drawer')) {
+            return back()->with('success', 'Client user created successfully.');
+        }
 
         return redirect()->route('client-users.show', $profile)->with('success', 'Client user created successfully.');
     }
@@ -172,6 +183,13 @@ class ClientUserController extends Controller
                 'can_manage_contacts' => $clientUser->can_manage_contacts,
             ],
             'clients' => $this->clientOptions(),
+            'contacts' => $this->contactOptions(),
+            'defaults' => [
+                'can_view_all_company_tickets' => false,
+                'can_create_tickets' => true,
+                'can_view_assets' => true,
+                'can_manage_contacts' => false,
+            ],
             'contacts' => $this->contactOptions(),
         ]);
     }

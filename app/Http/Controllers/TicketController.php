@@ -96,6 +96,12 @@ class TicketController extends Controller
             'drawerTicket' => $drawerTicket,
             'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
             'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
+            'formData' => $this->formData(),
+            'defaults' => [
+                'status' => 'new',
+                'priority' => 'medium',
+                'source' => 'portal',
+            ],
             'can' => [
                 'create' => $request->user()->can('create', Ticket::class),
                 'update' => $request->user()->can('tickets.update'),
@@ -158,6 +164,10 @@ class TicketController extends Controller
         $ticketAttachmentService->storeForTicket($ticket, $request->user(), $request->file('attachments', []));
 
         $ticketNotificationService->notifyTicketCreated($ticket, $request->user());
+
+        if ($request->boolean('from_drawer')) {
+            return back()->with('success', 'Ticket created successfully.');
+        }
 
         return redirect()->route('tickets.show', $ticket)->with('success', 'Ticket created successfully.');
     }
@@ -374,6 +384,12 @@ class TicketController extends Controller
                 ])->values(),
             'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
             'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
+            'formData' => $this->formData(),
+            'defaults' => [
+                'status' => 'new',
+                'priority' => 'medium',
+                'source' => 'portal',
+            ],
             'defaultClientId' => $defaultClientId,
             'defaultAssetId' => $defaultAssetId,
             'defaultServiceId' => $defaultServiceId,

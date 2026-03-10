@@ -65,6 +65,7 @@ class ServiceController extends Controller
                 'status' => $status,
             ],
             'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
+            'formData' => $this->formData(),
             'can' => [
                 'create' => $request->user()->can('create', Service::class),
                 'update' => $request->user()->can('services.update'),
@@ -100,6 +101,10 @@ class ServiceController extends Controller
                 'client_company_id' => $service->client_company_id,
             ])
             ->log('Service created');
+
+        if ($request->boolean('from_drawer')) {
+            return back()->with('success', 'Service created successfully.');
+        }
 
         return redirect()->route('services.show', $service)->with('success', 'Service created successfully.');
     }

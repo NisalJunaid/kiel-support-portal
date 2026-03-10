@@ -68,6 +68,8 @@ class AssetController extends Controller
             ],
             'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
             'assetTypes' => AssetType::query()->orderBy('name')->get(['id', 'name']),
+            'formData' => $this->formData(),
+            'metaFieldsByType' => AssetMetaFields::definitions(),
             'can' => [
                 'create' => $request->user()->can('create', Asset::class),
                 'update' => $request->user()->can('assets.update'),
@@ -96,6 +98,10 @@ class AssetController extends Controller
             ->event('created')
             ->withProperties(['asset_code' => $asset->asset_code])
             ->log('Asset created');
+
+        if ($request->boolean('from_drawer')) {
+            return back()->with('success', 'Asset created successfully.');
+        }
 
         return redirect()->route('assets.show', $asset)->with('success', 'Asset created successfully.');
     }
