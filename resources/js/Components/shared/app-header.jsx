@@ -1,26 +1,22 @@
 import { Link, router } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
 import { Bell, PanelLeft, PanelLeftClose } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { Switch } from '@/Components/ui/switch';
+import { useTheme } from '@/lib/theme-context';
 
 export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSidebar, auth, notifications, authorization, branding }) {
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
   const initials = auth.user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'SU';
-  const [isDarkModeEnabled, setIsDarkModeEnabled] = useState(Boolean(branding?.dark_mode_enabled));
-
-  useEffect(() => {
-    setIsDarkModeEnabled(Boolean(branding?.dark_mode_enabled));
-  }, [branding?.dark_mode_enabled]);
+  const { darkModeEnabled, setDarkModeEnabled } = useTheme();
 
   const onToggleDarkMode = (checked) => {
     if (!authorization?.canViewSettings) return;
 
-    setIsDarkModeEnabled(checked);
+    setDarkModeEnabled(checked, { persistPreference: false });
     router.patch('/settings/branding/dark-mode', { dark_mode_enabled: checked }, { preserveScroll: true, preserveState: true, replace: true });
   };
 
@@ -39,7 +35,7 @@ export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSideb
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 rounded-md border px-2 py-1">
           <span className="text-xs text-muted-foreground">Dark mode</span>
-          <Switch checked={isDarkModeEnabled} onCheckedChange={onToggleDarkMode} disabled={!authorization?.canViewSettings} />
+          <Switch checked={darkModeEnabled} onCheckedChange={onToggleDarkMode} disabled={!authorization?.canViewSettings} />
         </div>
 
         {authorization?.canViewNotifications && (

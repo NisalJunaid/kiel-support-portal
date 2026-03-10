@@ -52,9 +52,9 @@ export default function ClientDashboard({ summary, recentTickets, can }) {
       </Card>
 
       <section className="grid gap-4 md:grid-cols-3">
-        <Link href="/portal/tickets" className="rounded-lg border bg-white p-4 text-sm hover:bg-accent">View my company tickets</Link>
-        {can.viewAssets && <Link href="/portal/assets" className="rounded-lg border bg-white p-4 text-sm hover:bg-accent">Browse company assets</Link>}
-        {can.viewContacts && <Link href="/portal/contacts" className="rounded-lg border bg-white p-4 text-sm hover:bg-accent">View company contacts</Link>}
+        <Link href="/portal/tickets" className="rounded-lg border bg-card p-4 text-sm text-foreground transition-colors hover:bg-accent">View my company tickets</Link>
+        {can.viewAssets && <Link href="/portal/assets" className="rounded-lg border bg-card p-4 text-sm text-foreground transition-colors hover:bg-accent">Browse company assets</Link>}
+        {can.viewContacts && <Link href="/portal/contacts" className="rounded-lg border bg-card p-4 text-sm text-foreground transition-colors hover:bg-accent">View company contacts</Link>}
       </section>
     </ClientPortalLayout>
   );

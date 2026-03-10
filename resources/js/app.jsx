@@ -4,12 +4,27 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 import { useEffect, useState } from 'react';
 import { applyBrandingTheme } from '@/lib/theme';
+import { ThemeContext } from '@/lib/theme-context';
+
+const THEME_MODE_STORAGE_KEY = 'ksp-theme-mode';
+
+function readStoredThemeMode() {
+  if (typeof window === 'undefined') return null;
+
+  const mode = window.localStorage.getItem(THEME_MODE_STORAGE_KEY);
+
+  return mode === 'dark' || mode === 'light' ? mode : null;
+}
 
 function ThemeBridge({ branding, children }) {
   const [currentBranding, setCurrentBranding] = useState(branding);
+  const [themeMode, setThemeMode] = useState(() => readStoredThemeMode() || (Boolean(branding?.dark_mode_enabled) ? 'dark' : 'light'));
 
   useEffect(() => {
     setCurrentBranding(branding);
+    if (!readStoredThemeMode()) {
+      setThemeMode(Boolean(branding?.dark_mode_enabled) ? 'dark' : 'light');
+    }
   }, [branding]);
 
   useEffect(() => {
@@ -17,6 +32,10 @@ function ThemeBridge({ branding, children }) {
       const nextBranding = event.detail.page?.props?.branding;
       if (nextBranding) {
         setCurrentBranding(nextBranding);
+
+        if (!readStoredThemeMode()) {
+          setThemeMode(Boolean(nextBranding?.dark_mode_enabled) ? 'dark' : 'light');
+        }
       }
     });
 
@@ -25,7 +44,22 @@ function ThemeBridge({ branding, children }) {
     };
   }, []);
 
-  const darkModeEnabled = Boolean(currentBranding?.dark_mode_enabled);
+  const darkModeEnabled = themeMode === 'dark';
+
+  const setDarkModeEnabled = (enabled, options = {}) => {
+    const { persistPreference = true } = options;
+    const nextMode = enabled ? 'dark' : 'light';
+
+    setThemeMode(nextMode);
+
+    if (typeof window === 'undefined') return;
+
+    if (persistPreference) {
+      window.localStorage.setItem(THEME_MODE_STORAGE_KEY, nextMode);
+    } else {
+      window.localStorage.removeItem(THEME_MODE_STORAGE_KEY);
+    }
+  };
 
   useEffect(() => {
     const root = document.documentElement;
@@ -38,7 +72,11 @@ function ThemeBridge({ branding, children }) {
     }
   }, [currentBranding, darkModeEnabled]);
 
-  return children;
+  return (
+    <ThemeContext.Provider value={{ darkModeEnabled, setDarkModeEnabled }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 createInertiaApp({
