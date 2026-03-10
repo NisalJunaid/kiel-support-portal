@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useMemo } from 'react';
 import { useForm } from '@inertiajs/react';
 import AppLayout from '@/Layouts/app-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
@@ -7,7 +7,6 @@ import { Label } from '@/Components/ui/label';
 import { Button } from '@/Components/ui/button';
 import { ThemePreviewCard } from '@/Components/settings/theme-preview-card';
 import { Switch } from '@/Components/ui/switch';
-import { applyBrandingTheme, hexToHsl } from '@/lib/theme';
 
 export default function Branding({ branding }) {
   const form = useForm({
@@ -15,49 +14,17 @@ export default function Branding({ branding }) {
     primary_color: branding.primary_color,
     secondary_color: branding.secondary_color,
     accent_color: branding.accent_color,
-    surface_border_color: branding.surface_border_color,
+    border_color: branding.border_color,
     dark_mode_enabled: Boolean(branding.dark_mode_enabled),
     logo: null,
     remove_logo: false,
   });
 
-
-  useEffect(() => {
-    const root = document.documentElement;
-    const prev = {
-      primary: root.style.getPropertyValue('--primary'),
-      secondary: root.style.getPropertyValue('--secondary'),
-      accent: root.style.getPropertyValue('--accent'),
-      surfaceBorder: root.style.getPropertyValue('--surface-border'),
-      border: root.style.getPropertyValue('--border'),
-      input: root.style.getPropertyValue('--input'),
-      dark: root.classList.contains('dark'),
-    };
-
-    applyBrandingTheme(root, {
-      primary: hexToHsl(form.data.primary_color),
-      secondary: hexToHsl(form.data.secondary_color),
-      accent: hexToHsl(form.data.accent_color),
-      surfaceBorder: hexToHsl(form.data.surface_border_color),
-    });
-    root.classList.toggle('dark', Boolean(form.data.dark_mode_enabled));
-
-    return () => {
-      root.style.setProperty('--primary', prev.primary);
-      root.style.setProperty('--secondary', prev.secondary);
-      root.style.setProperty('--accent', prev.accent);
-      root.style.setProperty('--surface-border', prev.surfaceBorder);
-      root.style.setProperty('--border', prev.border);
-      root.style.setProperty('--input', prev.input);
-      root.classList.toggle('dark', prev.dark);
-    };
-  }, [form.data.primary_color, form.data.secondary_color, form.data.accent_color, form.data.surface_border_color, form.data.dark_mode_enabled]);
-
-  const preview = {
+  const preview = useMemo(() => ({
     ...branding,
     ...form.data,
     logo_url: form.data.remove_logo ? null : (form.data.logo ? URL.createObjectURL(form.data.logo) : branding.logo_url),
-  };
+  }), [branding, form.data]);
 
   return (
     <AppLayout title="Branding settings" description="Manage logo and global theme for the staff workspace." breadcrumbs={[{ label: 'Home', href: '/dashboard' }, { label: 'Settings' }, { label: 'Branding' }]}>
@@ -70,7 +37,7 @@ export default function Branding({ branding }) {
               <Input value={form.data.app_name} onChange={(e) => form.setData('app_name', e.target.value)} />
             </div>
             <div className="grid gap-3 sm:grid-cols-4">
-              {[['primary_color', 'Primary'], ['secondary_color', 'Secondary'], ['accent_color', 'Accent'], ['surface_border_color', 'Card border']].map(([key, label]) => (
+              {[['primary_color', 'Primary'], ['secondary_color', 'Secondary'], ['accent_color', 'Accent'], ['border_color', 'Card border']].map(([key, label]) => (
                 <div key={key}>
                   <Label>{label} color</Label>
                   <Input type="color" value={form.data[key]} onChange={(e) => form.setData(key, e.target.value)} className="h-10 p-1" />
