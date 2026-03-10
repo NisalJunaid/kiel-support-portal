@@ -88,6 +88,7 @@ Route::middleware('auth')->group(function () {
         Route::post('tickets/{ticket}/workflow/resolve', [TicketWorkflowController::class, 'resolve'])->name('tickets.workflow.resolve');
         Route::post('tickets/{ticket}/workflow/close', [TicketWorkflowController::class, 'close'])->name('tickets.workflow.close');
         Route::post('tickets/{ticket}/workflow/reopen', [TicketWorkflowController::class, 'reopen'])->name('tickets.workflow.reopen');
+        Route::get('tickets/{ticket}/activity', [TicketController::class, 'activity'])->name('tickets.activity');
         Route::get('tickets/{ticket}/attachments/{attachment}', [TicketAttachmentController::class, 'show'])->name('tickets.attachments.show');
 
         Route::get('/reports', ReportsController::class)

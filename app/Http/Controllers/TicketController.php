@@ -19,9 +19,11 @@ use App\Services\Tickets\TicketAttachmentService;
 use App\Services\Tickets\SlaDeadlineService;
 use App\Services\Tickets\TicketMessageService;
 use App\Services\Notifications\TicketNotificationService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Support\ActivityPresenter;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
 use Inertia\Response;
@@ -31,6 +33,7 @@ class TicketController extends Controller
 {
     public function index(Request $request, SlaDeadlineService $slaDeadlineService): Response
     {
+        $startedAt = microtime(true);
         $this->authorize('viewAny', Ticket::class);
 
         $search = trim((string) $request->string('search'));
@@ -39,53 +42,40 @@ class TicketController extends Controller
         $assigneeId = $request->integer('assigned_user_id') ?: null;
         $clientId = $request->integer('client_company_id') ?: null;
 
-        $tickets = Ticket::query()
-            ->with(['clientCompany:id,name', 'asset:id,name,asset_code', 'service:id,name', 'slaPlan:id,name', 'assignedUser:id,name'])
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($inner) use ($search) {
-                    $inner->where('ticket_number', 'like', "%{$search}%")
-                        ->orWhere('title', 'like', "%{$search}%")
-                        ->orWhere('category', 'like', "%{$search}%");
-                });
-            })
-            ->when($status, fn ($query) => $query->where('status', $status))
-            ->when($priority, fn ($query) => $query->where('priority', $priority))
-            ->when($assigneeId, fn ($query) => $query->where('assigned_user_id', $assigneeId))
-            ->when($clientId, fn ($query) => $query->where('client_company_id', $clientId))
-            ->latest('updated_at')
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn (Ticket $ticket) => [
-                'id' => $ticket->id,
-                'ticket_number' => $ticket->ticket_number,
-                'title' => $ticket->title,
-                'priority' => $ticket->priority?->value,
-                'status' => $ticket->status?->value,
-                'client' => $ticket->clientCompany,
-                'asset' => $ticket->asset,
-                'service' => $ticket->service,
-                'sla_plan' => $ticket->slaPlan ? ['id' => $ticket->slaPlan->id, 'name' => $ticket->slaPlan->name] : null,
-                'assignee' => $ticket->assignedUser,
-                'updated_at' => optional($ticket->updated_at)?->diffForHumans(),
-                'first_response_due_at' => optional($ticket->first_response_due_at)?->toDateTimeString(),
-                'resolution_due_at' => optional($ticket->resolution_due_at)?->toDateTimeString(),
-                'sla_response_indicator' => $slaDeadlineService->computeIndicator($ticket, 'first_response_due_at'),
-                'sla_resolution_indicator' => $slaDeadlineService->computeIndicator($ticket, 'resolution_due_at'),
-            ]);
-
-        $drawerTicketId = $request->integer('drawer_ticket') ?: null;
-        $drawerTicket = null;
-
-        if ($drawerTicketId) {
-            $candidate = Ticket::query()->find($drawerTicketId);
-
-            if ($candidate && $request->user()->can('view', $candidate)) {
-                $drawerTicket = $this->ticketWorkspacePayload($request, $candidate, $slaDeadlineService);
-            }
-        }
-
-        return Inertia::render('Tickets/Index', [
-            'tickets' => $tickets,
+        $response = Inertia::render('Tickets/Index', [
+            'tickets' => fn () => Ticket::query()
+                ->with(['clientCompany:id,name', 'asset:id,name,asset_code', 'service:id,name', 'slaPlan:id,name', 'assignedUser:id,name'])
+                ->when($search, function ($query) use ($search) {
+                    $query->where(function ($inner) use ($search) {
+                        $inner->where('ticket_number', 'like', "%{$search}%")
+                            ->orWhere('title', 'like', "%{$search}%")
+                            ->orWhere('category', 'like', "%{$search}%");
+                    });
+                })
+                ->when($status, fn ($query) => $query->where('status', $status))
+                ->when($priority, fn ($query) => $query->where('priority', $priority))
+                ->when($assigneeId, fn ($query) => $query->where('assigned_user_id', $assigneeId))
+                ->when($clientId, fn ($query) => $query->where('client_company_id', $clientId))
+                ->latest('updated_at')
+                ->paginate(15)
+                ->withQueryString()
+                ->through(fn (Ticket $ticket) => [
+                    'id' => $ticket->id,
+                    'ticket_number' => $ticket->ticket_number,
+                    'title' => $ticket->title,
+                    'priority' => $ticket->priority?->value,
+                    'status' => $ticket->status?->value,
+                    'client' => $ticket->clientCompany,
+                    'asset' => $ticket->asset,
+                    'service' => $ticket->service,
+                    'sla_plan' => $ticket->slaPlan ? ['id' => $ticket->slaPlan->id, 'name' => $ticket->slaPlan->name] : null,
+                    'assignee' => $ticket->assignedUser,
+                    'updated_at' => optional($ticket->updated_at)?->diffForHumans(),
+                    'first_response_due_at' => optional($ticket->first_response_due_at)?->toDateTimeString(),
+                    'resolution_due_at' => optional($ticket->resolution_due_at)?->toDateTimeString(),
+                    'sla_response_indicator' => $slaDeadlineService->computeIndicator($ticket, 'first_response_due_at'),
+                    'sla_resolution_indicator' => $slaDeadlineService->computeIndicator($ticket, 'resolution_due_at'),
+                ]),
             'filters' => [
                 'search' => $search,
                 'status' => $status,
@@ -93,10 +83,10 @@ class TicketController extends Controller
                 'assigned_user_id' => $assigneeId,
                 'client_company_id' => $clientId,
             ],
-            'drawerTicket' => $drawerTicket,
-            'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
-            'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
-            'formData' => $this->formData(),
+            'drawerTicket' => fn () => $this->resolveDrawerTicketPayload($request, $slaDeadlineService),
+            'staff' => fn () => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
+            'clients' => fn () => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
+            'formData' => fn () => $this->formData(),
             'defaults' => [
                 'status' => 'new',
                 'priority' => 'medium',
@@ -108,6 +98,50 @@ class TicketController extends Controller
                 'delete' => $request->user()->can('tickets.delete'),
             ],
         ]);
+
+        $elapsedMs = (int) ((microtime(true) - $startedAt) * 1000);
+        if ($elapsedMs >= 800) {
+            Log::warning('Slow tickets index request detected.', [
+                'elapsed_ms' => $elapsedMs,
+                'search' => $search,
+                'status' => $status,
+                'priority' => $priority,
+                'assigned_user_id' => $assigneeId,
+                'client_company_id' => $clientId,
+                'drawer_ticket' => $request->integer('drawer_ticket'),
+                'user_id' => $request->user()?->id,
+            ]);
+        }
+
+        return $response;
+    }
+
+    public function activity(Request $request, Ticket $ticket): JsonResponse
+    {
+        $startedAt = microtime(true);
+        $this->authorize('view', $ticket);
+
+        $activity = Activity::query()
+            ->where('subject_type', Ticket::class)
+            ->where('subject_id', $ticket->id)
+            ->latest()
+            ->limit(50)
+            ->get();
+
+        $response = response()->json([
+            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
+        ]);
+
+        $elapsedMs = (int) ((microtime(true) - $startedAt) * 1000);
+        if ($elapsedMs >= 600) {
+            Log::warning('Slow ticket activity request detected.', [
+                'ticket_id' => $ticket->id,
+                'elapsed_ms' => $elapsedMs,
+                'user_id' => $request->user()?->id,
+            ]);
+        }
+
+        return $response;
     }
 
     public function create(Request $request): Response
@@ -299,13 +333,6 @@ class TicketController extends Controller
             ->sortBy('created_at')
             ->values();
 
-        $activity = Activity::query()
-            ->where('subject_type', Ticket::class)
-            ->where('subject_id', $ticket->id)
-            ->latest()
-            ->limit(10)
-            ->get();
-
         return [
             'ticket' => [
                 ...$ticket->toArray(),
@@ -333,7 +360,6 @@ class TicketController extends Controller
                 'download_url' => route('tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
                 'created_at' => optional($attachment->created_at)?->toDateTimeString(),
             ])->values(),
-            'activity' => $activity->map(fn (Activity $item) => ActivityPresenter::forTimeline($item))->values(),
             'messages' => $messages->map(fn (TicketMessage $message) => [
                 'id' => $message->id,
                 'message_type' => $message->message_type?->value,
@@ -382,9 +408,6 @@ class TicketController extends Controller
                     'email' => $profile->user?->email,
                     'client_company_id' => $profile->client_company_id,
                 ])->values(),
-            'staff' => User::query()->role(['super-admin', 'admin', 'staff', 'support-agent'])->orderBy('name')->get(['id', 'name']),
-            'clients' => ClientCompany::query()->orderBy('name')->get(['id', 'name']),
-            'formData' => $this->formData(),
             'defaults' => [
                 'status' => 'new',
                 'priority' => 'medium',
@@ -394,5 +417,22 @@ class TicketController extends Controller
             'defaultAssetId' => $defaultAssetId,
             'defaultServiceId' => $defaultServiceId,
         ];
+    }
+
+    private function resolveDrawerTicketPayload(Request $request, SlaDeadlineService $slaDeadlineService): ?array
+    {
+        $drawerTicketId = $request->integer('drawer_ticket') ?: null;
+
+        if (! $drawerTicketId) {
+            return null;
+        }
+
+        $candidate = Ticket::query()->find($drawerTicketId);
+
+        if (! $candidate || ! $request->user()->can('view', $candidate)) {
+            return null;
+        }
+
+        return $this->ticketWorkspacePayload($request, $candidate, $slaDeadlineService);
     }
 }
