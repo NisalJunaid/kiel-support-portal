@@ -28,16 +28,16 @@ export default function Branding({ branding }) {
   }), [branding, form.data]);
 
   const saveBranding = () => {
-    form
-      .transform((data) => ({
-        ...data,
-        dark_mode_enabled: data.dark_mode_enabled ? 1 : 0,
-        remove_logo: data.remove_logo ? 1 : 0,
-      }))
-      .patch('/settings/branding', {
-        forceFormData: true,
-        preserveState: false,
-      });
+    form.transform((data) => ({
+      ...data,
+      dark_mode_enabled: data.dark_mode_enabled ? 1 : 0,
+      remove_logo: data.remove_logo ? 1 : 0,
+    }));
+
+    form.patch('/settings/branding', {
+      forceFormData: true,
+      preserveState: false,
+    });
   };
 
   return (
