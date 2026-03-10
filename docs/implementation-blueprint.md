@@ -16,6 +16,7 @@
 - Ticket detail UI is centralized in `Pages/Tickets/Partials/TicketDetailWorkspace.jsx` and reused by both `Tickets/Show` and the tickets index drawer to avoid divergent implementations.
 - Branding settings now include `surface_border_color` and `dark_mode_enabled`, persisted in `app_settings` and propagated as CSS variables/classes (`--surface-border`, `--border`, `--input`, and global `.dark`) via `ThemeBridge` for real-time global theme updates across staff and client portals.
 - Global theme hydration now runs from Inertia page props (not only initial boot payload), allowing branding updates to apply across all navigation targets; dark mode can be toggled from the staff header and persisted globally for super-admins while preserving per-browser local preference overrides.
+- Inertia bootstrap theme hydration is now Inertia-context-safe: `ThemeBridge` no longer calls `usePage()` from `app.jsx` (outside the Inertia provider) and instead consumes initial branding from boot props while subscribing to Inertia `router.on('success')` updates for cross-page branding synchronization.
 - Client portal ticket detail now supports policy-gated public replies through the shared `TicketMessageController` endpoint under `/portal/tickets/{ticket}/messages`, while preserving internal-note restrictions through `StoreTicketMessageRequest` and `TicketPolicy`.
 
 ## Implemented Modules
