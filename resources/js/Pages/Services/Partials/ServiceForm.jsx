@@ -2,10 +2,13 @@ import { Link } from '@inertiajs/react';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Badge } from '@/Components/ui/badge';
+import { FormField } from '@/Components/forms/form-field';
+import { FormSelectField } from '@/Components/forms/form-select-field';
+import { FormDateField } from '@/Components/forms/form-date-field';
 import { getDomainOptions } from '@/lib/domain-references';
+import { RENEWAL_CYCLE_OPTIONS, withCurrentOption } from '@/lib/form-options';
 
 export default function ServiceForm({ data, setData, errors, processing, onSubmit, submitLabel, formData, domainReferences }) {
   const serviceTypeOptions = getDomainOptions(domainReferences, 'serviceType');
@@ -30,16 +33,16 @@ export default function ServiceForm({ data, setData, errors, processing, onSubmi
       <Card>
         <CardHeader><CardTitle>Service details</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2"><Label>Client</Label><select value={data.client_company_id} onChange={(e) => setData('client_company_id', e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"><option value="">Select client</option>{formData.clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select><p className="text-xs text-destructive">{errors.client_company_id}</p></div>
-          <div className="space-y-2"><Label>Name</Label><Input value={data.name} onChange={(e) => setData('name', e.target.value)} /><p className="text-xs text-destructive">{errors.name}</p></div>
-          <div className="space-y-2"><Label>Service type</Label><select value={data.service_type} onChange={(e) => setData('service_type', e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">{serviceTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><p className="text-xs text-destructive">{errors.service_type}</p></div>
-          <div className="space-y-2"><Label>Status</Label><select value={data.status} onChange={(e) => setData('status', e.target.value)} className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">{statusOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select><p className="text-xs text-destructive">{errors.status}</p></div>
-          <div className="space-y-2"><Label>SLA plan</Label><select className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.sla_plan_id || ''} onChange={(e) => setData('sla_plan_id', e.target.value)}><option value="">No SLA plan</option>{formData.slaPlans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</select><p className="text-xs text-destructive">{errors.sla_plan_id}</p></div>
-          <div className="space-y-2"><Label>Renewal cycle</Label><Input placeholder="monthly, quarterly, annually" value={data.renewal_cycle || ''} onChange={(e) => setData('renewal_cycle', e.target.value)} /><p className="text-xs text-destructive">{errors.renewal_cycle}</p></div>
-          <div className="space-y-2"><Label>Start date</Label><Input type="date" value={data.start_date || ''} onChange={(e) => setData('start_date', e.target.value)} /><p className="text-xs text-destructive">{errors.start_date}</p></div>
-          <div className="space-y-2"><Label>Renewal date</Label><Input type="date" value={data.renewal_date || ''} onChange={(e) => setData('renewal_date', e.target.value)} /><p className="text-xs text-destructive">{errors.renewal_date}</p></div>
-          <div className="space-y-2"><Label>End date</Label><Input type="date" value={data.end_date || ''} onChange={(e) => setData('end_date', e.target.value)} /><p className="text-xs text-destructive">{errors.end_date}</p></div>
-          <div className="space-y-2 md:col-span-2"><Label>Notes</Label><Textarea value={data.notes || ''} onChange={(e) => setData('notes', e.target.value)} rows={4} /><p className="text-xs text-destructive">{errors.notes}</p></div>
+          <FormSelectField id="client_company_id" label="Client" value={data.client_company_id} onChange={(value) => setData('client_company_id', value)} options={formData.clients.map((client) => ({ value: client.id, label: client.name }))} placeholder="Select client" error={errors.client_company_id} />
+          <FormField id="name" label="Name" error={errors.name}><Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} /></FormField>
+          <FormSelectField id="service_type" label="Service type" value={data.service_type} onChange={(value) => setData('service_type', value)} options={serviceTypeOptions} error={errors.service_type} />
+          <FormSelectField id="status" label="Status" value={data.status} onChange={(value) => setData('status', value)} options={statusOptions} error={errors.status} />
+          <FormSelectField id="sla_plan_id" label="SLA plan" value={data.sla_plan_id} onChange={(value) => setData('sla_plan_id', value)} options={formData.slaPlans.map((plan) => ({ value: plan.id, label: plan.name }))} allowEmpty emptyLabel="No SLA plan" error={errors.sla_plan_id} />
+          <FormSelectField id="renewal_cycle" label="Renewal cycle" value={data.renewal_cycle} onChange={(value) => setData('renewal_cycle', value)} options={withCurrentOption(RENEWAL_CYCLE_OPTIONS, data.renewal_cycle)} allowEmpty emptyLabel="Not set" error={errors.renewal_cycle} />
+          <FormDateField id="start_date" label="Start date" value={data.start_date} onChange={(value) => setData('start_date', value)} error={errors.start_date} />
+          <FormDateField id="renewal_date" label="Renewal date" value={data.renewal_date} onChange={(value) => setData('renewal_date', value)} error={errors.renewal_date} />
+          <FormDateField id="end_date" label="End date" value={data.end_date} onChange={(value) => setData('end_date', value)} error={errors.end_date} />
+          <FormField id="notes" label="Notes" error={errors.notes} className="md:col-span-2"><Textarea id="notes" value={data.notes || ''} onChange={(e) => setData('notes', e.target.value)} rows={4} /></FormField>
         </CardContent>
       </Card>
 

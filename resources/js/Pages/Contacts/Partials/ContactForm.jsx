@@ -1,14 +1,11 @@
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Input } from '@/Components/ui/input';
-import { Label } from '@/Components/ui/label';
+import { Switch } from '@/Components/ui/switch';
 import { Textarea } from '@/Components/ui/textarea';
+import { FormField } from '@/Components/forms/form-field';
+import { FormSelectField } from '@/Components/forms/form-select-field';
 import { getDomainOptions } from '@/lib/domain-references';
-
-function FieldError({ message }) {
-  if (!message) return null;
-  return <p className="text-xs text-red-600">{message}</p>;
-}
 
 export default function ContactForm({ data, setData, errors, processing, onSubmit, clients, domainReferences, submitLabel = 'Save contact' }) {
   const contactTypes = getDomainOptions(domainReferences, 'contactType');
@@ -18,63 +15,32 @@ export default function ContactForm({ data, setData, errors, processing, onSubmi
       <Card>
         <CardHeader><CardTitle>Contact details</CardTitle></CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="client_company_id">Client company *</Label>
-            <select id="client_company_id" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.client_company_id ?? ''} onChange={(e) => setData('client_company_id', e.target.value)}>
-              <option value="">Select client</option>
-              {clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}
-            </select>
-            <FieldError message={errors.client_company_id} />
-          </div>
+          <FormSelectField id="client_company_id" label="Client company" required value={data.client_company_id} onChange={(value) => setData('client_company_id', value)} options={clients.map((client) => ({ value: client.id, label: client.name }))} placeholder="Select client" error={errors.client_company_id} />
 
-          {[['full_name', 'Full name *'], ['title', 'Title'], ['department', 'Department'], ['email', 'Email *', 'email'], ['phone', 'Phone'], ['mobile', 'Mobile']].map(([field, label, type = 'text']) => (
-            <div key={field} className="space-y-2">
-              <Label htmlFor={field}>{label}</Label>
+          {[['full_name', 'Full name', 'text', true], ['title', 'Title'], ['department', 'Department'], ['email', 'Email', 'email', true], ['phone', 'Phone'], ['mobile', 'Mobile']].map(([field, label, type = 'text', required = false]) => (
+            <FormField key={field} id={field} label={label} required={required} error={errors[field]}>
               <Input id={field} type={type} value={data[field] ?? ''} onChange={(e) => setData(field, e.target.value)} />
-              <FieldError message={errors[field]} />
-            </div>
+            </FormField>
           ))}
 
-          <div className="space-y-2">
-            <Label htmlFor="contact_type">Contact type *</Label>
-            <select id="contact_type" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.contact_type} onChange={(e) => setData('contact_type', e.target.value)}>
-              <option value="">Select type</option>
-              {contactTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-            </select>
-            <FieldError message={errors.contact_type} />
-          </div>
+          <FormSelectField id="contact_type" label="Contact type" required value={data.contact_type} onChange={(value) => setData('contact_type', value)} options={contactTypes} placeholder="Select type" error={errors.contact_type} />
 
-          <div className="space-y-2">
-            <Label htmlFor="escalation_level">Escalation level</Label>
+          <FormField id="escalation_level" label="Escalation level" error={errors.escalation_level}>
             <Input id="escalation_level" type="number" min="1" max="5" value={data.escalation_level ?? ''} onChange={(e) => setData('escalation_level', e.target.value)} />
-            <FieldError message={errors.escalation_level} />
-          </div>
+          </FormField>
 
-          <div className="space-y-2">
-            <Label htmlFor="preferred_contact_method">Preferred contact method</Label>
-            <select id="preferred_contact_method" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.preferred_contact_method ?? ''} onChange={(e) => setData('preferred_contact_method', e.target.value)}>
-              <option value="">No preference</option>
-              <option value="email">Email</option>
-              <option value="phone">Phone</option>
-              <option value="mobile">Mobile</option>
-            </select>
-            <FieldError message={errors.preferred_contact_method} />
-          </div>
+          <FormSelectField id="preferred_contact_method" label="Preferred contact method" value={data.preferred_contact_method} onChange={(value) => setData('preferred_contact_method', value)} options={[{ value: 'email', label: 'Email' }, { value: 'phone', label: 'Phone' }, { value: 'mobile', label: 'Mobile' }]} allowEmpty emptyLabel="No preference" error={errors.preferred_contact_method} />
 
-          <div className="space-y-2">
-            <Label htmlFor="is_active">Status *</Label>
-            <select id="is_active" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" value={data.is_active ? '1' : '0'} onChange={(e) => setData('is_active', e.target.value === '1')}>
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </select>
-            <FieldError message={errors.is_active} />
-          </div>
+          <FormField id="is_active" label="Active status" error={errors.is_active} className="md:col-span-2">
+            <div className="flex items-center justify-between rounded-md border p-3">
+              <span className="text-sm text-muted-foreground">Inactive contacts remain linked to history but are hidden from active flows.</span>
+              <Switch id="is_active" checked={Boolean(data.is_active)} onCheckedChange={(checked) => setData('is_active', checked)} />
+            </div>
+          </FormField>
 
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="notes">Notes</Label>
+          <FormField id="notes" label="Notes" error={errors.notes} className="md:col-span-2">
             <Textarea id="notes" value={data.notes ?? ''} onChange={(e) => setData('notes', e.target.value)} />
-            <FieldError message={errors.notes} />
-          </div>
+          </FormField>
         </CardContent>
       </Card>
       <Button disabled={processing}>{submitLabel}</Button>
