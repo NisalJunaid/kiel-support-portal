@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreClientPortalTicketRequest;
 use App\Models\Asset;
 use App\Models\Ticket;
+use App\Models\TicketMessage;
 use App\Services\Notifications\TicketNotificationService;
 use App\Services\Tickets\SlaDeadlineService;
 use App\Services\Tickets\TicketAttachmentService;
@@ -25,6 +26,8 @@ class TicketController extends Controller
     {
         $profile = $request->user()->clientUserProfile;
         abort_unless($profile, 403);
+
+        $drawerTicketId = $request->integer('drawer_ticket') ?: null;
 
         $tickets = Ticket::query()
             ->where('client_company_id', $profile->client_company_id)
@@ -43,6 +46,14 @@ class TicketController extends Controller
         return Inertia::render('ClientPortal/Tickets/Index', [
             'tickets' => $tickets,
             'canCreate' => (bool) $profile->can_create_tickets,
+            'drawerTicket' => $this->resolveDrawerTicketPayload($request, $profile->client_company_id, $drawerTicketId),
+            'formData' => [
+                'assets' => $this->assetOptions($profile->client_company_id),
+            ],
+            'defaults' => [
+                'priority' => 'medium',
+            ],
+            'canSetPriority' => true,
         ]);
     }
 
@@ -54,11 +65,9 @@ class TicketController extends Controller
         abort_unless($profile, 403);
 
         return Inertia::render('ClientPortal/Tickets/Create', [
-            'assets' => Asset::query()
-                ->where('client_company_id', $profile->client_company_id)
-                ->orderBy('name')
-                ->get(['id', 'name', 'asset_code'])
-                ->values(),
+            'formData' => [
+                'assets' => $this->assetOptions($profile->client_company_id),
+            ],
             'canSetPriority' => true,
             'defaults' => [
                 'priority' => 'medium',
@@ -111,15 +120,50 @@ class TicketController extends Controller
 
         $ticketNotificationService->notifyTicketCreated($ticket, $request->user());
 
-        return redirect()
-            ->route('portal.tickets.show', $ticket)
-            ->with('success', 'Ticket created successfully.');
+        if ($request->boolean('from_drawer')) {
+            return back()
+                ->with('success', 'Ticket created successfully.')
+                ->with('created_ticket_id', $ticket->id);
+        }
+
+        return redirect()->route('portal.tickets.show', $ticket)->with('success', 'Ticket created successfully.');
     }
 
     public function show(Request $request, Ticket $ticket): Response
     {
         $this->authorize('view', $ticket);
 
+        return Inertia::render('ClientPortal/Tickets/Show', $this->ticketWorkspacePayload($request, $ticket));
+    }
+
+    private function assetOptions(int $clientCompanyId)
+    {
+        return Asset::query()
+            ->where('client_company_id', $clientCompanyId)
+            ->orderBy('name')
+            ->get(['id', 'name', 'asset_code'])
+            ->values();
+    }
+
+    private function resolveDrawerTicketPayload(Request $request, int $clientCompanyId, ?int $drawerTicketId): ?array
+    {
+        if (! $drawerTicketId) {
+            return null;
+        }
+
+        $ticket = Ticket::query()
+            ->where('client_company_id', $clientCompanyId)
+            ->find($drawerTicketId);
+
+        if (! $ticket || ! $request->user()->can('view', $ticket)) {
+            return null;
+        }
+
+        return $this->ticketWorkspacePayload($request, $ticket);
+    }
+
+    private function ticketWorkspacePayload(Request $request, Ticket $ticket): array
+    {
         $ticket->load([
             'messages.author:id,name',
             'messages.attachments.uploader:id,name',
@@ -129,10 +173,10 @@ class TicketController extends Controller
         ]);
 
         $messages = $ticket->messages
-            ->filter(fn ($message) => $message->message_type === TicketMessageType::PublicReply)
+            ->filter(fn (TicketMessage $message) => $message->message_type === TicketMessageType::PublicReply)
             ->values();
 
-        return Inertia::render('ClientPortal/Tickets/Show', [
+        return [
             'ticket' => [
                 'id' => $ticket->id,
                 'ticket_number' => $ticket->ticket_number,
@@ -144,7 +188,7 @@ class TicketController extends Controller
                 'asset' => $ticket->asset,
                 'service' => $ticket->service,
             ],
-            'messages' => $messages->map(fn ($message) => [
+            'messages' => $messages->map(fn (TicketMessage $message) => [
                 'id' => $message->id,
                 'message_type' => $message->message_type?->value,
                 'body' => $message->body,
@@ -171,6 +215,6 @@ class TicketController extends Controller
             'can' => [
                 'addPublicReply' => $request->user()->can('addPublicReply', $ticket),
             ],
-        ]);
+        ];
     }
 }
