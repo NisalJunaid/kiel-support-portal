@@ -1,23 +1,12 @@
-import { useForm } from '@inertiajs/react';
+import { usePage } from '@inertiajs/react';
 import ClientPortalLayout from '@/Layouts/client-portal-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { EmptyState } from '@/Components/shared/empty-state';
-import { Button } from '@/Components/ui/button';
-import { Textarea } from '@/Components/ui/textarea';
+import { TicketAttachmentBlock } from '@/Components/tickets/ticket-attachment-block';
+import { TicketConversationThread } from '@/Components/tickets/ticket-conversation-thread';
+import { TicketReplyComposer } from '@/Components/tickets/ticket-reply-composer';
 
 export default function ClientTicketShow({ ticket, messages, attachments, can }) {
-  const form = useForm({
-    message_type: 'public_reply',
-    body: '',
-  });
-
-  const submitReply = (e) => {
-    e.preventDefault();
-    form.post(`/portal/tickets/${ticket.id}/messages`, {
-      preserveScroll: true,
-      onSuccess: () => form.reset('body'),
-    });
-  };
+  const currentUserId = usePage().props?.auth?.user?.id || null;
 
   return (
     <ClientPortalLayout title={ticket.ticket_number} description={ticket.title}>
@@ -31,39 +20,32 @@ export default function ClientTicketShow({ ticket, messages, attachments, can })
       </Card>
 
       <Card>
-        <CardHeader><CardTitle>Public Conversation</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {messages.length === 0 ? <EmptyState title="No public replies yet" description="Public updates from support will appear here." /> : messages.map((message) => (
-            <div key={message.id} className="rounded-md border bg-card p-3">
-              <div className="text-xs text-muted-foreground">{message.author?.name || 'Support'} • {message.created_at}</div>
-              <p className="mt-2 whitespace-pre-wrap text-sm">{message.body}</p>
-            </div>
-          ))}
-
-          {can?.addPublicReply && (
-            <form onSubmit={submitReply} className="space-y-2 rounded-md border p-3">
-              <p className="text-sm font-medium">Add reply</p>
-              <Textarea
-                value={form.data.body}
-                onChange={(e) => form.setData('body', e.target.value)}
-                placeholder="Write your reply to support..."
-                rows={4}
-              />
-              {form.errors.body && <p className="text-sm text-destructive">{form.errors.body}</p>}
-              <Button size="sm" disabled={form.processing}>Send reply</Button>
-            </form>
-          )}
+        <CardHeader><CardTitle>Conversation</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="max-h-[30rem] overflow-y-auto rounded-xl border bg-muted/10 p-4">
+            <TicketConversationThread
+              messages={messages}
+              currentUserId={currentUserId}
+              emptyTitle="No public replies yet"
+              emptyDescription="Public updates from support will appear here."
+              showTypeBadge={false}
+            />
+          </div>
+          <TicketReplyComposer
+            endpoint={`/portal/tickets/${ticket.id}/messages`}
+            canAddPublicReply={can?.addPublicReply}
+            canAddInternalNote={false}
+            title="Reply to support"
+            placeholder="Write your reply to support…"
+            submitLabel="Send reply"
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader><CardTitle>Attachments</CardTitle></CardHeader>
         <CardContent>
-          {attachments.length === 0 ? <EmptyState title="No ticket attachments" description="Attachments shared on the ticket will appear here." /> : (
-            <ul className="space-y-2 text-sm">
-              {attachments.map((attachment) => <li key={attachment.id} className="rounded-md border bg-card p-2">{attachment.name}</li>)}
-            </ul>
-          )}
+          {attachments.length === 0 ? <p className="text-sm text-muted-foreground">No ticket attachments.</p> : <TicketAttachmentBlock attachments={attachments} />}
         </CardContent>
       </Card>
     </ClientPortalLayout>

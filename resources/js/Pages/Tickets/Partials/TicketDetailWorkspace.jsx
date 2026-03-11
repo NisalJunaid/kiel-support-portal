@@ -1,36 +1,28 @@
-import { router, useForm } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useMemo, useState } from 'react';
 import axios from 'axios';
 import { ActivityTimeline } from '@/Components/shared/activity-timeline';
-import AttachmentList from '@/Components/shared/attachment-list';
+import { TicketAttachmentBlock } from '@/Components/tickets/ticket-attachment-block';
+import { TicketConversationThread } from '@/Components/tickets/ticket-conversation-thread';
+import { TicketReplyComposer } from '@/Components/tickets/ticket-reply-composer';
 import { CollapsibleDetailSection } from '@/Components/shared/collapsible-detail-section';
 import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
-import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import FileUploadField from '@/Components/shared/file-upload-field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/Components/ui/sheet';
-import { Textarea } from '@/Components/ui/textarea';
 import { getDomainOptions } from '@/lib/domain-references';
 
-const typeStyles = {
-  public_reply: { label: 'Public reply', variant: 'default', container: 'bg-muted/30 border-border' },
-  internal_note: { label: 'Internal note', variant: 'warning', container: 'bg-warning/10 border-warning/40' },
-  system_event: { label: 'System', variant: 'outline', container: 'bg-secondary/35 border-border' },
-};
-
 export function TicketDetailWorkspace({ ticket, messages, attachments, can, domainReferences, slaIndicators, staff = [], embedded = false, onWorkflowSuccess = null }) {
-  const [composerType, setComposerType] = useState(can.addInternalNote ? 'internal_note' : 'public_reply');
   const [activityDrawerOpen, setActivityDrawerOpen] = useState(false);
   const [activity, setActivity] = useState([]);
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityLoaded, setActivityLoaded] = useState(false);
-  const form = useForm({ message_type: composerType, body: '', attachments: [] });
   const latestMessage = useMemo(() => messages[0], [messages]);
   const ticketStatusOptions = useMemo(() => getDomainOptions(domainReferences, 'ticketStatus'), [domainReferences]);
   const ticketPriorityOptions = useMemo(() => getDomainOptions(domainReferences, 'ticketPriority'), [domainReferences]);
+  const currentUserId = usePage().props?.auth?.user?.id || null;
 
   const runWorkflowUpdate = (method, url, payload = {}) => {
     router[method](url, payload, {
@@ -46,10 +38,6 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, can, doma
   const canResolve = can.update && ticket.status !== 'resolved' && ticket.status !== 'closed';
   const canClose = can.update && ticket.status !== 'closed';
   const canReopen = can.update && (ticket.status === 'resolved' || ticket.status === 'closed');
-
-  const submitMessage = () => {
-    form.transform((data) => ({ ...data, message_type: composerType })).post(`/tickets/${ticket.id}/messages`, { preserveScroll: true, onSuccess: () => form.reset('body', 'attachments') });
-  };
 
   const openActivityDrawer = async () => {
     setActivityDrawerOpen(true);
@@ -84,13 +72,19 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, can, doma
 
       <Card>
         <CardHeader><CardTitle>Conversation</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          {messages.map((message) => {
-            const style = typeStyles[message.message_type] || typeStyles.system_event;
-            return <div key={message.id} className={`rounded-md border p-3 ${style.container}`}><div className="mb-2 flex items-center justify-between"><div className="flex items-center gap-2"><Badge variant={style.variant}>{style.label}</Badge><span className="text-sm font-medium">{message.author?.name || 'System'}</span></div><span className="text-xs text-muted-foreground">{message.created_at}</span></div><p className="whitespace-pre-wrap text-sm leading-relaxed">{message.body}</p><AttachmentList attachments={message.attachments} emptyText="No message attachments." /></div>;
-          })}
-
-          {(can.addPublicReply || can.addInternalNote) && <div className="space-y-2 rounded-md border bg-muted/20 p-3"><p className="text-sm font-medium">Add update</p><Select value={composerType} onValueChange={setComposerType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{can.addPublicReply && <SelectItem value="public_reply">Public reply</SelectItem>}{can.addInternalNote && <SelectItem value="internal_note">Internal note</SelectItem>}</SelectContent></Select><Textarea value={form.data.body} onChange={(e) => form.setData('body', e.target.value)} placeholder="Write your message..." /><FileUploadField id="message-attachments" label="Attach files" onChange={(e) => form.setData('attachments', Array.from(e.target.files || []))} /><Button size="sm" onClick={submitMessage} disabled={form.processing}>Post message</Button></div>}
+        <CardContent className="space-y-4">
+          <div className="max-h-[32rem] overflow-y-auto rounded-xl border bg-muted/10 p-4">
+            <TicketConversationThread messages={messages} currentUserId={currentUserId} />
+          </div>
+          <TicketReplyComposer
+            endpoint={`/tickets/${ticket.id}/messages`}
+            canAddPublicReply={can.addPublicReply}
+            canAddInternalNote={can.addInternalNote}
+            defaultType={can.addInternalNote ? 'internal_note' : 'public_reply'}
+            title="Add update"
+            placeholder="Add details for the requester or your internal team…"
+            submitLabel="Post message"
+          />
         </CardContent>
       </Card>
 
@@ -104,7 +98,7 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, can, doma
         </CardContent>
       </Card>
 
-      <Card><CardHeader><CardTitle>Ticket attachments</CardTitle></CardHeader><CardContent><AttachmentList attachments={attachments} emptyText="No files attached directly to this ticket." /></CardContent></Card>
+      <Card><CardHeader><CardTitle>Ticket attachments</CardTitle></CardHeader><CardContent>{attachments.length === 0 ? <p className="text-sm text-muted-foreground">No files attached directly to this ticket.</p> : <TicketAttachmentBlock attachments={attachments} />}</CardContent></Card>
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-4 space-y-0">

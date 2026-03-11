@@ -146,14 +146,26 @@ class TicketController extends Controller
             ],
             'messages' => $messages->map(fn ($message) => [
                 'id' => $message->id,
+                'message_type' => $message->message_type?->value,
                 'body' => $message->body,
                 'created_at' => optional($message->created_at)->toDateTimeString(),
                 'author' => $message->author,
+                'attachments' => $message->attachments->map(fn ($attachment) => [
+                    'id' => $attachment->id,
+                    'name' => $attachment->original_name,
+                    'mime_type' => $attachment->mime_type,
+                    'size_bytes' => $attachment->size_bytes,
+                    'uploaded_by' => $attachment->uploader?->name,
+                    'download_url' => route('portal.tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
+                ])->values(),
             ])->values(),
             'attachments' => $ticket->attachments->map(fn ($attachment) => [
                 'id' => $attachment->id,
                 'name' => $attachment->original_name,
+                'mime_type' => $attachment->mime_type,
+                'size_bytes' => $attachment->size_bytes,
                 'uploaded_by' => $attachment->uploader?->name,
+                'download_url' => route('portal.tickets.attachments.show', ['ticket' => $ticket->id, 'attachment' => $attachment->id]),
                 'created_at' => optional($attachment->created_at)->toDateTimeString(),
             ])->values(),
             'can' => [
