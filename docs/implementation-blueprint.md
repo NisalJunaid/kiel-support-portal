@@ -428,3 +428,17 @@
 - `ThemeBridge` now applies branding tokens globally (colors/logo remain global) while applying light/dark mode from the authenticated user preference and persisting changes through the new endpoint.
 - Staff and client portal topbar switches now both use the shared theme context and backend persistence path, keeping both experiences synchronized for the signed-in user.
 - Branding settings page remains super-admin-only and now focuses on global branding only (app name, colors, light/dark logos); the global dark-mode control was removed.
+
+## Form UX Normalization Standards
+- Shared form presentation is now centralized through reusable wrappers in `resources/js/Components/forms`:
+  - `FormField` for consistent label/hint/error rendering.
+  - `FormSelectField` for themed shadcn select usage (including nullable/empty options).
+  - `FormDateField` for normalized date entry with consistent iconography and clear action.
+  - `FormDateTimeField` for normalized datetime entry with consistent iconography and clear action.
+  - `TimezoneSelectField` for searchable IANA timezone selection (`Intl.supportedValuesOf('timeZone')`) while preserving backend-compatible timezone values.
+- Constrained free-text values are normalized into controlled options, with backward-safe handling via `withCurrentOption(...)` in `resources/js/lib/form-options.js` so legacy persisted values remain selectable/editable.
+- Domain normalization defaults currently include:
+  - Service `renewal_cycle`: `monthly`, `quarterly`, `semi_annually`, `annually`, `custom`.
+  - Asset `environment`: `production`, `staging`, `development`, `test`, `sandbox`.
+  - Client user `role_label`: curated contact/access role labels.
+- Staff-side forms for Clients, Contacts, Client Users, Assets, Services, and Tickets now use shared normalized patterns for select/date/datetime/boolean controls instead of mixed native control styles, while keeping existing payload shapes and backend validation contracts intact.
