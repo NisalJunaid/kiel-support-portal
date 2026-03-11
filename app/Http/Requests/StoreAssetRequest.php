@@ -9,6 +9,7 @@ use App\Models\AssetType;
 use App\Support\AssetMetaFields;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Support\FormOptionCatalog;
 use Illuminate\Validation\Validator;
 
 class StoreAssetRequest extends FormRequest
@@ -47,9 +48,9 @@ class StoreAssetRequest extends FormRequest
             'asset_type_id' => ['required', 'exists:asset_types,id'],
             'name' => ['required', 'string', 'max:255'],
             'asset_code' => ['required', 'string', 'max:100', 'alpha_dash', 'unique:assets,asset_code'],
-            'service_category' => ['nullable', 'string', 'max:120'],
+            'service_category' => ['nullable', Rule::in(FormOptionCatalog::TICKET_CATEGORIES)],
             'status' => ['required', Rule::enum(AssetStatus::class)],
-            'environment' => ['nullable', 'string', 'max:100'],
+            'environment' => ['nullable', Rule::in(FormOptionCatalog::ENVIRONMENTS)],
             'criticality' => ['required', Rule::enum(AssetCriticality::class)],
             'assigned_staff_id' => ['nullable', 'exists:users,id'],
             'start_date' => ['nullable', 'date'],

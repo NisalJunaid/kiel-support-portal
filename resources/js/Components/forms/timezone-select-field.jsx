@@ -1,6 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Input } from '@/Components/ui/input';
-import { FormSelectField } from '@/Components/forms/form-select-field';
 import { FormField } from '@/Components/forms/form-field';
 
 function getTimezoneOptions() {
@@ -9,39 +8,28 @@ function getTimezoneOptions() {
     ? Intl.supportedValuesOf('timeZone')
     : fallback;
 
-  return values.map((zone) => ({ value: zone, label: zone }));
+  return values;
 }
 
 export function TimezoneSelectField({ id = 'timezone', label = 'Timezone', value, onChange, error, required = false }) {
-  const [search, setSearch] = useState('');
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
-
-  const filteredOptions = useMemo(
-    () => timezoneOptions.filter((option) => option.label.toLowerCase().includes(search.toLowerCase())),
-    [timezoneOptions, search],
-  );
-
-  const selectedExists = timezoneOptions.some((option) => option.value === value);
-  const options = selectedExists || !value
-    ? filteredOptions
-    : [{ value, label: `${value} (current)` }, ...filteredOptions];
+  const datalistId = `${id}-options`;
 
   return (
     <FormField id={id} label={label} required={required} error={error}>
       <Input
-        id={`${id}-search`}
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder="Search timezone (e.g. Asia, UTC, Europe/London)"
-      />
-      <FormSelectField
         id={id}
-        label={null}
-        value={value}
-        onChange={onChange}
-        options={options}
-        placeholder={filteredOptions.length ? 'Select timezone' : 'No timezone match'}
+        list={datalistId}
+        value={value || ''}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder="Select timezone (e.g. Asia/Male or UTC)"
+        autoComplete="off"
       />
+      <datalist id={datalistId}>
+        {timezoneOptions.map((zone) => (
+          <option key={zone} value={zone} />
+        ))}
+      </datalist>
     </FormField>
   );
 }

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\TicketPriority;
 use App\Enums\TicketStatus;
 use App\Models\Ticket;
+use App\Support\FormOptionCatalog;
 use App\Support\TicketAttachmentRules;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -38,12 +39,12 @@ class StoreTicketRequest extends FormRequest
             ],
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string'],
-            'category' => ['required', 'string', 'max:120'],
+            'category' => ['required', Rule::in(FormOptionCatalog::TICKET_CATEGORIES)],
             'priority' => ['required', Rule::enum(TicketPriority::class)],
             'impact' => ['nullable', 'integer', 'min:1', 'max:5'],
             'urgency' => ['nullable', 'integer', 'min:1', 'max:5'],
             'status' => ['required', Rule::enum(TicketStatus::class)],
-            'source' => ['required', 'string', 'max:80'],
+            'source' => ['required', Rule::in(FormOptionCatalog::TICKET_SOURCES)],
             'assigned_team' => ['nullable', 'string', 'max:120'],
             'assigned_user_id' => ['nullable', Rule::exists('users', 'id')],
             'sla_plan_id' => ['nullable', 'exists:sla_plans,id'],

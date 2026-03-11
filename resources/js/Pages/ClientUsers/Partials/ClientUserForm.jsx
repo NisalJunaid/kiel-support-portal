@@ -41,7 +41,7 @@ export default function ClientUserForm({ data, setData, errors, processing, onSu
 
           {[['name', 'Name', 'text', true], ['email', 'Email', 'email', true]].map(([field, label, type = 'text', required = false]) => (
             <FormField key={field} id={field} label={label} required={required} error={errors[field]}>
-              <Input id={field} type={type} value={data[field] ?? ''} onChange={(e) => setData(field, e.target.value)} />
+              <Input id={field} type={type} value={data[field] ?? ''} onChange={(e) => setData(field, e.target.value)} placeholder={field === 'name' ? 'Enter full name' : 'name@company.com'} />
             </FormField>
           ))}
 
@@ -52,11 +52,12 @@ export default function ClientUserForm({ data, setData, errors, processing, onSu
             value={data.role_label}
             onChange={(value) => setData('role_label', value)}
             options={withCurrentOption(CLIENT_USER_ROLE_OPTIONS, data.role_label)}
+            placeholder="Select role"
             error={errors.role_label}
           />
 
-          <FormField id="password" label={`Password ${submitLabel.includes('Update') ? '(optional)' : '*'}`} error={errors.password}><Input id="password" type="password" value={data.password ?? ''} onChange={(e) => setData('password', e.target.value)} /></FormField>
-          <FormField id="password_confirmation" label="Confirm password"><Input id="password_confirmation" type="password" value={data.password_confirmation ?? ''} onChange={(e) => setData('password_confirmation', e.target.value)} /></FormField>
+          <FormField id="password" label={`Password ${submitLabel.includes('Update') ? '(optional)' : '*'}`} error={errors.password}><Input id="password" type="password" value={data.password ?? ''} onChange={(e) => setData('password', e.target.value)} placeholder="Minimum 8 characters" /></FormField>
+          <FormField id="password_confirmation" label="Confirm password"><Input id="password_confirmation" type="password" value={data.password_confirmation ?? ''} onChange={(e) => setData('password_confirmation', e.target.value)} placeholder="Re-enter password" /></FormField>
         </CardContent>
       </Card>
 

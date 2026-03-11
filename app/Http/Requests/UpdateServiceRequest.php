@@ -7,6 +7,7 @@ use App\Enums\ServiceType;
 use App\Models\Service;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Support\FormOptionCatalog;
 
 class UpdateServiceRequest extends FormRequest
 {
@@ -34,7 +35,7 @@ class UpdateServiceRequest extends FormRequest
             'service_type' => ['required', Rule::enum(ServiceType::class)],
             'status' => ['required', Rule::enum(ServiceStatus::class)],
             'sla_plan_id' => ['nullable', 'exists:sla_plans,id'],
-            'renewal_cycle' => ['nullable', 'string', 'max:80'],
+            'renewal_cycle' => ['nullable', Rule::in(FormOptionCatalog::RENEWAL_CYCLES)],
             'start_date' => ['nullable', 'date'],
             'renewal_date' => ['nullable', 'date'],
             'end_date' => ['nullable', 'date'],

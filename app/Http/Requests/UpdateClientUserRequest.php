@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\ClientUserProfile;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Support\FormOptionCatalog;
 
 class UpdateClientUserRequest extends FormRequest
 {
@@ -30,7 +31,7 @@ class UpdateClientUserRequest extends FormRequest
                 'integer',
                 Rule::exists('client_contacts', 'id')->where(fn ($query) => $query->where('client_company_id', $this->input('client_company_id'))),
             ],
-            'role_label' => ['required', 'string', 'max:120'],
+            'role_label' => ['required', Rule::in(FormOptionCatalog::CLIENT_USER_ROLE_LABELS)],
             'can_view_all_company_tickets' => ['required', 'boolean'],
             'can_create_tickets' => ['required', 'boolean'],
             'can_view_assets' => ['required', 'boolean'],
