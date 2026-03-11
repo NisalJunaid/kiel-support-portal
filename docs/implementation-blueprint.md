@@ -442,3 +442,16 @@
   - Asset `environment`: `production`, `staging`, `development`, `test`, `sandbox`.
   - Client user `role_label`: curated contact/access role labels.
 - Staff-side forms for Clients, Contacts, Client Users, Assets, Services, and Tickets now use shared normalized patterns for select/date/datetime/boolean controls instead of mixed native control styles, while keeping existing payload shapes and backend validation contracts intact.
+
+## Form UX Standards (Updated)
+- Timezone inputs must render as a single control only (no split search + select). Use `TimezoneSelectField` with a single searchable timezone input bound to IANA values.
+- Major forms should include concise, helpful placeholders for text, textarea, numeric, URL, and email inputs when guidance improves completion quality.
+- Constrained business fields must use prepopulated select options instead of arbitrary text where possible:
+  - Ticket category: `incident`, `service_request`, `change_request`, `problem`, `access_request`
+  - Ticket source: `portal`, `email`, `phone`, `chat`, `monitoring`, `onsite`
+  - Contact department: `IT`, `Operations`, `Finance`, `HR`, `Procurement`, `Management`, `Support`, `Security`
+  - Service renewal cycle: `monthly`, `quarterly`, `semi_annually`, `annually`, `custom`
+  - Asset environment: `production`, `staging`, `development`, `test`, `sandbox`
+  - Client user role label: catalog-backed role labels from `CLIENT_USER_ROLE_OPTIONS`
+- Frontend option sets are centralized in `resources/js/lib/form-options.js`; backend validation mirrors those constraints via `App\Support\FormOptionCatalog` in request rules.
+- For edit scenarios with legacy values, select inputs should use `withCurrentOption(...)` to display and preserve existing out-of-catalog values while guiding users to the canonical list.

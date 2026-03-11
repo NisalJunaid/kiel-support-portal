@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\ContactType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Support\FormOptionCatalog;
 
 class UpdateClientContactRequest extends FormRequest
 {
@@ -21,7 +22,7 @@ class UpdateClientContactRequest extends FormRequest
             'client_company_id' => ['required', 'exists:client_companies,id'],
             'full_name' => ['required', 'string', 'max:255'],
             'title' => ['nullable', 'string', 'max:255'],
-            'department' => ['nullable', 'string', 'max:255'],
+            'department' => ['nullable', Rule::in(FormOptionCatalog::CONTACT_DEPARTMENTS)],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
             'mobile' => ['nullable', 'string', 'max:50'],

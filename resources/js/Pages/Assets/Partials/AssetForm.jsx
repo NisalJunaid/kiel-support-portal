@@ -8,7 +8,7 @@ import { FormField } from '@/Components/forms/form-field';
 import { FormSelectField } from '@/Components/forms/form-select-field';
 import { FormDateField } from '@/Components/forms/form-date-field';
 import { getDomainOptions } from '@/lib/domain-references';
-import { ENVIRONMENT_OPTIONS, withCurrentOption } from '@/lib/form-options';
+import { ENVIRONMENT_OPTIONS, TICKET_CATEGORY_OPTIONS, withCurrentOption } from '@/lib/form-options';
 
 function getAssetTypeSlug(assetTypes, assetTypeId) {
   return assetTypes.find((type) => `${type.id}` === `${assetTypeId}`)?.slug;
@@ -46,15 +46,15 @@ export default function AssetForm({ data, setData, errors, processing, onSubmit,
         <CardContent className="grid gap-4 md:grid-cols-2">
           <FormSelectField id="client_company_id" label="Client" value={data.client_company_id} onChange={(value) => setData('client_company_id', value)} options={formData.clients.map((client) => ({ value: client.id, label: client.name }))} placeholder="Select client" error={errors.client_company_id} />
           <FormSelectField id="asset_type_id" label="Asset type" value={data.asset_type_id} onChange={(value) => setData('asset_type_id', value)} options={formData.assetTypes.map((type) => ({ value: type.id, label: type.name }))} placeholder="Select type" error={errors.asset_type_id} />
-          <FormField id="name" label="Name" error={errors.name}><Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} /></FormField>
-          <FormField id="asset_code" label="Asset code" error={errors.asset_code}><Input id="asset_code" value={data.asset_code} onChange={(e) => setData('asset_code', e.target.value)} /></FormField>
+          <FormField id="name" label="Name" error={errors.name}><Input id="name" value={data.name} onChange={(e) => setData('name', e.target.value)} placeholder="Enter asset name" /></FormField>
+          <FormField id="asset_code" label="Asset code" error={errors.asset_code}><Input id="asset_code" value={data.asset_code} onChange={(e) => setData('asset_code', e.target.value)} placeholder="e.g. WEB-PRD-01" /></FormField>
           <FormSelectField id="parent_asset_id" label="Parent asset" value={data.parent_asset_id} onChange={(value) => setData('parent_asset_id', value)} options={parents.map((asset) => ({ value: asset.id, label: `${asset.name} (${asset.asset_code})` }))} allowEmpty emptyLabel="No parent" error={errors.parent_asset_id} />
           <FormSelectField id="assigned_staff_id" label="Assigned staff" value={data.assigned_staff_id} onChange={(value) => setData('assigned_staff_id', value)} options={formData.staff.map((user) => ({ value: user.id, label: user.name }))} allowEmpty emptyLabel="Unassigned" error={errors.assigned_staff_id} />
           <FormSelectField id="status" label="Status" value={data.status} onChange={(value) => setData('status', value)} options={statusOptions} error={errors.status} />
           <FormSelectField id="criticality" label="Criticality" value={data.criticality} onChange={(value) => setData('criticality', value)} options={criticalityOptions} error={errors.criticality} />
-          <FormField id="service_category" label="Service category" error={errors.service_category}><Input id="service_category" value={data.service_category || ''} onChange={(e) => setData('service_category', e.target.value)} /></FormField>
-          <FormSelectField id="environment" label="Environment" value={data.environment} onChange={(value) => setData('environment', value)} options={withCurrentOption(ENVIRONMENT_OPTIONS, data.environment)} allowEmpty emptyLabel="Not set" error={errors.environment} />
-          <FormField id="vendor" label="Vendor" error={errors.vendor}><Input id="vendor" value={data.vendor || ''} onChange={(e) => setData('vendor', e.target.value)} /></FormField>
+          <FormSelectField id="service_category" label="Service category" value={data.service_category} onChange={(value) => setData('service_category', value)} options={withCurrentOption(TICKET_CATEGORY_OPTIONS, data.service_category)} allowEmpty emptyLabel="Not set" placeholder="Select category" error={errors.service_category} />
+          <FormSelectField id="environment" label="Environment" value={data.environment} onChange={(value) => setData('environment', value)} options={withCurrentOption(ENVIRONMENT_OPTIONS, data.environment)} allowEmpty emptyLabel="Not set" placeholder="Select environment" error={errors.environment} />
+          <FormField id="vendor" label="Vendor" error={errors.vendor}><Input id="vendor" value={data.vendor || ''} onChange={(e) => setData('vendor', e.target.value)} placeholder="Vendor or provider name" /></FormField>
         </CardContent>
       </Card>
 
@@ -69,7 +69,7 @@ export default function AssetForm({ data, setData, errors, processing, onSubmit,
               {renderMetaField(field, data.meta?.[field.key], (value) => updateMeta(field.key, value))}
             </FormField>
           ))}
-          <FormField id="notes" label="Notes" className="md:col-span-2" error={errors.notes}><Textarea id="notes" value={data.notes || ''} onChange={(e) => setData('notes', e.target.value)} rows={4} /></FormField>
+          <FormField id="notes" label="Notes" className="md:col-span-2" error={errors.notes}><Textarea id="notes" value={data.notes || ''} onChange={(e) => setData('notes', e.target.value)} rows={4} placeholder="Add internal notes or context" /></FormField>
           <p className="text-xs text-destructive md:col-span-2">{errors.meta}</p>
         </CardContent>
       </Card>
