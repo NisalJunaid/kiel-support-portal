@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Administration\ReadinessController;
+use App\Http\Controllers\Administration\RoleManagementController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Administration\SystemReferenceController;
+use App\Http\Controllers\Administration\UserManagementController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\ClientCompanyController;
@@ -65,6 +67,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/administration/system-reference', SystemReferenceController::class)
             ->middleware('role:super-admin|admin|staff')
             ->name('administration.system-reference');
+
+        Route::middleware('role:super-admin')->prefix('/administration')->name('administration.')->group(function () {
+            Route::get('/users', [UserManagementController::class, 'index'])->name('users.index');
+            Route::post('/users/staff', [UserManagementController::class, 'storeStaff'])->name('users.staff.store');
+            Route::patch('/users/staff/{user}', [UserManagementController::class, 'updateStaff'])->name('users.staff.update');
+            Route::post('/users/client', [UserManagementController::class, 'storeClient'])->name('users.client.store');
+            Route::patch('/users/client/{clientUser}', [UserManagementController::class, 'updateClient'])->name('users.client.update');
+
+            Route::get('/roles', [RoleManagementController::class, 'index'])->name('roles.index');
+            Route::post('/roles', [RoleManagementController::class, 'store'])->name('roles.store');
+            Route::patch('/roles/{role}', [RoleManagementController::class, 'update'])->name('roles.update');
+        });
 
         Route::resource('clients', ClientCompanyController::class)->parameters(['clients' => 'client']);
 
