@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Ticket, Boxes, Users, Moon, Sun, UserCircle2 } from 'lucide-react';
+import { LayoutDashboard, Ticket, Boxes, Users, Moon, Sun, UserCircle2, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FlashMessages } from '@/Components/shared/flash-messages';
 import { Button } from '@/Components/ui/button';
@@ -9,12 +9,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { resolveBrandLogoUrl } from '@/lib/branding';
 import { useTheme } from '@/lib/theme-context';
 
-const nav = [
-  { label: 'Dashboard', href: '/portal/dashboard', icon: LayoutDashboard },
-  { label: 'My Tickets', href: '/portal/tickets', icon: Ticket },
-  { label: 'Assets', href: '/portal/assets', icon: Boxes, requires: 'canViewAssets' },
-  { label: 'Contacts', href: '/portal/contacts', icon: Users, requires: 'canViewContacts' },
-];
+const iconMap = {
+  LayoutDashboard,
+  Ticket,
+  Boxes,
+  Users,
+};
 
 export default function ClientPortalLayout({ children, title, description }) {
   const { url, props } = usePage();
@@ -22,6 +22,7 @@ export default function ClientPortalLayout({ children, title, description }) {
   const { darkModeEnabled, setDarkModeEnabled } = useTheme();
   const logoUrl = resolveBrandLogoUrl(branding, darkModeEnabled);
   const initials = props.auth?.user?.avatar_initials || 'U';
+  const nav = props.navigation?.portal || [];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -65,19 +66,17 @@ export default function ClientPortalLayout({ children, title, description }) {
       <div className="mx-auto grid max-w-7xl gap-6 px-6 py-6 md:grid-cols-[220px_1fr]">
         <aside className="rounded-lg border bg-card p-3">
           <nav className="space-y-1">
-            {nav
-              .filter((item) => !item.requires || props.authorization?.[item.requires])
-              .map((item) => {
-                const Icon = item.icon;
-                const active = url.startsWith(item.href);
+            {nav.map((item) => {
+              const Icon = iconMap[item.icon] || Shield;
+              const active = url.startsWith(item.href);
 
-                return (
-                  <Link key={item.href} href={item.href} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors duration-200', active ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent')}>
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                );
-              })}
+              return (
+                <Link key={item.key} href={item.href} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors duration-200', active ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent')}>
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
         </aside>
 

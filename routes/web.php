@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Administration\ReadinessController;
+use App\Http\Controllers\Administration\NavigationVisibilityController;
 use App\Http\Controllers\Administration\RoleManagementController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Administration\SystemReferenceController;
@@ -85,6 +86,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/roles', [RoleManagementController::class, 'index'])->name('roles.index');
             Route::post('/roles', [RoleManagementController::class, 'store'])->name('roles.store');
             Route::patch('/roles/{role}', [RoleManagementController::class, 'update'])->name('roles.update');
+
+            Route::get('/navigation-visibility', [NavigationVisibilityController::class, 'index'])->name('navigation-visibility.index');
+            Route::patch('/navigation-visibility', [NavigationVisibilityController::class, 'update'])->name('navigation-visibility.update');
         });
 
         Route::resource('clients', ClientCompanyController::class)->parameters(['clients' => 'client']);

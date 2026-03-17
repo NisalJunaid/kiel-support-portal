@@ -503,3 +503,18 @@
 - `PATCH /settings/profile/password` (`settings.profile.password.update`)
 - `POST /settings/profile/avatar` (`settings.profile.avatar.update`)
 - `DELETE /settings/profile/avatar` (`settings.profile.avatar.destroy`)
+
+## Role-Based Navigation Visibility Management (Latest)
+- Introduced centralized canonical navigation registry in `App\Support\NavigationRegistry` with stable keys for staff/admin workspace and client portal items.
+- Added persisted per-role nav visibility settings using `App\Support\RoleNavigationVisibility` stored under `app_settings.key = role_navigation_visibility` with cache support.
+- Effective nav rendering now uses **intersection logic**: item is shown only when both role visibility config is enabled **and** existing authorization gates/policies mark it allowed.
+- Added super-admin-only management module at `/administration/navigation-visibility` for toggling nav items per role via Inertia + React shadcn switches.
+- Added `navigation` shared Inertia props from middleware so layouts consume server-resolved nav items instead of local hardcoded arrays.
+- Defaults are auto-initialized from current behavior:
+  - Staff items default visible for non-`client-user` roles.
+  - Portal items default visible for `client-user` role.
+  - This preserves existing behavior while allowing granular overrides.
+
+### Route Inventory Additions (Navigation Visibility)
+- `GET /administration/navigation-visibility` (`administration.navigation-visibility.index`)
+- `PATCH /administration/navigation-visibility` (`administration.navigation-visibility.update`)

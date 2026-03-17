@@ -1,35 +1,33 @@
 import { Link } from '@inertiajs/react';
-import { LayoutDashboard, Building2, Users, Boxes, Ticket, Briefcase, Timer, BarChart3, Settings, Shield, History, Bell } from 'lucide-react';
+import { LayoutDashboard, Building2, Users, Boxes, Ticket, Briefcase, Timer, BarChart3, Settings, Shield, History, Bell, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { resolveBrandLogoUrl } from '@/lib/branding';
 import { useTheme } from '@/lib/theme-context';
 
-const nav = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, requires: 'isStaffWorkspace' },
-  { label: 'Clients', href: '/clients', icon: Building2, requires: 'canViewClients' },
-  { label: 'Contacts', href: '/contacts', icon: Users, requires: 'canViewContacts' },
-  { label: 'Client Users', href: '/client-users', icon: Users, requires: 'canViewClientUsers' },
-  { label: 'Assets', href: '/assets', icon: Boxes, requires: 'canViewAssets' },
-  { label: 'Tickets', href: '/tickets', icon: Ticket, requires: 'canViewTickets' },
-  { label: 'Services', href: '/services', icon: Briefcase, requires: 'canViewServices' },
-  { label: 'SLA Plans', href: '/sla-plans', icon: Timer, requires: 'canViewSlaPlans' },
-  { label: 'Activity', href: '/activity', icon: History, requires: 'canViewActivity' },
-  { label: 'Notifications', href: '/notifications', icon: Bell, requires: 'canViewNotifications' },
-  { label: 'Reports', href: '/reports', icon: BarChart3, requires: 'canViewReports' },
-  { label: 'Settings', href: '/settings/branding', icon: Settings, requires: 'canViewSettings' },
-  { label: 'User Management', href: '/administration/users', icon: Users, requires: 'canManageUsersAndRoles' },
-  { label: 'Role Management', href: '/administration/roles', icon: Shield, requires: 'canManageUsersAndRoles' },
-  { label: 'Administration', href: '/administration', icon: Shield, requires: 'canViewAdminReadiness' },
-  { label: 'System Reference', href: '/administration/system-reference', icon: Shield, requires: 'canViewSystemReference' },
-];
+const iconMap = {
+  LayoutDashboard,
+  Building2,
+  Users,
+  Boxes,
+  Ticket,
+  Briefcase,
+  Timer,
+  BarChart3,
+  Settings,
+  Shield,
+  History,
+  Bell,
+  SlidersHorizontal,
+};
 
-export function AppSidebar({ collapsed = false, onNavigate, url, auth, authorization, branding }) {
+export function AppSidebar({ collapsed = false, onNavigate, url, auth, authorization, branding, navigation }) {
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
   const { darkModeEnabled } = useTheme();
   const logoUrl = resolveBrandLogoUrl(branding, darkModeEnabled);
   const appName = branding?.app_name || 'Support portal';
   const appInitial = appName.charAt(0).toUpperCase();
+  const nav = navigation?.staff || [];
 
   return (
     <aside className={cn('h-full border-r bg-card p-3 transition-all', collapsed ? 'w-[78px]' : 'w-64')}>
@@ -47,12 +45,12 @@ export function AppSidebar({ collapsed = false, onNavigate, url, auth, authoriza
         )}
       </div>
       <nav className="space-y-1">
-        {nav.filter((item) => !item.requires || authorization?.[item.requires]).map((item) => {
-          const Icon = item.icon;
+        {nav.map((item) => {
+          const Icon = iconMap[item.icon] || Shield;
           const active = url.startsWith(item.href);
 
           return (
-            <Link key={item.href} href={item.href} onClick={onNavigate} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors', active ? 'bg-primary text-primary-foreground' : 'hover:bg-accent', collapsed && 'justify-center px-2')} title={collapsed ? item.label : undefined}>
+            <Link key={item.key} href={item.href} onClick={onNavigate} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors', active ? 'bg-primary text-primary-foreground' : 'hover:bg-accent', collapsed && 'justify-center px-2')} title={collapsed ? item.label : undefined}>
               <Icon className="h-4 w-4" />
               {!collapsed && item.label}
             </Link>
