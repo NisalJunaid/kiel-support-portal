@@ -28,7 +28,7 @@
     --info-foreground: 204 100% 97%;
     --surface-border: 214 22% 65%;
     --border: var(--surface-border);
-    --input: var(--surface-border);
+    --input: 210 40% 97%;
     --ring: 184 78% 32%;
     --radius: 0.5rem;
   }
@@ -54,7 +54,7 @@
     --info-foreground: 204 100% 97%;
     --surface-border: 215 20% 30%;
     --border: var(--surface-border);
-    --input: var(--surface-border);
+    --input: 215 28% 14%;
   }
 
   * {
