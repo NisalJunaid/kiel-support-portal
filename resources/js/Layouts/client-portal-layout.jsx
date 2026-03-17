@@ -1,9 +1,11 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutDashboard, Ticket, Boxes, Users, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, Ticket, Boxes, Users, Moon, Sun, UserCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FlashMessages } from '@/Components/shared/flash-messages';
 import { Button } from '@/Components/ui/button';
 import { Switch } from '@/Components/ui/switch';
+import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
 import { resolveBrandLogoUrl } from '@/lib/branding';
 import { useTheme } from '@/lib/theme-context';
 
@@ -19,6 +21,7 @@ export default function ClientPortalLayout({ children, title, description }) {
   const branding = props.branding;
   const { darkModeEnabled, setDarkModeEnabled } = useTheme();
   const logoUrl = resolveBrandLogoUrl(branding, darkModeEnabled);
+  const initials = props.auth?.user?.avatar_initials || 'U';
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -35,16 +38,26 @@ export default function ClientPortalLayout({ children, title, description }) {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 rounded-md border bg-background px-2 py-1.5">
               <Sun className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-              <Switch
-                checked={darkModeEnabled}
-                onCheckedChange={(checked) => setDarkModeEnabled(checked)}
-                aria-label="Toggle dark mode"
-              />
+              <Switch checked={darkModeEnabled} onCheckedChange={(checked) => setDarkModeEnabled(checked)} aria-label="Toggle dark mode" />
               <Moon className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
             </div>
-            <Button asChild variant="outline">
-              <Link href="/logout" method="post" as="button">Log out</Link>
-            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Avatar>
+                    <AvatarImage src={props.auth?.user?.avatar_url || ''} alt={props.auth?.user?.name} />
+                    <AvatarFallback>{initials}</AvatarFallback>
+                  </Avatar>
+                  <span className="max-w-32 truncate">{props.auth?.user?.name}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>{props.auth?.user?.email}</DropdownMenuLabel>
+                <DropdownMenuItem asChild><Link href="/settings/profile"><UserCircle2 className="mr-2 h-4 w-4" />My Profile</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/logout" method="post" as="button">Log out</Link></DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -59,7 +72,7 @@ export default function ClientPortalLayout({ children, title, description }) {
                 const active = url.startsWith(item.href);
 
                 return (
-                  <Link key={item.href} href={item.href} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm', active ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent')}>
+                  <Link key={item.href} href={item.href} className={cn('flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors duration-200', active ? 'bg-primary text-primary-foreground' : 'text-foreground hover:bg-accent')}>
                     <Icon className="h-4 w-4" />
                     {item.label}
                   </Link>
@@ -74,7 +87,7 @@ export default function ClientPortalLayout({ children, title, description }) {
             {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}
           </div>
           <FlashMessages />
-          {children}
+          <div className="animate-in fade-in-0 duration-300">{children}</div>
         </main>
       </div>
     </div>

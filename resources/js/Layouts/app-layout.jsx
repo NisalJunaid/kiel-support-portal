@@ -39,7 +39,7 @@ export default function AppLayout({ children, title, description, breadcrumbs = 
         <main className="flex-1 space-y-6 p-4 md:p-6">
           <PageHeader title={title} description={description} breadcrumbs={breadcrumbs} />
           <FlashMessages flash={props.flash} />
-          <div className="space-y-6">{children}</div>
+          <div className="animate-in fade-in-0 duration-300 space-y-6">{children}</div>
         </main>
       </div>
     </div>

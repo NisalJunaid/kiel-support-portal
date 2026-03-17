@@ -25,6 +25,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TicketMessageController;
 use App\Http\Controllers\TicketWorkflowController;
 use App\Http\Controllers\ThemeModePreferenceController;
+use App\Http\Controllers\Settings\ProfileSettingsController;
 use App\Support\Roles;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,12 @@ Route::middleware('auth')->group(function () {
 
     Route::patch('/settings/theme-mode', ThemeModePreferenceController::class)
         ->name('settings.theme-mode.update');
+
+    Route::get('/settings/profile', [ProfileSettingsController::class, 'edit'])->name('settings.profile.edit');
+    Route::patch('/settings/profile', [ProfileSettingsController::class, 'update'])->name('settings.profile.update');
+    Route::patch('/settings/profile/password', [ProfileSettingsController::class, 'updatePassword'])->name('settings.profile.password.update');
+    Route::post('/settings/profile/avatar', [ProfileSettingsController::class, 'updateAvatar'])->name('settings.profile.avatar.update');
+    Route::delete('/settings/profile/avatar', [ProfileSettingsController::class, 'destroyAvatar'])->name('settings.profile.avatar.destroy');
 
     Route::middleware('role:super-admin|admin|staff|support-agent|asset-manager')->group(function () {
         Route::get('/dashboard', DashboardController::class)->name('dashboard');

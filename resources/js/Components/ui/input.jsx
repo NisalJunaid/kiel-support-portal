@@ -4,7 +4,7 @@ export function Input({ className, type = 'text', ...props }) {
   return (
     <input
       type={type}
-      className={cn('flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', className)}
+      className={cn('flex h-10 w-full rounded-md border border-input/80 bg-input px-3 py-2 text-sm shadow-sm ring-offset-background transition-colors duration-200 placeholder:text-muted-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60', className)}
       {...props}
     />
   );

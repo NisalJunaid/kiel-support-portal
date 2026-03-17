@@ -31,6 +31,8 @@ class HandleInertiaRequests extends Middleware
                         'roles' => $user->getRoleNames()->values(),
                         'is_client_user' => $user->isClientUser(),
                         'theme_mode' => $user->theme_mode,
+                        'avatar_url' => $user->avatar_url,
+                        'avatar_initials' => strtoupper($user->initials() ?: 'U'),
                     ]
                     : null,
             ],
