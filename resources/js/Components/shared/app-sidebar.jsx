@@ -17,6 +17,8 @@ const nav = [
   { label: 'Notifications', href: '/notifications', icon: Bell, requires: 'canViewNotifications' },
   { label: 'Reports', href: '/reports', icon: BarChart3, requires: 'canViewReports' },
   { label: 'Settings', href: '/settings/branding', icon: Settings, requires: 'canViewSettings' },
+  { label: 'User Management', href: '/administration/users', icon: Users, requires: 'canManageUsersAndRoles' },
+  { label: 'Role Management', href: '/administration/roles', icon: Shield, requires: 'canManageUsersAndRoles' },
   { label: 'Administration', href: '/administration', icon: Shield, requires: 'canViewAdminReadiness' },
   { label: 'System Reference', href: '/administration/system-reference', icon: Shield, requires: 'canViewSystemReference' },
 ];

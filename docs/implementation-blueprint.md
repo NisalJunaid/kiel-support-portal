@@ -437,6 +437,15 @@
 - Staff and client portal topbar switches now both use the shared theme context and backend persistence path, keeping both experiences synchronized for the signed-in user.
 - Branding settings page remains super-admin-only and now focuses on global branding only (app name, colors, light/dark logos); the global dark-mode control was removed.
 
+
+## Super-Admin User & Role Management (Latest)
+- Added a dedicated super-admin-only administration module for unified user lifecycle management at `/administration/users` with staff + client user creation/edit flows in drawers.
+- Reused the existing single `users` identity model plus `client_user_profiles` extension for client-side access controls (company/contact link + ticket/asset/contact capability flags).
+- Staff user management now assigns only non-`client-user` roles; client user management always enforces `client-user` role and updates `client_user_profiles` without changing client portal routing behavior.
+- Added super-admin-only roles management at `/administration/roles` backed directly by Spatie roles/permissions (list/create/edit + permission assignment).
+- Protected system roles from renaming in role management UI/controller: `super-admin`, `admin`, `staff`, `support-agent`, `asset-manager`, `client-user`.
+- Sidebar navigation now exposes `User Management` and `Role Management` entries only when `authorization.canManageUsersAndRoles` is true (super-admin).
+
 ## Form UX Normalization Standards
 - Shared form presentation is now centralized through reusable wrappers in `resources/js/Components/forms`:
   - `FormField` for consistent label/hint/error rendering.
@@ -463,3 +472,14 @@
   - Client user role label: catalog-backed role labels from `CLIENT_USER_ROLE_OPTIONS`
 - Frontend option sets are centralized in `resources/js/lib/form-options.js`; backend validation mirrors those constraints via `App\Support\FormOptionCatalog` in request rules.
 - For edit scenarios with legacy values, select inputs should use `withCurrentOption(...)` to display and preserve existing out-of-catalog values while guiding users to the canonical list.
+
+
+### Route Inventory Additions (User/Role Management)
+- `GET /administration/users` (`administration.users.index`)
+- `POST /administration/users/staff` (`administration.users.staff.store`)
+- `PATCH /administration/users/staff/{user}` (`administration.users.staff.update`)
+- `POST /administration/users/client` (`administration.users.client.store`)
+- `PATCH /administration/users/client/{clientUser}` (`administration.users.client.update`)
+- `GET /administration/roles` (`administration.roles.index`)
+- `POST /administration/roles` (`administration.roles.store`)
+- `PATCH /administration/roles/{role}` (`administration.roles.update`)

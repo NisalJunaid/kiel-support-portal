@@ -51,6 +51,7 @@ class HandleInertiaRequests extends Middleware
                 'canViewContacts' => $user ? $user->can('viewAny', \App\Models\ClientContact::class) : false,
                 'canViewNotifications' => $user ? (! $user->isClientUser()) : false,
                 'canViewSettings' => $user ? $user->hasRole('super-admin') : false,
+                'canManageUsersAndRoles' => $user ? $user->hasRole('super-admin') : false,
                 'isStaffWorkspace' => $user ? (! $user->isClientUser()) : false,
             ],
             'branding' => fn () => BrandingSettings::cached(),
