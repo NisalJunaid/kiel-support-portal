@@ -27,15 +27,15 @@ export default function AppLayout({ children, title, description, breadcrumbs = 
   return (
     <div className="flex min-h-screen bg-background" style={{ '--sidebar-width': sidebarWidth }}>
       <div className="hidden md:block">
-        <AppSidebar collapsed={sidebarCollapsed} url={url} auth={props.auth} authorization={props.authorization} branding={props.branding} />
+        <AppSidebar collapsed={sidebarCollapsed} url={url} auth={props.auth} authorization={props.authorization} branding={props.branding} navigation={props.navigation} />
       </div>
       <Sheet open={mobileSidebarOpen} onOpenChange={setMobileSidebarOpen}>
         <SheetContent side="left" className="p-0 pt-4 sm:max-w-[280px]">
-          <AppSidebar onNavigate={() => setMobileSidebarOpen(false)} url={url} auth={props.auth} authorization={props.authorization} branding={props.branding} />
+          <AppSidebar onNavigate={() => setMobileSidebarOpen(false)} url={url} auth={props.auth} authorization={props.authorization} branding={props.branding} navigation={props.navigation} />
         </SheetContent>
       </Sheet>
       <div className="flex flex-1 flex-col">
-        <AppHeader sidebarCollapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} onOpenMobileSidebar={() => setMobileSidebarOpen(true)} auth={props.auth} notifications={props.notifications} authorization={props.authorization} branding={props.branding} />
+        <AppHeader sidebarCollapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} onOpenMobileSidebar={() => setMobileSidebarOpen(true)} auth={props.auth} notifications={props.notifications} authorization={props.authorization} branding={props.branding} navigation={props.navigation} />
         <main className="flex-1 space-y-6 p-4 md:p-6">
           <PageHeader title={title} description={description} breadcrumbs={breadcrumbs} />
           <FlashMessages flash={props.flash} />

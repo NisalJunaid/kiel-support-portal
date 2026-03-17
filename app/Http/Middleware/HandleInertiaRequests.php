@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Support\BrandingSettings;
 use App\Support\DomainReferenceCatalog;
+use App\Support\NavigationRegistry;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Illuminate\Support\Facades\Cache;
@@ -21,6 +22,29 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
+        $authorization = [
+            'canViewAdminReadiness' => $user ? $user->can('viewAdminReadiness', $user) : false,
+            'canViewSystemReference' => $user ? $user->can('viewSystemReference', $user) : false,
+            'canViewClients' => $user ? $user->can('viewAny', \App\Models\ClientCompany::class) : false,
+            'canCreateClients' => $user ? $user->can('create', \App\Models\ClientCompany::class) : false,
+            'canViewClientUsers' => $user ? $user->can('viewAny', \App\Models\ClientUserProfile::class) : false,
+            'canViewServices' => $user ? $user->can('viewAny', \App\Models\Service::class) : false,
+            'canViewTickets' => $user ? $user->can('viewAny', \App\Models\Ticket::class) : false,
+            'canCreateTickets' => $user ? $user->can('create', \App\Models\Ticket::class) : false,
+            'canViewSlaPlans' => $user ? $user->can('viewAny', \App\Models\SlaPlan::class) : false,
+            'canViewActivity' => $user ? $user->hasAnyRole(['super-admin', 'admin', 'staff']) : false,
+            'canViewReports' => $user ? $user->hasAnyRole(['super-admin', 'admin', 'staff']) : false,
+            'canAccessClientPortal' => $user ? $user->isClientUser() : false,
+            'canViewAssets' => $user ? $user->can('viewAny', \App\Models\Asset::class) : false,
+            'canViewContacts' => $user ? $user->can('viewAny', \App\Models\ClientContact::class) : false,
+            'canViewNotifications' => $user ? (! $user->isClientUser()) : false,
+            'canViewSettings' => $user ? $user->hasRole('super-admin') : false,
+            'canManageUsersAndRoles' => $user ? $user->hasRole('super-admin') : false,
+            'isStaffWorkspace' => $user ? (! $user->isClientUser()) : false,
+        ];
+
+        $navigation = NavigationRegistry::resolveForUser($user, $authorization);
+
         return array_merge(parent::share($request), [
             'auth' => fn () => [
                 'user' => $user
@@ -36,26 +60,8 @@ class HandleInertiaRequests extends Middleware
                     ]
                     : null,
             ],
-            'authorization' => fn () => [
-                'canViewAdminReadiness' => $user ? $user->can('viewAdminReadiness', $user) : false,
-                'canViewSystemReference' => $user ? $user->can('viewSystemReference', $user) : false,
-                'canViewClients' => $user ? $user->can('viewAny', \App\Models\ClientCompany::class) : false,
-                'canCreateClients' => $user ? $user->can('create', \App\Models\ClientCompany::class) : false,
-                'canViewClientUsers' => $user ? $user->can('viewAny', \App\Models\ClientUserProfile::class) : false,
-                'canViewServices' => $user ? $user->can('viewAny', \App\Models\Service::class) : false,
-                'canViewTickets' => $user ? $user->can('viewAny', \App\Models\Ticket::class) : false,
-                'canCreateTickets' => $user ? $user->can('create', \App\Models\Ticket::class) : false,
-                'canViewSlaPlans' => $user ? $user->can('viewAny', \App\Models\SlaPlan::class) : false,
-                'canViewActivity' => $user ? $user->hasAnyRole(['super-admin', 'admin', 'staff']) : false,
-                'canViewReports' => $user ? $user->hasAnyRole(['super-admin', 'admin', 'staff']) : false,
-                'canAccessClientPortal' => $user ? $user->isClientUser() : false,
-                'canViewAssets' => $user ? $user->can('viewAny', \App\Models\Asset::class) : false,
-                'canViewContacts' => $user ? $user->can('viewAny', \App\Models\ClientContact::class) : false,
-                'canViewNotifications' => $user ? (! $user->isClientUser()) : false,
-                'canViewSettings' => $user ? $user->hasRole('super-admin') : false,
-                'canManageUsersAndRoles' => $user ? $user->hasRole('super-admin') : false,
-                'isStaffWorkspace' => $user ? (! $user->isClientUser()) : false,
-            ],
+            'authorization' => fn () => $authorization,
+            'navigation' => fn () => $navigation,
             'branding' => fn () => BrandingSettings::cached(),
             'domainReferences' => fn () => Cache::rememberForever('domain-references:shared', fn () => DomainReferenceCatalog::all()),
             'notifications' => fn () => $this->sharedNotifications($request),
