@@ -83,7 +83,7 @@ export function buildThemeTokens(branding, darkModeEnabled = false) {
   const card = darkModeEnabled ? mixHex('#0b1220', secondary, 0.16) : mixHex('#ffffff', secondary, 0.34);
   const popover = darkModeEnabled ? mixHex('#0f172a', secondary, 0.2) : mixHex('#ffffff', secondary, 0.26);
   const muted = darkModeEnabled ? mixHex('#1e293b', secondary, 0.18) : mixHex('#f8fafc', secondary, 0.48);
-  const input = darkModeEnabled ? mixHex(border, '#1f2937', 0.3) : border;
+  const input = darkModeEnabled ? mixHex(card, '#0b1220', 0.45) : mixHex('#ffffff', secondary, 0.5);
 
   return {
     '--background': hexToHsl(background),
