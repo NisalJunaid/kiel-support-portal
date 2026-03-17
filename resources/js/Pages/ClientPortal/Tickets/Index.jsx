@@ -1,8 +1,9 @@
 import { Link, router, useForm, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import ClientPortalLayout from '@/Layouts/client-portal-layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader } from '@/Components/ui/table';
 import { EmptyState } from '@/Components/shared/empty-state';
 import { ListPagination } from '@/Components/shared/list-pagination';
@@ -10,14 +11,32 @@ import { DomainPriorityBadge } from '@/Components/shared/domain-priority-badge';
 import { DomainStatusBadge } from '@/Components/shared/domain-status-badge';
 import { ClickableTableRow } from '@/Components/shared/clickable-table-row';
 import { EntityCreateDrawer } from '@/Components/shared/entity-create-drawer';
+import { FilterBar } from '@/Components/shared/filter-bar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/Components/ui/sheet';
+import { getDomainOptions } from '@/lib/domain-references';
 import ClientTicketWorkspace from '@/Pages/ClientPortal/Tickets/Partials/ClientTicketWorkspace';
 import ClientTicketForm from '@/Pages/ClientPortal/Tickets/Partials/ClientTicketForm';
 
-export default function ClientTicketsIndex({ tickets, canCreate, drawerTicket = null, formData, defaults, canSetPriority }) {
+export default function ClientTicketsIndex({ tickets, canCreate, drawerTicket = null, formData, defaults, canSetPriority, filters }) {
   const { props } = usePage();
   const [selectedTicketId, setSelectedTicketId] = useState(drawerTicket?.ticket?.id || null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [search, setSearch] = useState(filters?.search || '');
+  const [status, setStatus] = useState(filters?.status || 'all');
+  const [priority, setPriority] = useState(filters?.priority || 'all');
+
+  const statusOptions = getDomainOptions(props.domainReferences, 'ticketStatus');
+  const priorityOptions = getDomainOptions(props.domainReferences, 'ticketPriority');
+  const indexParams = useMemo(
+    () => ({
+      search: search || undefined,
+      status: status === 'all' ? undefined : status,
+      priority: priority === 'all' ? undefined : priority,
+    }),
+    [search, status, priority],
+  );
+
   const { data, setData, post, processing, errors, reset } = useForm({
     title: '',
     description: '',
@@ -30,12 +49,12 @@ export default function ClientTicketsIndex({ tickets, canCreate, drawerTicket = 
 
   const openTicketDrawer = (ticketId) => {
     setSelectedTicketId(ticketId);
-    router.get('/portal/tickets', { drawer_ticket: ticketId }, { preserveState: true, preserveScroll: true, replace: true, only: ['drawerTicket'] });
+    router.get('/portal/tickets', { ...indexParams, drawer_ticket: ticketId }, { preserveState: true, preserveScroll: true, replace: true, only: ['drawerTicket'] });
   };
 
   const closeTicketDrawer = () => {
     setSelectedTicketId(null);
-    router.get('/portal/tickets', {}, { preserveState: true, preserveScroll: true, replace: true, only: ['drawerTicket'] });
+    router.get('/portal/tickets', indexParams, { preserveState: true, preserveScroll: true, replace: true, only: ['drawerTicket'] });
   };
 
   return (
@@ -47,7 +66,25 @@ export default function ClientTicketsIndex({ tickets, canCreate, drawerTicket = 
             <Button size="sm" onClick={() => setCreateOpen(true)}>Create ticket</Button>
           ) : null}
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <FilterBar
+            onSubmit={(e) => {
+              e.preventDefault();
+              router.get('/portal/tickets', indexParams, { preserveState: true, replace: true });
+            }}
+            onReset={() => {
+              setSearch('');
+              setStatus('all');
+              setPriority('all');
+              router.get('/portal/tickets');
+            }}
+            submitLabel="Filter"
+          >
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search ticket #, title, or category" className="md:col-span-2" />
+            <Select value={status} onValueChange={setStatus}><SelectTrigger><SelectValue placeholder="Status" /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{statusOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
+            <Select value={priority} onValueChange={setPriority}><SelectTrigger><SelectValue placeholder="Priority" /></SelectTrigger><SelectContent><SelectItem value="all">All priorities</SelectItem>{priorityOptions.map((option) => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}</SelectContent></Select>
+          </FilterBar>
+
           {tickets.data.length === 0 ? <EmptyState title="No tickets found" description="There are no tickets for your company yet." /> : (
             <>
               <Table>

@@ -28,9 +28,21 @@ class TicketController extends Controller
         abort_unless($profile, 403);
 
         $drawerTicketId = $request->integer('drawer_ticket') ?: null;
+        $search = trim((string) $request->string('search'));
+        $status = $request->string('status')->toString();
+        $priority = $request->string('priority')->toString();
 
         $tickets = Ticket::query()
             ->where('client_company_id', $profile->client_company_id)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($inner) use ($search) {
+                    $inner->where('ticket_number', 'like', "%{$search}%")
+                        ->orWhere('title', 'like', "%{$search}%")
+                        ->orWhere('category', 'like', "%{$search}%");
+                });
+            })
+            ->when($status, fn ($query) => $query->where('status', $status))
+            ->when($priority, fn ($query) => $query->where('priority', $priority))
             ->latest('updated_at')
             ->paginate(15)
             ->withQueryString()
@@ -45,6 +57,11 @@ class TicketController extends Controller
 
         return Inertia::render('ClientPortal/Tickets/Index', [
             'tickets' => $tickets,
+            'filters' => [
+                'search' => $search,
+                'status' => $status,
+                'priority' => $priority,
+            ],
             'canCreate' => (bool) $profile->can_create_tickets,
             'drawerTicket' => $this->resolveDrawerTicketPayload($request, $profile->client_company_id, $drawerTicketId),
             'formData' => [
@@ -184,9 +201,11 @@ class TicketController extends Controller
                 'description' => $ticket->description,
                 'status' => $ticket->status?->value,
                 'priority' => $ticket->priority?->value,
+                'created_at' => optional($ticket->created_at)->toDateTimeString(),
                 'updated_at' => optional($ticket->updated_at)->toDateTimeString(),
                 'asset' => $ticket->asset,
                 'service' => $ticket->service,
+                'requester_name' => $request->user()->name,
             ],
             'messages' => $messages->map(fn (TicketMessage $message) => [
                 'id' => $message->id,
