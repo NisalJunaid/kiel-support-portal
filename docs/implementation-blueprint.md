@@ -483,3 +483,23 @@
 - `GET /administration/roles` (`administration.roles.index`)
 - `POST /administration/roles` (`administration.roles.store`)
 - `PATCH /administration/roles/{role}` (`administration.roles.update`)
+
+## Self-Service Profile Management, Input Contrast, and Motion Polish (Latest)
+- Added authenticated self-service profile settings at `/settings/profile` for all signed-in roles (staff workspace and client portal) without introducing cross-user edit flows.
+- Profile settings now support updating own `name`, `email`, `password` (with current password verification), and `avatar` upload/removal.
+- Avatar storage is persisted on the `public` disk at `avatars/*` via `users.avatar_path`; UI consumption uses `User::avatar_url` accessor + shared Inertia props (`auth.user.avatar_url`, `auth.user.avatar_initials`).
+- Staff header dropdown and client portal topbar user menu now include `My Profile` and render uploaded avatar image with initials fallback.
+- Form field surfaces were globally adjusted via shared shadcn primitives (`Input`, `Textarea`, `SelectTrigger`) and theme token refinements (`--input` in light/dark) so editable controls have clearer contrast against cards.
+- Interaction polish enhancements were applied in shared primitives and layouts:
+  - Added reusable animation utility classes for Radix state-based transitions (fade/slide in-out).
+  - Improved sheet/drawer and dropdown enter/exit motion.
+  - Added subtle page content fade-in in both staff and client layouts.
+  - Added reusable `Skeleton` and replaced abrupt ticket activity loading text with skeleton placeholders.
+- Reduced-motion preferences now disable app animation utility classes and skeleton pulse.
+
+### Route Inventory Additions (Profile)
+- `GET /settings/profile` (`settings.profile.edit`)
+- `PATCH /settings/profile` (`settings.profile.update`)
+- `PATCH /settings/profile/password` (`settings.profile.password.update`)
+- `POST /settings/profile/avatar` (`settings.profile.avatar.update`)
+- `DELETE /settings/profile/avatar` (`settings.profile.avatar.destroy`)

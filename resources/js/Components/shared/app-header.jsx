@@ -1,6 +1,6 @@
 import { Link, router } from '@inertiajs/react';
-import { Bell, PanelLeft, PanelLeftClose } from 'lucide-react';
-import { Avatar, AvatarFallback } from '@/Components/ui/avatar';
+import { Bell, PanelLeft, PanelLeftClose, UserCircle2 } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
 import { Badge } from '@/Components/ui/badge';
 import { Button } from '@/Components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/Components/ui/dropdown-menu';
@@ -10,12 +10,8 @@ import { useTheme } from '@/lib/theme-context';
 export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSidebar, auth, notifications, authorization, branding }) {
   if (!auth?.user || !authorization?.isStaffWorkspace) return null;
 
-  const initials = auth.user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'SU';
+  const initials = auth.user.avatar_initials || auth.user.name?.split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase() || 'SU';
   const { darkModeEnabled, setDarkModeEnabled } = useTheme();
-
-  const onToggleDarkMode = (checked) => {
-    setDarkModeEnabled(checked);
-  };
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-card px-4 md:px-6">
@@ -32,7 +28,7 @@ export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSideb
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2 rounded-md border px-2 py-1">
           <span className="text-xs text-muted-foreground">Dark mode</span>
-          <Switch checked={darkModeEnabled} onCheckedChange={onToggleDarkMode} />
+          <Switch checked={darkModeEnabled} onCheckedChange={setDarkModeEnabled} />
         </div>
 
         {authorization?.canViewNotifications && (
@@ -51,9 +47,18 @@ export function AppHeader({ sidebarCollapsed, onToggleSidebar, onOpenMobileSideb
         )}
 
         <DropdownMenu>
-          <DropdownMenuTrigger asChild><Button variant="ghost" size="sm" className="gap-2"><Avatar><AvatarFallback>{initials}</AvatarFallback></Avatar><span>{auth.user.name}</span></Button></DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Avatar>
+                <AvatarImage src={auth.user.avatar_url || ''} alt={auth.user.name} />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+              <span>{auth.user.name}</span>
+            </Button>
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>{auth.user.email}</DropdownMenuLabel>
+            <DropdownMenuItem asChild><Link href="/settings/profile"><UserCircle2 className="mr-2 h-4 w-4" />My Profile</Link></DropdownMenuItem>
             <DropdownMenuItem asChild><Link href="/dashboard">Dashboard</Link></DropdownMenuItem>
             <DropdownMenuItem asChild><Link href="/logout" method="post" as="button">Sign out</Link></DropdownMenuItem>
           </DropdownMenuContent>

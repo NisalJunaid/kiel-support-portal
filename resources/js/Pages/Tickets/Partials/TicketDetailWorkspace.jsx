@@ -13,6 +13,7 @@ import { Button } from '@/Components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/Components/ui/sheet';
+import { Skeleton } from '@/Components/ui/skeleton';
 import { getDomainOptions } from '@/lib/domain-references';
 
 export function TicketDetailWorkspace({ ticket, messages, attachments, can, domainReferences, slaIndicators, staff = [], embedded = false, onWorkflowSuccess = null }) {
@@ -151,7 +152,7 @@ export function TicketDetailWorkspace({ ticket, messages, attachments, can, doma
             <SheetDescription>Ticket workflow and reply events.</SheetDescription>
           </SheetHeader>
           <div className="mt-6 h-[calc(100%-2rem)] overflow-y-auto pr-1">
-            {activityLoading ? <p className="text-sm text-muted-foreground">Loading activity…</p> : <ActivityTimeline items={activity} title="Activity log" description="Ticket workflow and reply events." emptyDescription="Ticket changes will appear here." />}
+            {activityLoading ? <div className="space-y-3"><Skeleton className="h-4 w-1/3" /><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-full" /><Skeleton className="h-16 w-5/6" /></div> : <ActivityTimeline items={activity} title="Activity log" description="Ticket workflow and reply events." emptyDescription="Ticket changes will appear here." />}
           </div>
         </SheetContent>
       </Sheet>

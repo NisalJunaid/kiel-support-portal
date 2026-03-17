@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Support\Roles;
+use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable
 {
@@ -26,6 +27,7 @@ class User extends Authenticatable
         'email',
         'password',
         'theme_mode',
+        'avatar_path',
     ];
 
     public function clientUserProfile(): HasOne
@@ -48,6 +50,25 @@ class User extends Authenticatable
         'theme_mode',
         'remember_token',
     ];
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (! $this->avatar_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->avatar_path);
+    }
+
+    public function initials(): string
+    {
+        return (string) str($this->name)
+            ->explode(' ')
+            ->filter()
+            ->map(fn (string $part) => mb_substr($part, 0, 1))
+            ->take(2)
+            ->implode('');
+    }
 
     /**
      * The attributes that should be cast.
